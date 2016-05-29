@@ -1,0 +1,6 @@
+[package]
+name = "midi-looper"
+version = "0.1.0"
+authors = ["rexim <reximkut@gmail.com>"]
+
+[dependencies]
