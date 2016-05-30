@@ -12,3 +12,8 @@ Prerequisite:
 - libportmidi
 
 Having installed all of that just run `$ cargo run`
+
+### NixOS ###
+
+    $ nix-shell midi-looper.nix -A midiLooperEnv
+    $ cargo run
