@@ -40,3 +40,11 @@ fn main() {
         thread::sleep(Duration::from_millis(400));
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_hello() {
+        assert!(true);
+    }
+}
