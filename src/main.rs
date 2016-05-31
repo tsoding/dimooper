@@ -5,10 +5,15 @@ use std::thread;
 use pm::types::MidiEvent;
 use pm::OutputPort;
 
-fn replay_buffer(record_buffer: Vec<MidiEvent>, out_port: &mut OutputPort) {
+fn replay_buffer_forever(record_buffer: &Vec<MidiEvent>, out_port: &mut OutputPort) {
+    let mut some_previous_event: Option<MidiEvent> = None;
     for event in record_buffer {
+        if let Some(previous_event) = some_previous_event {
+            thread::sleep(Duration::from_millis((event.timestamp - previous_event.timestamp) as u64));
+        }
+
         out_port.write_message(event.message).unwrap();
-        thread::sleep(Duration::from_millis(400));
+        some_previous_event = Some(event.clone())
     }
 }
 
@@ -16,7 +21,7 @@ fn main() {
     let context = pm::PortMidi::new().unwrap();
     let timeout = Duration::from_millis(10);
     let mut record_buffer: Vec<MidiEvent> = vec!();
-    let record_buffer_limit = 10;
+    let record_buffer_limit = 50;
 
     let in_info = context.device(1).unwrap();
     println!("Listening on: {} {}", in_info.id(), in_info.name());
@@ -43,7 +48,7 @@ fn main() {
 
     let mut out_port = context.output_port(out_info, 1024).unwrap();
 
-    replay_buffer(record_buffer, &mut out_port);
+    replay_buffer_forever(&record_buffer, &mut out_port);
 }
 
 #[cfg(test)]
