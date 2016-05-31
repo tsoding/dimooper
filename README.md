@@ -2,7 +2,7 @@
 
 # Midi Looper #
 
-Just Midi Looper application focused on live performance.
+Midi Looper application focused on live performance.
 
 ## Building ##
 
