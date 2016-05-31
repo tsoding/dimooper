@@ -3,6 +3,14 @@ extern crate portmidi as pm;
 use std::time::Duration;
 use std::thread;
 use pm::types::MidiEvent;
+use pm::OutputPort;
+
+fn replay_buffer(record_buffer: Vec<MidiEvent>, out_port: &mut OutputPort) {
+    for event in record_buffer {
+        out_port.write_message(event.message).unwrap();
+        thread::sleep(Duration::from_millis(400));
+    }
+}
 
 fn main() {
     let context = pm::PortMidi::new().unwrap();
@@ -35,10 +43,7 @@ fn main() {
 
     let mut out_port = context.output_port(out_info, 1024).unwrap();
 
-    for event in record_buffer {
-        out_port.write_message(event.message).unwrap();
-        thread::sleep(Duration::from_millis(400));
-    }
+    replay_buffer(record_buffer, &mut out_port);
 }
 
 #[cfg(test)]
