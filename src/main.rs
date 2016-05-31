@@ -23,21 +23,27 @@ fn main() {
     let context = pm::PortMidi::new().unwrap();
     let timeout = Duration::from_millis(10);
     let mut record_buffer: Vec<MidiEvent> = vec!();
-    let record_buffer_limit = 50;
 
     let in_info = context.device(1).unwrap();
     println!("Listening on: {} {}", in_info.id(), in_info.name());
 
     let in_port = context.input_port(in_info, 1024).unwrap();
+    let mut recording = true;
 
     while let Ok(_) = in_port.poll() {
-        if record_buffer.len() >= record_buffer_limit {
+        if !recording {
             break;
         }
 
         if let Ok(Some(current_events)) = in_port.read_n(1024) {
             for event in current_events {
-                record_buffer.push(event.clone());
+                let channel = event.message.status & 15;
+                println!("Channel: {}", channel);
+                if channel == 9 {
+                    recording = false;
+                } else {
+                    record_buffer.push(event.clone());
+                }
                 println!("{:?}", event);
             }
         }
