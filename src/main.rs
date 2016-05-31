@@ -6,14 +6,16 @@ use pm::types::MidiEvent;
 use pm::OutputPort;
 
 fn replay_buffer_forever(record_buffer: &Vec<MidiEvent>, out_port: &mut OutputPort) {
-    let mut some_previous_event: Option<MidiEvent> = None;
-    for event in record_buffer {
-        if let Some(previous_event) = some_previous_event {
-            thread::sleep(Duration::from_millis((event.timestamp - previous_event.timestamp) as u64));
-        }
+    loop {
+        let mut some_previous_event: Option<MidiEvent> = None;
+        for event in record_buffer {
+            if let Some(previous_event) = some_previous_event {
+                thread::sleep(Duration::from_millis((event.timestamp - previous_event.timestamp) as u64));
+            }
 
-        out_port.write_message(event.message).unwrap();
-        some_previous_event = Some(event.clone())
+            out_port.write_message(event.message).unwrap();
+            some_previous_event = Some(event.clone())
+        }
     }
 }
 
