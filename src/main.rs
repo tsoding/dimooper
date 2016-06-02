@@ -5,9 +5,9 @@ use std::thread;
 use pm::types::MidiEvent;
 use pm::OutputPort;
 
-fn replay_buffer_forever(record_buffer: &Vec<MidiEvent>, out_port: &mut OutputPort) {
+fn replay_buffer_forever(record_buffer: &[MidiEvent], out_port: &mut OutputPort) {
     loop {
-        let mut some_previous_event: Option<MidiEvent> = None;
+        let mut some_previous_event = None;
         for event in record_buffer {
             if let Some(previous_event) = some_previous_event {
                 thread::sleep(Duration::from_millis((event.timestamp - previous_event.timestamp) as u64));
@@ -22,7 +22,7 @@ fn replay_buffer_forever(record_buffer: &Vec<MidiEvent>, out_port: &mut OutputPo
 fn main() {
     let context = pm::PortMidi::new().unwrap();
     let timeout = Duration::from_millis(10);
-    let mut record_buffer: Vec<MidiEvent> = vec!();
+    let mut record_buffer = Vec::new();
 
     let in_info = context.device(1).unwrap();
     println!("Listening on: {} {}", in_info.id(), in_info.name());
