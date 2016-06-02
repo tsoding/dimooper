@@ -7,7 +7,7 @@ use pm::OutputPort;
 
 fn replay_buffer_forever(record_buffer: &[MidiEvent], out_port: &mut OutputPort) {
     loop {
-        let mut some_previous_event = None;
+        let mut some_previous_event: Option<MidiEvent> = None;
         for event in record_buffer {
             if let Some(previous_event) = some_previous_event {
                 thread::sleep(Duration::from_millis((event.timestamp - previous_event.timestamp) as u64));
