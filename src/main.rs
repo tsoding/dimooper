@@ -3,7 +3,6 @@ extern crate portmidi as pm;
 
 use std::time::Duration;
 use std::thread;
-use std::time::Instant;
 
 use pm::types::{MidiEvent, MidiMessage};
 use pm::OutputPort;
@@ -122,9 +121,11 @@ fn midi_to_color(message: &MidiMessage) -> Color {
     Color::RGB(message.status, message.data1, message.data2)
 }
 
+#[derive(PartialEq)]
 enum State {
     Recording,
     Looping,
+    Quit
 }
 
 fn main() {
@@ -151,21 +152,38 @@ fn main() {
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut state = State::Recording;
+    let mut record_buffer = Vec::new();
 
-    'running: loop {
+    while state != State::Quit {
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
                 | Event::KeyDown { keycode: Some(Keycode::Escape), ..  } => {
-                    break 'running
+                    state = State::Quit
                 },
+
+                Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
+                    state = State::Looping
+                }
+
                 _ => {}
             }
         }
 
-        if let Ok(Some(events)) = in_port.read_n(1024) {
-            for event in events {
-                game_object.color = midi_to_color(&event.message);
+        match state {
+            State::Recording => if let Ok(Some(events)) = in_port.read_n(1024) {
+                for event in events {
+                    game_object.color = midi_to_color(&event.message);
+                    record_buffer.push(event)
+                }
+            },
+
+            State::Looping => {
+
+            },
+
+            State::Quit => {
+
             }
         }
 
