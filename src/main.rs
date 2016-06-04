@@ -5,7 +5,7 @@ use std::time::Duration;
 use std::thread;
 use std::time::Instant;
 
-use pm::types::MidiEvent;
+use pm::types::{MidiEvent, MidiMessage};
 use pm::OutputPort;
 
 use sdl2::event::Event;
@@ -118,6 +118,10 @@ impl GameObject {
     }
 }
 
+fn midi_to_color(message: &MidiMessage) -> Color {
+    Color::RGB(message.status, message.data1, message.data2)
+}
+
 enum State {
     Recording,
     Looping,
@@ -161,9 +165,7 @@ fn main() {
 
         if let Ok(Some(events)) = in_port.read_n(1024) {
             for event in events {
-                game_object.color = Color::RGB(event.message.status,
-                                               event.message.data1,
-                                               event.message.data2);
+                game_object.color = midi_to_color(&event.message);
             }
         }
 
