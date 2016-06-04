@@ -1,3 +1,5 @@
+sudo: required
+dist: trusty
 language: rust
 before_install:
   - sudo apt-get update -qq
