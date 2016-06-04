@@ -118,6 +118,11 @@ impl GameObject {
     }
 }
 
+enum State {
+    Recording,
+    Looping,
+}
+
 fn main() {
     let context = pm::PortMidi::new().unwrap();
     let in_info = context.device(1).unwrap();
@@ -138,10 +143,10 @@ fn main() {
         .unwrap();
 
     let mut game_object = GameObject::default();
-
     let mut renderer = window.renderer().build().unwrap();
-
     let mut event_pump = sdl_context.event_pump().unwrap();
+
+    let mut state = State::Recording;
 
     'running: loop {
         for event in event_pump.poll_iter() {
@@ -156,10 +161,11 @@ fn main() {
 
         if let Ok(Some(events)) = in_port.read_n(1024) {
             for event in events {
-                game_object.color = Color::RGB(event.message.status, event.message.data1, event.message.data2);
+                game_object.color = Color::RGB(event.message.status,
+                                               event.message.data1,
+                                               event.message.data2);
             }
         }
-
 
         game_object.update(window_width, window_height);
         game_object.render(&mut renderer);
