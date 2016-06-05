@@ -130,11 +130,14 @@ enum State {
 
 fn main() {
     let context = pm::PortMidi::new().unwrap();
+
     let in_info = context.device(1).unwrap();
     println!("Listening on: {} {}", in_info.id(), in_info.name());
-
     let in_port = context.input_port(in_info, 1024).unwrap();
 
+    let out_info = context.device(0).unwrap();
+    println!("Sending recorded events: {} {}", out_info.id(), out_info.name());
+    let mut out_port = context.output_port(out_info, 1024).unwrap();
 
     let window_width = 800;
     let window_height = 600;
