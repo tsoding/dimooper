@@ -18,12 +18,6 @@ fn midi_to_color(message: &MidiMessage) -> Color {
     Color::RGB(message.status, message.data1, message.data2)
 }
 
-fn timestamp() -> u32 {
-    unsafe {
-        sdl2_sys::timer::SDL_GetTicks()
-    }
-}
-
 struct Note {
     pitch: u32,
     duration: u32,
@@ -45,6 +39,7 @@ fn main() {
     let window_height = 600;
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
+    let mut timer_subsystem = sdl_context.timer().unwrap();
 
     let window = video_subsystem.window("Midi Looper", window_width, window_height)
         .position_centered()
@@ -72,7 +67,7 @@ fn main() {
                 Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
                     state = State::Looping;
                     if !record_buffer.is_empty() {
-                        dt = timestamp();
+                        dt = timer_subsystem.ticks();
                         next_event = 0;
                     }
                 }
@@ -91,7 +86,7 @@ fn main() {
 
             State::Looping => {
                 if !record_buffer.is_empty() {
-                    let t = timestamp() - dt;
+                    let t = timer_subsystem.ticks() - dt;
                     let event = &record_buffer[next_event];
                     if t > event.timestamp {
                         out_port.write_message(event.message).unwrap();
@@ -99,7 +94,7 @@ fn main() {
                         next_event += 1;
 
                         if next_event >= record_buffer.len() {
-                            dt = timestamp();
+                            dt = timer_subsystem.ticks();
                             next_event = 0;
                         }
                     }
