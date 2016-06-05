@@ -6,59 +6,10 @@ use pm::types::MidiMessage;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::rect::Rect;
 use sdl2::pixels::Color;
-use sdl2::render::Renderer;
 
-struct GameObject {
-    x: f32,
-    y: f32,
-    vx: f32,
-    vy: f32,
-    width: u32,
-    height: u32,
-    color: Color,
-}
-
-impl Default for GameObject {
-    fn default() -> GameObject {
-        GameObject {
-            x: f32::default(),
-            y: f32::default(),
-            vx: 1.0,
-            vy: 1.0,
-            width: 100,
-            height: 100,
-            color: Color::RGB(255, 0, 0),
-        }
-    }
-}
-
-impl GameObject {
-    fn update(&mut self, window_width: u32, window_height: u32) {
-        let velocity = 0.1;
-
-        if self.x < 0.0 || self.x > (window_width - self.width) as f32 {
-            self.vx = -self.vx;
-        }
-
-        if self.y < 0.0 || self.y > (window_height - self.height) as f32 {
-            self.vy = -self.vy;
-        }
-
-        self.x += self.vx * velocity;
-        self.y += self.vy * velocity;
-    }
-
-    fn render(&self, renderer: &mut Renderer) {
-        renderer.set_draw_color(Color::RGB(0, 0, 0));
-        renderer.clear();
-
-        renderer.set_draw_color(self.color);
-        renderer.fill_rect(Rect::new(self.x as i32, self.y as i32, self.width, self.height)).unwrap();
-        renderer.present();
-    }
-}
+mod track;
+mod ark;
 
 fn midi_to_color(message: &MidiMessage) -> Color {
     Color::RGB(message.status, message.data1, message.data2)
@@ -68,6 +19,12 @@ fn timestamp() -> u32 {
     unsafe {
         sdl2_sys::timer::SDL_GetTicks()
     }
+}
+
+struct Note {
+    pitch: u32,
+    duration: u32,
+    start: u32
 }
 
 #[derive(PartialEq)]
@@ -99,7 +56,7 @@ fn main() {
         .build()
         .unwrap();
 
-    let mut game_object = GameObject::default();
+    let mut game_object = ark::GameObject::default();
     let mut renderer = window.renderer().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
@@ -131,7 +88,7 @@ fn main() {
         match state {
             State::Recording => if let Ok(Some(events)) = in_port.read_n(1024) {
                 for event in events {
-                    game_object.color = midi_to_color(&event.message);
+                    game_object.set_color(midi_to_color(&event.message));
                     record_buffer.push(event);
                 }
             },
@@ -142,7 +99,7 @@ fn main() {
                     let event = &record_buffer[next_event];
                     if t > event.timestamp {
                         out_port.write_message(event.message).unwrap();
-                        game_object.color = midi_to_color(&event.message);
+                        game_object.set_color(midi_to_color(&event.message));
                         next_event += 1;
 
                         if next_event >= record_buffer.len() {
