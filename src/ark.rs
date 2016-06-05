@@ -2,7 +2,7 @@ use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 use sdl2::render::Renderer;
 
-pub struct GameObject {
+pub struct Arkanoid {
     x: f32,
     y: f32,
     vx: f32,
@@ -12,9 +12,9 @@ pub struct GameObject {
     color: Color,
 }
 
-impl Default for GameObject {
-    fn default() -> GameObject {
-        GameObject {
+impl Default for Arkanoid {
+    fn default() -> Arkanoid {
+        Arkanoid {
             x: f32::default(),
             y: f32::default(),
             vx: 1.0,
@@ -26,7 +26,7 @@ impl Default for GameObject {
     }
 }
 
-impl GameObject {
+impl Arkanoid {
     pub fn update(&mut self, window_width: u32, window_height: u32) {
         let velocity = 0.1;
 

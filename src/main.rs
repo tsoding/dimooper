@@ -56,7 +56,7 @@ fn main() {
         .build()
         .unwrap();
 
-    let mut game_object = ark::GameObject::default();
+    let mut arkanoid = ark::Arkanoid::default();
     let mut renderer = window.renderer().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
@@ -88,7 +88,7 @@ fn main() {
         match state {
             State::Recording => if let Ok(Some(events)) = in_port.read_n(1024) {
                 for event in events {
-                    game_object.set_color(midi_to_color(&event.message));
+                    arkanoid.set_color(midi_to_color(&event.message));
                     record_buffer.push(event);
                 }
             },
@@ -99,7 +99,7 @@ fn main() {
                     let event = &record_buffer[next_event];
                     if t > event.timestamp {
                         out_port.write_message(event.message).unwrap();
-                        game_object.set_color(midi_to_color(&event.message));
+                        arkanoid.set_color(midi_to_color(&event.message));
                         next_event += 1;
 
                         if next_event >= record_buffer.len() {
@@ -115,8 +115,8 @@ fn main() {
             }
         }
 
-        game_object.update(window_width, window_height);
-        game_object.render(&mut renderer);
+        arkanoid.update(window_width, window_height);
+        arkanoid.render(&mut renderer);
     }
 }
 
