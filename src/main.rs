@@ -10,6 +10,9 @@ use sdl2::pixels::Color;
 
 mod track;
 mod ark;
+mod looper;
+
+use looper::State;
 
 fn midi_to_color(message: &MidiMessage) -> Color {
     Color::RGB(message.status, message.data1, message.data2)
@@ -25,13 +28,6 @@ struct Note {
     pitch: u32,
     duration: u32,
     start: u32
-}
-
-#[derive(PartialEq)]
-enum State {
-    Recording,
-    Looping,
-    Quit
 }
 
 fn main() {
