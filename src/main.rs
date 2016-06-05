@@ -51,10 +51,8 @@ fn main() {
     let mut renderer = window.renderer().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
+    let mut looper = looper::Looper::default();
     let mut state = State::Recording;
-    let mut record_buffer = Vec::new();
-    let mut next_event = 0;
-    let mut dt = 0;
 
     while state != State::Quit {
         for event in event_pump.poll_iter() {
@@ -66,46 +64,21 @@ fn main() {
 
                 Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
                     state = State::Looping;
-                    if !record_buffer.is_empty() {
-                        dt = timer_subsystem.ticks();
-                        next_event = 0;
-                    }
+                    looper.looping(&mut timer_subsystem);
                 }
 
                 _ => {}
             }
         }
 
-        match state {
-            State::Recording => if let Ok(Some(events)) = in_port.read_n(1024) {
-                for event in events {
-                    arkanoid.set_color(midi_to_color(&event.message));
-                    record_buffer.push(event);
-                }
-            },
-
-            State::Looping => {
-                if !record_buffer.is_empty() {
-                    let t = timer_subsystem.ticks() - dt;
-                    let event = &record_buffer[next_event];
-                    if t > event.timestamp {
-                        out_port.write_message(event.message).unwrap();
-                        arkanoid.set_color(midi_to_color(&event.message));
-                        next_event += 1;
-
-                        if next_event >= record_buffer.len() {
-                            dt = timer_subsystem.ticks();
-                            next_event = 0;
-                        }
-                    }
-                }
-            },
-
-            State::Quit => {
-                println!("Quiting...")
+        if let Ok(Some(events)) = in_port.read_n(1024) {
+            for event in events {
+                arkanoid.set_color(midi_to_color(&event.message));
+                looper.on_midi_event(&event);
             }
         }
 
+        looper.update(&mut timer_subsystem, &mut out_port);
         arkanoid.update(window_width, window_height);
         arkanoid.render(&mut renderer);
     }
