@@ -6,3 +6,4 @@ authors = ["rexim <reximkut@gmail.com>"]
 [dependencies]
 portmidi = "^0.2"
 sdl2 = "0.19"
+chrono = "0.2"
