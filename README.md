@@ -12,6 +12,7 @@ Prerequisite:
 - Rust 1.8.0+
 - Cargo 0.9.0+
 - libportmidi
+- SDL2
 
 Having installed all of that just run `$ cargo run`
 
