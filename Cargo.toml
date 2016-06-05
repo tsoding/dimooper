@@ -7,4 +7,3 @@ authors = ["rexim <reximkut@gmail.com>"]
 portmidi = "^0.2"
 sdl2 = "0.19"
 sdl2-sys = "0.19"
-chrono = "0.2"

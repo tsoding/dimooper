@@ -1,6 +1,5 @@
 extern crate sdl2;
 extern crate sdl2_sys;
-extern crate chrono;
 extern crate portmidi as pm;
 
 use std::time::Duration;
