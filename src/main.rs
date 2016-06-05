@@ -1,4 +1,6 @@
 extern crate sdl2;
+extern crate sdl2_sys;
+extern crate chrono;
 extern crate portmidi as pm;
 
 use std::time::Duration;
@@ -121,6 +123,12 @@ fn midi_to_color(message: &MidiMessage) -> Color {
     Color::RGB(message.status, message.data1, message.data2)
 }
 
+fn timestamp() -> u32 {
+    unsafe {
+        sdl2_sys::timer::SDL_GetTicks()
+    }
+}
+
 #[derive(PartialEq)]
 enum State {
     Recording,
@@ -156,6 +164,8 @@ fn main() {
 
     let mut state = State::Recording;
     let mut record_buffer = Vec::new();
+    let mut next_event = 0;
+    let mut dt = 0;
 
     while state != State::Quit {
         for event in event_pump.poll_iter() {
@@ -166,7 +176,11 @@ fn main() {
                 },
 
                 Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
-                    state = State::Looping
+                    state = State::Looping;
+                    if !record_buffer.is_empty() {
+                        dt = timestamp();
+                        next_event = 0;
+                    }
                 }
 
                 _ => {}
@@ -177,16 +191,29 @@ fn main() {
             State::Recording => if let Ok(Some(events)) = in_port.read_n(1024) {
                 for event in events {
                     game_object.color = midi_to_color(&event.message);
-                    record_buffer.push(event)
+                    record_buffer.push(event);
                 }
             },
 
             State::Looping => {
+                if !record_buffer.is_empty() {
+                    let t = timestamp() - dt;
+                    let event = &record_buffer[next_event];
+                    if t > event.timestamp {
+                        out_port.write_message(event.message).unwrap();
+                        game_object.color = midi_to_color(&event.message);
+                        next_event += 1;
 
+                        if next_event >= record_buffer.len() {
+                            dt = timestamp();
+                            next_event = 0;
+                        }
+                    }
+                }
             },
 
             State::Quit => {
-
+                println!("Quiting...")
             }
         }
 
