@@ -11,8 +11,10 @@ use sdl2::pixels::Color;
 mod track;
 mod ark;
 mod looper;
+mod updatable;
 
 use looper::State;
+use updatable::Updatable;
 
 fn midi_to_color(message: &MidiMessage) -> Color {
     Color::RGB(message.status, message.data1, message.data2)

@@ -2,6 +2,8 @@ use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 use sdl2::render::Renderer;
 
+use super::updatable::Updatable;
+
 pub struct Arkanoid {
     x: f32,
     y: f32,
@@ -12,6 +14,25 @@ pub struct Arkanoid {
     color: Color,
     window_width: u32,
     window_height: u32,
+}
+
+impl Updatable for Arkanoid {
+    fn update(&mut self, delta_time: u32) {
+        let velocity = 100.0;
+
+        if self.x < 0.0 || self.x > (self.window_width - self.width) as f32 {
+            self.vx = -self.vx;
+        }
+
+        if self.y < 0.0 || self.y > (self.window_height - self.height) as f32 {
+            self.vy = -self.vy;
+        }
+
+        let dt = (delta_time as f32) * 0.001;
+
+        self.x += self.vx * velocity * dt;
+        self.y += self.vy * velocity * dt;
+    }
 }
 
 impl Arkanoid {
@@ -27,23 +48,6 @@ impl Arkanoid {
             window_width: window_width,
             window_height: window_height,
         }
-    }
-
-    pub fn update(&mut self, delta_time: u32) {
-        let velocity = 100.0;
-
-        if self.x < 0.0 || self.x > (self.window_width - self.width) as f32 {
-            self.vx = -self.vx;
-        }
-
-        if self.y < 0.0 || self.y > (self.window_height - self.height) as f32 {
-            self.vy = -self.vy;
-        }
-
-        let dt = (delta_time as f32) * 0.001;
-
-        self.x += self.vx * velocity * dt;
-        self.y += self.vy * velocity * dt;
     }
 
     pub fn render(&self, renderer: &mut Renderer) {
