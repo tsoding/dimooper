@@ -29,8 +29,8 @@ impl Arkanoid {
         }
     }
 
-    pub fn update(&mut self) {
-        let velocity = 0.1;
+    pub fn update(&mut self, delta_time: u32) {
+        let velocity = 100.0;
 
         if self.x < 0.0 || self.x > (self.window_width - self.width) as f32 {
             self.vx = -self.vx;
@@ -40,8 +40,10 @@ impl Arkanoid {
             self.vy = -self.vy;
         }
 
-        self.x += self.vx * velocity;
-        self.y += self.vy * velocity;
+        let dt = (delta_time as f32) * 0.001;
+
+        self.x += self.vx * velocity * dt;
+        self.y += self.vy * velocity * dt;
     }
 
     pub fn render(&self, renderer: &mut Renderer) {

@@ -85,7 +85,7 @@ fn main() {
         }
 
         looper.update(delta_time);
-        arkanoid.update();
+        arkanoid.update(delta_time);
         arkanoid.render(&mut renderer);
     }
 }
