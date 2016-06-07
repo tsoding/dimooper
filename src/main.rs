@@ -11,8 +11,10 @@ use sdl2::pixels::Color;
 mod track;
 mod ark;
 mod looper;
+mod updatable;
 
 use looper::State;
+use updatable::Updatable;
 
 fn midi_to_color(message: &MidiMessage) -> Color {
     Color::RGB(message.status, message.data1, message.data2)
@@ -22,6 +24,13 @@ struct Note {
     pitch: u32,
     duration: u32,
     start: u32
+}
+
+fn update_all(updatables: &mut Vec<&mut Updatable>,
+              delta_time: u32) {
+    for updatable in updatables {
+        updatable.update(delta_time);
+    }
 }
 
 fn main() {
@@ -47,14 +56,20 @@ fn main() {
         .build()
         .unwrap();
 
-    let mut arkanoid = ark::Arkanoid::default();
+    let mut arkanoid = ark::Arkanoid::new(window_width, window_height);
     let mut renderer = window.renderer().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let mut looper = looper::Looper::default();
+    let mut looper = looper::Looper::new(&mut out_port);
     let mut state = State::Recording;
 
+    let mut previuos_ticks = timer_subsystem.ticks();
+
     while state != State::Quit {
+        let current_ticks = timer_subsystem.ticks();
+        let delta_time = current_ticks - previuos_ticks;
+        previuos_ticks = current_ticks;
+
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
@@ -64,7 +79,7 @@ fn main() {
 
                 Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
                     state = State::Looping;
-                    looper.looping(&mut timer_subsystem);
+                    looper.looping();
                 }
 
                 _ => {}
@@ -78,8 +93,12 @@ fn main() {
             }
         }
 
-        looper.update(&mut timer_subsystem, &mut out_port);
-        arkanoid.update(window_width, window_height);
+        {
+            let mut updatables: Vec<&mut Updatable> = Vec::new();
+            updatables.push(&mut looper);
+            updatables.push(&mut arkanoid);
+            update_all(&mut updatables, delta_time);
+        }
         arkanoid.render(&mut renderer);
     }
 }

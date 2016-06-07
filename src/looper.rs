@@ -1,7 +1,6 @@
 use pm::types::MidiEvent;
 use pm::OutputPort;
-
-use sdl2::TimerSubsystem;
+use ::updatable::Updatable;
 
 #[derive(PartialEq)]
 pub enum State {
@@ -10,50 +9,55 @@ pub enum State {
     Quit,
 }
 
-pub struct Looper {
+pub struct Looper<'a> {
     pub state: State,
     pub record_buffer: Vec<MidiEvent>,
     pub next_event: usize,
-    pub dt: u32,
+    pub time_cursor: u32,
+    pub out_port: &'a mut OutputPort,
 }
 
-impl Default for Looper {
-    fn default() -> Looper {
-        Looper {
-            state: State::Recording,
-            record_buffer: Vec::new(),
-            next_event: 0,
-            dt: 0,
-        }
-    }
-}
-
-impl Looper {
-    pub fn update(&mut self,
-                  timer_subsystem: &mut TimerSubsystem,
-                  out_port: &mut OutputPort) {
+impl<'a> Updatable for Looper<'a> {
+    fn update(&mut self, delta_time: u32) {
         if let State::Looping = self.state {
             if !self.record_buffer.is_empty() {
-                let t = timer_subsystem.ticks() - self.dt;
-                let event = &self.record_buffer[self.next_event];
-                if t > event.timestamp {
-                    out_port.write_message(event.message).unwrap();
+                self.time_cursor += delta_time;
+
+                let event_timestamp = self.record_buffer[self.next_event].timestamp;
+                if self.time_cursor > event_timestamp {
+                    let event = self.record_buffer[self.next_event];
+                    self.out_port.write_message(event.message).unwrap();
                     self.next_event += 1;
 
                     if self.next_event >= self.record_buffer.len() {
-                        self.dt = timer_subsystem.ticks();
-                        self.next_event = 0;
+                        self.reset();
                     }
                 }
             }
         }
     }
+}
 
-    pub fn looping(&mut self, timer_subsystem: &mut TimerSubsystem) {
+impl<'a> Looper<'a> {
+    pub fn new(out_port: &'a mut OutputPort) -> Looper<'a> {
+        Looper {
+            state: State::Recording,
+            record_buffer: Vec::new(),
+            next_event: 0,
+            time_cursor: 0,
+            out_port: out_port,
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.time_cursor = 0;
+        self.next_event = 0;
+    }
+
+    pub fn looping(&mut self) {
         self.state = State::Looping;
         if !self.record_buffer.is_empty() {
-            self.dt = timer_subsystem.ticks();
-            self.next_event = 0;
+            self.reset();
         }
     }
 
