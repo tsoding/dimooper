@@ -26,6 +26,13 @@ struct Note {
     start: u32
 }
 
+fn update_all(updatables: &mut Vec<&mut Updatable>,
+              delta_time: u32) {
+    for updatable in updatables {
+        updatable.update(delta_time);
+    }
+}
+
 fn main() {
     let context = pm::PortMidi::new().unwrap();
 
@@ -86,8 +93,12 @@ fn main() {
             }
         }
 
-        looper.update(delta_time);
-        arkanoid.update(delta_time);
+        {
+            let mut updatables: Vec<&mut Updatable> = Vec::new();
+            updatables.push(&mut looper);
+            updatables.push(&mut arkanoid);
+            update_all(&mut updatables, delta_time);
+        }
         arkanoid.render(&mut renderer);
     }
 }
