@@ -54,7 +54,13 @@ fn main() {
     let mut looper = looper::Looper::new(&mut out_port);
     let mut state = State::Recording;
 
+    let mut previuos_ticks = timer_subsystem.ticks();
+
     while state != State::Quit {
+        let current_ticks = timer_subsystem.ticks();
+        let delta_time = current_ticks - previuos_ticks;
+        previuos_ticks = current_ticks;
+
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
@@ -64,7 +70,7 @@ fn main() {
 
                 Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
                     state = State::Looping;
-                    looper.looping(&mut timer_subsystem);
+                    looper.looping();
                 }
 
                 _ => {}
@@ -78,7 +84,7 @@ fn main() {
             }
         }
 
-        looper.update(&mut timer_subsystem);
+        looper.update(delta_time);
         arkanoid.update();
         arkanoid.render(&mut renderer);
     }
