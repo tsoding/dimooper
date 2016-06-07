@@ -51,7 +51,7 @@ fn main() {
     let mut renderer = window.renderer().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let mut looper = looper::Looper::default();
+    let mut looper = looper::Looper::new(&mut out_port);
     let mut state = State::Recording;
 
     while state != State::Quit {
@@ -78,7 +78,7 @@ fn main() {
             }
         }
 
-        looper.update(&mut timer_subsystem, &mut out_port);
+        looper.update(&mut timer_subsystem);
         arkanoid.update();
         arkanoid.render(&mut renderer);
     }
