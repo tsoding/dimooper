@@ -1,5 +1,6 @@
 use pm::types::MidiEvent;
 use pm::OutputPort;
+use ::updatable::Updatable;
 
 #[derive(PartialEq)]
 pub enum State {
@@ -16,18 +17,8 @@ pub struct Looper<'a> {
     pub out_port: &'a mut OutputPort,
 }
 
-impl<'a> Looper<'a> {
-    pub fn new(out_port: &'a mut OutputPort) -> Looper<'a> {
-        Looper {
-            state: State::Recording,
-            record_buffer: Vec::new(),
-            next_event: 0,
-            time_cursor: 0,
-            out_port: out_port,
-        }
-    }
-
-    pub fn update(&mut self, delta_time: u32) {
+impl<'a> Updatable for Looper<'a> {
+    fn update(&mut self, delta_time: u32) {
         if let State::Looping = self.state {
             if !self.record_buffer.is_empty() {
                 self.time_cursor += delta_time;
@@ -43,6 +34,18 @@ impl<'a> Looper<'a> {
                     }
                 }
             }
+        }
+    }
+}
+
+impl<'a> Looper<'a> {
+    pub fn new(out_port: &'a mut OutputPort) -> Looper<'a> {
+        Looper {
+            state: State::Recording,
+            record_buffer: Vec::new(),
+            next_event: 0,
+            time_cursor: 0,
+            out_port: out_port,
         }
     }
 
