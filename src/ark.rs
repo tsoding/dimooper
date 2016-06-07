@@ -10,10 +10,12 @@ pub struct Arkanoid {
     width: u32,
     height: u32,
     color: Color,
+    window_width: u32,
+    window_height: u32,
 }
 
-impl Default for Arkanoid {
-    fn default() -> Arkanoid {
+impl Arkanoid {
+    pub fn new(window_width: u32, window_height: u32) -> Arkanoid {
         Arkanoid {
             x: f32::default(),
             y: f32::default(),
@@ -22,19 +24,19 @@ impl Default for Arkanoid {
             width: 100,
             height: 100,
             color: Color::RGB(255, 0, 0),
+            window_width: window_width,
+            window_height: window_height,
         }
     }
-}
 
-impl Arkanoid {
-    pub fn update(&mut self, window_width: u32, window_height: u32) {
+    pub fn update(&mut self) {
         let velocity = 0.1;
 
-        if self.x < 0.0 || self.x > (window_width - self.width) as f32 {
+        if self.x < 0.0 || self.x > (self.window_width - self.width) as f32 {
             self.vx = -self.vx;
         }
 
-        if self.y < 0.0 || self.y > (window_height - self.height) as f32 {
+        if self.y < 0.0 || self.y > (self.window_height - self.height) as f32 {
             self.vy = -self.vy;
         }
 

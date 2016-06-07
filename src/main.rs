@@ -47,7 +47,7 @@ fn main() {
         .build()
         .unwrap();
 
-    let mut arkanoid = ark::Arkanoid::default();
+    let mut arkanoid = ark::Arkanoid::new(window_width, window_height);
     let mut renderer = window.renderer().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
@@ -79,7 +79,7 @@ fn main() {
         }
 
         looper.update(&mut timer_subsystem, &mut out_port);
-        arkanoid.update(window_width, window_height);
+        arkanoid.update();
         arkanoid.render(&mut renderer);
     }
 }
