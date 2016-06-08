@@ -7,30 +7,28 @@ use pm::types::MidiMessage;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
+use sdl2::render::Renderer;
 
-mod track;
-mod ark;
 mod looper;
 mod updatable;
 
-use looper::State;
+use looper::{State, Looper};
 use updatable::Updatable;
 
-fn midi_to_color(message: &MidiMessage) -> Color {
-    Color::RGB(message.status, message.data1, message.data2)
+fn get_message_type(message: &MidiMessage) -> u8 {
+    message.status & 0b11110000
 }
 
-struct Note {
-    pitch: u32,
-    duration: u32,
-    start: u32
+fn is_note_message(message: &MidiMessage) -> bool {
+    let message_type = get_message_type(message);
+    message_type == 0b10000000 || message_type == 0b10010000
 }
 
-fn update_all(updatables: &mut Vec<&mut Updatable>,
-              delta_time: u32) {
-    for updatable in updatables {
-        updatable.update(delta_time);
-    }
+fn render_looper(looper: &Looper,
+                 renderer: &mut Renderer,
+                 window_width: u32,
+                 window_height: u32) {
+
 }
 
 fn main() {
@@ -56,7 +54,6 @@ fn main() {
         .build()
         .unwrap();
 
-    let mut arkanoid = ark::Arkanoid::new(window_width, window_height);
     let mut renderer = window.renderer().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
@@ -88,18 +85,12 @@ fn main() {
 
         if let Ok(Some(events)) = in_port.read_n(1024) {
             for event in events {
-                arkanoid.set_color(midi_to_color(&event.message));
                 looper.on_midi_event(&event);
             }
         }
 
-        {
-            let mut updatables: Vec<&mut Updatable> = Vec::new();
-            updatables.push(&mut looper);
-            updatables.push(&mut arkanoid);
-            update_all(&mut updatables, delta_time);
-        }
-        arkanoid.render(&mut renderer);
+        looper.update(delta_time);
+        render_looper(&looper, &mut renderer, window_width, window_height);
     }
 }
 
