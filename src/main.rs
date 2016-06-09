@@ -2,8 +2,6 @@ extern crate sdl2;
 extern crate sdl2_sys;
 extern crate portmidi as pm;
 
-use pm::types::MidiMessage;
-
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
@@ -14,7 +12,7 @@ mod looper;
 mod updatable;
 mod midi;
 
-use looper::{State, Looper};
+use looper::Looper;
 use updatable::Updatable;
 
 
@@ -70,11 +68,11 @@ fn main() {
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut looper = looper::Looper::new(&mut out_port);
-    let mut state = State::Recording;
+    let mut running = true;
 
     let mut previuos_ticks = timer_subsystem.ticks();
 
-    while state != State::Quit {
+    while running {
         let current_ticks = timer_subsystem.ticks();
         let delta_time = current_ticks - previuos_ticks;
         previuos_ticks = current_ticks;
@@ -83,12 +81,15 @@ fn main() {
             match event {
                 Event::Quit { .. }
                 | Event::KeyDown { keycode: Some(Keycode::Escape), ..  } => {
-                    state = State::Quit
+                    running = false;
                 },
 
                 Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
-                    state = State::Looping;
                     looper.looping();
+                }
+
+                Event::KeyDown { keycode: Some(Keycode::Q), .. } => {
+                    looper.toggle_pause();
                 }
 
                 _ => {}
