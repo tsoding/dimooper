@@ -6,7 +6,7 @@ use ::updatable::Updatable;
 pub enum State {
     Recording,
     Looping,
-    Quit,
+    Pause,
 }
 
 pub struct Looper<'a> {
@@ -59,6 +59,14 @@ impl<'a> Looper<'a> {
         self.state = State::Looping;
         if !self.record_buffer.is_empty() {
             self.reset();
+        }
+    }
+
+    pub fn toggle_pause(&mut self) {
+        match self.state {
+            State::Looping => self.state = State::Pause,
+            State::Pause => self.state = State::Looping,
+            _ => (),
         }
     }
 
