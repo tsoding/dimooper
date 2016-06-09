@@ -8,7 +8,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::render::Renderer;
-use sdl2::rect::Point;
+use sdl2::rect::{Point, Rect};
 
 mod looper;
 mod updatable;
@@ -33,8 +33,7 @@ fn render_looper(looper: &Looper,
             let x = (ti / dt * (window_width as f32 - 10.0) + 5.0) as i32;
             let y = (row_height * (127 - midi::get_note_key(&event.message)) as f32) as i32;
             renderer.set_draw_color(Color::RGB(255, 0, 0));
-            renderer.draw_line(Point::from((x, y)),
-                               Point::from((x, y + row_height as i32))).unwrap();
+            renderer.fill_rect(Rect::new(x, y, 10, row_height as u32)).unwrap();
         }
 
         let x = ((looper.time_cursor as f32) / dt * (window_width as f32 - 10.0) + 5.0) as i32;
