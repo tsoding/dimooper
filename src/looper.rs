@@ -21,9 +21,10 @@ impl<'a> Updatable for Looper<'a> {
     fn update(&mut self, delta_time: u32) {
         if let State::Looping = self.state {
             if !self.record_buffer.is_empty() {
+                let t1 = self.record_buffer[0].timestamp;
                 self.time_cursor += delta_time;
 
-                let event_timestamp = self.record_buffer[self.next_event].timestamp;
+                let event_timestamp = self.record_buffer[self.next_event].timestamp - t1;
                 if self.time_cursor > event_timestamp {
                     let event = self.record_buffer[self.next_event];
                     self.out_port.write_message(event.message).unwrap();
@@ -64,7 +65,6 @@ impl<'a> Looper<'a> {
     pub fn on_midi_event(&mut self, event: &MidiEvent) {
         if let State::Recording = self.state {
             if ::midi::is_note_message(&event.message) {
-                println!("{:?}", event.message);
                 self.record_buffer.push(event.clone());
             }
         }
