@@ -63,7 +63,10 @@ impl<'a> Looper<'a> {
 
     pub fn on_midi_event(&mut self, event: &MidiEvent) {
         if let State::Recording = self.state {
-            self.record_buffer.push(event.clone());
+            if ::midi::is_note_message(&event.message) {
+                println!("{:?}", event.message);
+                self.record_buffer.push(event.clone());
+            }
         }
     }
 }

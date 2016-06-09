@@ -11,18 +11,11 @@ use sdl2::render::Renderer;
 
 mod looper;
 mod updatable;
+mod midi;
 
 use looper::{State, Looper};
 use updatable::Updatable;
 
-fn get_message_type(message: &MidiMessage) -> u8 {
-    message.status & 0b11110000
-}
-
-fn is_note_message(message: &MidiMessage) -> bool {
-    let message_type = get_message_type(message);
-    message_type == 0b10000000 || message_type == 0b10010000
-}
 
 fn render_looper(looper: &Looper,
                  renderer: &mut Renderer,
