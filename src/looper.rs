@@ -62,6 +62,12 @@ impl<'a> Looper<'a> {
         }
     }
 
+    pub fn recording(&mut self) {
+        self.state = State::Recording;
+        self.record_buffer.clear();
+        self.reset();
+    }
+
     pub fn toggle_pause(&mut self) {
         match self.state {
             State::Looping => self.state = State::Pause,

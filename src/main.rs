@@ -88,6 +88,10 @@ fn main() {
                     looper.looping();
                 }
 
+                Event::KeyDown { keycode: Some(Keycode::Z), .. } => {
+                    looper.recording();
+                }
+
                 Event::KeyDown { keycode: Some(Keycode::Q), .. } => {
                     looper.toggle_pause();
                 }
