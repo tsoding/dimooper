@@ -25,10 +25,12 @@ macro_rules! colors {
     }
 }
 
-const EVENT_PALETTE: &'static [Color; 3] = colors![
-    0xFF0000,
-    0x00FF00,
-    0x0000FF
+const EVENT_PALETTE: &'static [Color; 5] = colors![
+    0xF15A5A,
+    0xF0C419,
+    0x4EBA6F,
+    0x2D95BF,
+    0x955BA5
 ];
 
 fn render_looper(looper: &Looper,
