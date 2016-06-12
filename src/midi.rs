@@ -4,9 +4,18 @@ pub fn get_message_type(message: &MidiMessage) -> u8 {
     message.status & 0b11110000
 }
 
-pub fn is_note_message(message: &MidiMessage) -> bool {
+pub fn is_note_on(message: &MidiMessage) -> bool {
     let message_type = get_message_type(message);
-    message_type == 0b10000000 || message_type == 0b10010000
+    message_type == 0b10010000
+}
+
+pub fn is_note_off(message: &MidiMessage) -> bool {
+    let message_type = get_message_type(message);
+    message_type == 0b10000000
+}
+
+pub fn is_note_message(message: &MidiMessage) -> bool {
+    is_note_on(message) || is_note_off(message)
 }
 
 pub fn get_note_key(message: &MidiMessage) -> u8 {
