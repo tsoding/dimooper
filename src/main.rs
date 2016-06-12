@@ -20,7 +20,7 @@ macro_rules! colors {
         &[$(
             Color::RGB((($hex & 0xFF0000) >> 16) as u8,
                        (($hex & 0xFF00) >> 8) as u8,
-                       ($hex & 0xFF0000) as u8)
+                       ($hex & 0xFF) as u8)
         ),*]
     }
 }
