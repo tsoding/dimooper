@@ -15,6 +15,10 @@ mod midi;
 use looper::Looper;
 use updatable::Updatable;
 
+const EVENT_PALETTE: &'static [Color; 3] =
+    &[Color::RGB(255, 0, 0),
+      Color::RGB(0, 255, 0),
+      Color::RGB(0, 0, 255)];
 
 fn render_looper(looper: &Looper,
                  renderer: &mut Renderer,
@@ -27,10 +31,16 @@ fn render_looper(looper: &Looper,
         let dt = (record_buffer[n - 1].timestamp - record_buffer[0].timestamp) as f32;
         let row_height = window_height as f32 / 128.0;
         for event in record_buffer {
+
+            let channel = midi::get_note_channel(&event.message) as usize;
+            println!("channel: {}", channel);
+            let color = EVENT_PALETTE[channel % EVENT_PALETTE.len()];
+
             let ti = (event.timestamp - record_buffer[0].timestamp) as f32;
             let x = (ti / dt * (window_width as f32 - 10.0) + 5.0) as i32;
             let y = (row_height * (127 - midi::get_note_key(&event.message)) as f32) as i32;
-            renderer.set_draw_color(Color::RGB(255, 0, 0));
+
+            renderer.set_draw_color(color);
             renderer.fill_rect(Rect::new(x, y, 10, row_height as u32)).unwrap();
         }
 
