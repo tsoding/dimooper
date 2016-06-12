@@ -1,6 +1,6 @@
 use pm::types::MidiEvent;
 use pm::OutputPort;
-use ::updatable::Updatable;
+use updatable::Updatable;
 
 #[derive(PartialEq)]
 pub enum State {
