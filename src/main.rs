@@ -15,10 +15,21 @@ mod midi;
 use looper::Looper;
 use updatable::Updatable;
 
-const EVENT_PALETTE: &'static [Color; 3] =
-    &[Color::RGB(255, 0, 0),
-      Color::RGB(0, 255, 0),
-      Color::RGB(0, 0, 255)];
+macro_rules! colors {
+    ($($hex:expr),*) => {
+        &[$(
+            Color::RGB((($hex & 0xFF0000) >> 16) as u8,
+                       (($hex & 0xFF00) >> 8) as u8,
+                       ($hex & 0xFF0000) as u8)
+        ),*]
+    }
+}
+
+const EVENT_PALETTE: &'static [Color; 3] = colors![
+    0xFF0000,
+    0x00FF00,
+    0x0000FF
+];
 
 fn render_looper(looper: &Looper,
                  renderer: &mut Renderer,
