@@ -2,6 +2,8 @@ extern crate sdl2;
 extern crate sdl2_sys;
 extern crate portmidi as pm;
 
+use pm::types::MidiEvent;
+
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
@@ -33,6 +35,40 @@ const EVENT_PALETTE: &'static [Color; 5] = colors![
     0x955BA5
 ];
 
+fn render_event(event: &MidiEvent,
+                record_buffer: &[MidiEvent],
+                renderer: &mut Renderer,
+                window_width: u32,
+                window_height: u32) {
+    let row_height = window_height as f32 / 128.0;
+    let n = record_buffer.len();
+    let dt = (record_buffer[n - 1].timestamp - record_buffer[0].timestamp) as f32;
+
+    let channel = midi::get_note_channel(&event.message) as usize;
+    println!("channel: {}", channel);
+    let color = EVENT_PALETTE[channel % EVENT_PALETTE.len()];
+
+    let ti = (event.timestamp - record_buffer[0].timestamp) as f32;
+    let x = (ti / dt * (window_width as f32 - 10.0) + 5.0) as i32;
+    let y = (row_height * (127 - midi::get_note_key(&event.message)) as f32) as i32;
+
+    renderer.set_draw_color(color);
+    renderer.fill_rect(Rect::new(x, y, 10, row_height as u32)).unwrap();
+}
+
+fn render_bar(time_cursor: u32,
+              record_buffer: &[MidiEvent],
+              renderer: &mut Renderer,
+              window_width: u32,
+              window_height: u32) {
+    let n = record_buffer.len();
+    let dt = (record_buffer[n - 1].timestamp - record_buffer[0].timestamp) as f32;
+    let x = ((time_cursor as f32) / dt * (window_width as f32 - 10.0) + 5.0) as i32;
+    renderer.set_draw_color(Color::RGB(255, 255, 255));
+    renderer.draw_line(Point::from((x, 0)),
+                       Point::from((x, window_height as i32))).unwrap();
+}
+
 fn render_looper(looper: &Looper,
                  renderer: &mut Renderer,
                  window_width: u32,
@@ -41,26 +77,12 @@ fn render_looper(looper: &Looper,
         let record_buffer = &looper.record_buffer;
         let n = record_buffer.len();
         assert!(record_buffer[0].timestamp <= record_buffer[n - 1].timestamp);
-        let dt = (record_buffer[n - 1].timestamp - record_buffer[0].timestamp) as f32;
-        let row_height = window_height as f32 / 128.0;
+
         for event in record_buffer {
-
-            let channel = midi::get_note_channel(&event.message) as usize;
-            println!("channel: {}", channel);
-            let color = EVENT_PALETTE[channel % EVENT_PALETTE.len()];
-
-            let ti = (event.timestamp - record_buffer[0].timestamp) as f32;
-            let x = (ti / dt * (window_width as f32 - 10.0) + 5.0) as i32;
-            let y = (row_height * (127 - midi::get_note_key(&event.message)) as f32) as i32;
-
-            renderer.set_draw_color(color);
-            renderer.fill_rect(Rect::new(x, y, 10, row_height as u32)).unwrap();
+            render_event(&event, &record_buffer, renderer, window_width, window_height);
         }
 
-        let x = ((looper.time_cursor as f32) / dt * (window_width as f32 - 10.0) + 5.0) as i32;
-        renderer.set_draw_color(Color::RGB(255, 255, 255));
-        renderer.draw_line(Point::from((x, 0)),
-                           Point::from((x, window_height as i32))).unwrap();
+        render_bar(looper.time_cursor, &record_buffer, renderer, window_width, window_height);
     }
 }
 
