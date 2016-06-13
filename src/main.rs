@@ -45,7 +45,6 @@ fn render_event(event: &MidiEvent,
     let dt = (record_buffer[n - 1].timestamp - record_buffer[0].timestamp) as f32;
 
     let channel = midi::get_note_channel(&event.message) as usize;
-    println!("channel: {}", channel);
     let color = EVENT_PALETTE[channel % EVENT_PALETTE.len()];
 
     let ti = (event.timestamp - record_buffer[0].timestamp) as f32;
