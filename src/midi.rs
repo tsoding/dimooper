@@ -6,6 +6,13 @@ pub enum MessageType {
     Other,
 }
 
+pub struct Note {
+    pub start_timestamp: u32,
+    pub end_timestamp: u32,
+    pub key: u8,
+    pub channel: u8,
+}
+
 pub fn get_message_type_code(message: &MidiMessage) -> u8 {
     message.status & 0b11110000
 }

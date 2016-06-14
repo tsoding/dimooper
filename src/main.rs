@@ -14,7 +14,7 @@ mod looper;
 mod updatable;
 mod midi;
 
-use midi::MessageType;
+use midi::Note;
 use looper::Looper;
 use updatable::Updatable;
 
@@ -36,12 +36,6 @@ const EVENT_PALETTE: &'static [Color; 5] = colors![
     0x955BA5
 ];
 
-struct Note {
-    start_timestamp: u32,
-    end_timestamp: u32,
-    key: u8,
-}
-
 fn events_to_notes(record_buffer: &[MidiEvent]) -> Vec<Note> {
     let mut note_tracker: [Option<u32>; 128] = [None; 128];
     let mut result = Vec::new();
@@ -49,6 +43,7 @@ fn events_to_notes(record_buffer: &[MidiEvent]) -> Vec<Note> {
     use midi::MessageType::*;
 
     for event in record_buffer {
+        let channel = midi::get_note_channel(&event.message);
         match (midi::get_message_type(&event.message), midi::get_note_key(&event.message)) {
             (NoteOn, key) => {
                 match note_tracker[key as usize] {
@@ -56,7 +51,8 @@ fn events_to_notes(record_buffer: &[MidiEvent]) -> Vec<Note> {
                         result.push(Note {
                             start_timestamp: start_timestamp,
                             end_timestamp: event.timestamp,
-                            key: key
+                            key: key,
+                            channel: channel,
                         });
                         note_tracker[key as usize] = Some(event.timestamp);
                     },
@@ -69,7 +65,8 @@ fn events_to_notes(record_buffer: &[MidiEvent]) -> Vec<Note> {
                         result.push(Note {
                             start_timestamp: start_timestamp,
                             end_timestamp: event.timestamp,
-                            key: key
+                            key: key,
+                            channel: channel,
                         });
                         note_tracker[key as usize] = None;
                     },
