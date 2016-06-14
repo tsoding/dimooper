@@ -5,8 +5,8 @@ let
 in rec {
 
   rustNightly = funs.rust {
-    date = "2016-04-09";
-    hash = "07w2fs1c4jwzsdphcr6215py7f3nid8qf920hswfn9l3fy5x9jfz";
+    date = "2016-06-12";
+    hash = "07674ikgc51d6kmbarb2z2izbh63jlxhc9078jk3f11v3s73n73q";
   };
 
   midiLooperEnv = stdenv.mkDerivation rec {
