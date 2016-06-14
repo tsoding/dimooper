@@ -4,7 +4,7 @@
 
 Midi Looper application focused on live performance.
 
-![screenshot](http://i.imgur.com/YRVqnti.png)
+![screenshot](http://i.imgur.com/h3LkeLR.png)
 
 ## Building ##
 
