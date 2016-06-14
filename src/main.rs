@@ -37,7 +37,7 @@ const CHANNEL_PALETTE: &'static [Color; 5] = colors![
 ];
 
 fn events_to_notes(record_buffer: &[MidiEvent]) -> Vec<Note> {
-    let mut note_tracker: [Option<u32>; 128] = [None; 128];
+    let mut note_tracker: [[Option<u32>; 128]; 16] = [[None; 128]; 16];
     let mut result = Vec::new();
 
     use midi::MessageType::*;
@@ -46,7 +46,7 @@ fn events_to_notes(record_buffer: &[MidiEvent]) -> Vec<Note> {
         let channel = midi::get_note_channel(&event.message);
         match (midi::get_message_type(&event.message), midi::get_note_key(&event.message)) {
             (NoteOn, key) => {
-                match note_tracker[key as usize] {
+                match note_tracker[channel as usize][key as usize] {
                     Some(start_timestamp) => {
                         result.push(Note {
                             start_timestamp: start_timestamp,
@@ -54,13 +54,13 @@ fn events_to_notes(record_buffer: &[MidiEvent]) -> Vec<Note> {
                             key: key,
                             channel: channel,
                         });
-                        note_tracker[key as usize] = Some(event.timestamp);
+                        note_tracker[channel as usize][key as usize] = Some(event.timestamp);
                     },
-                    None => note_tracker[key as usize] = Some(event.timestamp)
+                    None => note_tracker[channel as usize][key as usize] = Some(event.timestamp)
                 }
             },
             (NoteOff, key) => {
-                match note_tracker[key as usize] {
+                match note_tracker[channel as usize][key as usize] {
                     Some(start_timestamp) => {
                         result.push(Note {
                             start_timestamp: start_timestamp,
@@ -68,7 +68,7 @@ fn events_to_notes(record_buffer: &[MidiEvent]) -> Vec<Note> {
                             key: key,
                             channel: channel,
                         });
-                        note_tracker[key as usize] = None;
+                        note_tracker[channel as usize][key as usize] = None;
                     },
                     None => ()
                 }
