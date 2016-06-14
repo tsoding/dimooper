@@ -28,7 +28,7 @@ macro_rules! colors {
     }
 }
 
-const EVENT_PALETTE: &'static [Color; 5] = colors![
+const CHANNEL_PALETTE: &'static [Color; 5] = colors![
     0xF15A5A,
     0xF0C419,
     0x4EBA6F,
@@ -91,7 +91,7 @@ fn render_event(event: &MidiEvent,
 
     let channel = midi::get_note_channel(&event.message) as usize;
     println!("channel: {}", channel);
-    let color = EVENT_PALETTE[channel % EVENT_PALETTE.len()];
+    let color = CHANNEL_PALETTE[channel % CHANNEL_PALETTE.len()];
 
     let ti = (event.timestamp - record_buffer[0].timestamp) as f32;
     let x = (ti / dt * (window_width as f32 - 10.0) + 5.0) as i32;
