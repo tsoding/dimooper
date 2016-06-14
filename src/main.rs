@@ -14,6 +14,7 @@ mod looper;
 mod updatable;
 mod midi;
 
+use midi::Note;
 use looper::Looper;
 use updatable::Updatable;
 
@@ -27,7 +28,7 @@ macro_rules! colors {
     }
 }
 
-const EVENT_PALETTE: &'static [Color; 5] = colors![
+const CHANNEL_PALETTE: &'static [Color; 5] = colors![
     0xF15A5A,
     0xF0C419,
     0x4EBA6F,
@@ -35,24 +36,70 @@ const EVENT_PALETTE: &'static [Color; 5] = colors![
     0x955BA5
 ];
 
-fn render_event(event: &MidiEvent,
-                record_buffer: &[MidiEvent],
-                renderer: &mut Renderer,
-                window_width: u32,
-                window_height: u32) {
+fn events_to_notes(record_buffer: &[MidiEvent]) -> Vec<Note> {
+    let mut note_tracker: [Option<u32>; 128] = [None; 128];
+    let mut result = Vec::new();
+
+    use midi::MessageType::*;
+
+    for event in record_buffer {
+        let channel = midi::get_note_channel(&event.message);
+        match (midi::get_message_type(&event.message), midi::get_note_key(&event.message)) {
+            (NoteOn, key) => {
+                match note_tracker[key as usize] {
+                    Some(start_timestamp) => {
+                        result.push(Note {
+                            start_timestamp: start_timestamp,
+                            end_timestamp: event.timestamp,
+                            key: key,
+                            channel: channel,
+                        });
+                        note_tracker[key as usize] = Some(event.timestamp);
+                    },
+                    None => note_tracker[key as usize] = Some(event.timestamp)
+                }
+            },
+            (NoteOff, key) => {
+                match note_tracker[key as usize] {
+                    Some(start_timestamp) => {
+                        result.push(Note {
+                            start_timestamp: start_timestamp,
+                            end_timestamp: event.timestamp,
+                            key: key,
+                            channel: channel,
+                        });
+                        note_tracker[key as usize] = None;
+                    },
+                    None => ()
+                }
+            },
+            (Other, _) => ()
+        }
+    }
+
+    result
+}
+
+fn render_note(note: &Note,
+               record_buffer: &[MidiEvent],
+               renderer: &mut Renderer,
+               window_width: u32,
+               window_height: u32)
+{
     let row_height = window_height as f32 / 128.0;
     let n = record_buffer.len();
     let dt = (record_buffer[n - 1].timestamp - record_buffer[0].timestamp) as f32;
 
-    let channel = midi::get_note_channel(&event.message) as usize;
-    let color = EVENT_PALETTE[channel % EVENT_PALETTE.len()];
+    let color = CHANNEL_PALETTE[note.channel as usize % CHANNEL_PALETTE.len()];
 
-    let ti = (event.timestamp - record_buffer[0].timestamp) as f32;
-    let x = (ti / dt * (window_width as f32 - 10.0) + 5.0) as i32;
-    let y = (row_height * (127 - midi::get_note_key(&event.message)) as f32) as i32;
+    let t1 = (note.start_timestamp - record_buffer[0].timestamp) as f32;
+    let t2 = (note.end_timestamp - record_buffer[0].timestamp) as f32;
+    let x1 = (t1 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
+    let x2 = (t2 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
+    let y = (row_height * (127 - note.key) as f32) as i32;
 
     renderer.set_draw_color(color);
-    renderer.fill_rect(Rect::new(x, y, 10, row_height as u32)).unwrap();
+    renderer.fill_rect(Rect::new(x1, y, (x2 - x1 + 1) as u32, row_height as u32)).unwrap();
 }
 
 fn render_bar(time_cursor: u32,
@@ -74,11 +121,10 @@ fn render_looper(looper: &Looper,
                  window_height: u32) {
     if looper.record_buffer.len() > 1 {
         let record_buffer = &looper.record_buffer;
-        let n = record_buffer.len();
-        assert!(record_buffer[0].timestamp <= record_buffer[n - 1].timestamp);
+        let notes = events_to_notes(record_buffer);
 
-        for event in record_buffer {
-            render_event(&event, &record_buffer, renderer, window_width, window_height);
+        for note in notes {
+            render_note(&note, record_buffer, renderer, window_width, window_height);
         }
 
         render_bar(looper.time_cursor, &record_buffer, renderer, window_width, window_height);
