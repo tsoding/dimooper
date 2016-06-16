@@ -82,5 +82,7 @@ impl<'a> Looper<'a> {
                 self.record_buffer.push(event.clone());
             }
         }
+
+        self.out_port.write_message(event.message).unwrap();
     }
 }

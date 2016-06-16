@@ -131,14 +131,32 @@ fn render_looper(looper: &Looper,
     }
 }
 
+fn print_devices(pm: &pm::PortMidi) {
+    for dev in pm.devices().unwrap() {
+        println!("{}", dev);
+    }
+}
+
 fn main() {
     let context = pm::PortMidi::new().unwrap();
 
-    let in_info = context.device(1).unwrap();
+    let (input_id, output_id) = {
+        let args: Vec<String> = std::env::args().collect();
+
+        if args.len() < 2 {
+            print_devices(&context);
+            println!("Usage: ./midi-looper <input-port> <output-port>");
+            std::process::exit(1);
+        }
+
+        (args[1].trim().parse().unwrap(), args[2].trim().parse().unwrap())
+    };
+
+    let in_info = context.device(input_id).unwrap();
     println!("Listening on: {} {}", in_info.id(), in_info.name());
     let in_port = context.input_port(in_info, 1024).unwrap();
 
-    let out_info = context.device(0).unwrap();
+    let out_info = context.device(output_id).unwrap();
     println!("Sending recorded events: {} {}", out_info.id(), out_info.name());
     let mut out_port = context.output_port(out_info, 1024).unwrap();
 
