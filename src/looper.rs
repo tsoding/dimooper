@@ -7,11 +7,13 @@ pub enum State {
     Recording,
     Looping,
     Pause,
+    Overdub,
 }
 
 pub struct Looper<'a> {
     pub state: State,
     pub record_buffer: Vec<MidiEvent>,
+    pub overdub_buffer: Vec<MidiEvent>,
     pub next_event: usize,
     pub time_cursor: u32,
     pub out_port: &'a mut OutputPort,
@@ -44,6 +46,7 @@ impl<'a> Looper<'a> {
         Looper {
             state: State::Recording,
             record_buffer: Vec::new(),
+            overdub_buffer: Vec::new(),
             next_event: 0,
             time_cursor: 0,
             out_port: out_port,
@@ -76,10 +79,18 @@ impl<'a> Looper<'a> {
         }
     }
 
+    pub fn overdub(&mut self) {
+        if let State::Looping = self.state {
+            self.state = State::Overdub;
+        }
+    }
+
     pub fn on_midi_event(&mut self, event: &MidiEvent) {
-        if let State::Recording = self.state {
-            if ::midi::is_note_message(&event.message) {
-                self.record_buffer.push(event.clone());
+        if ::midi::is_note_message(&event.message) {
+            match self.state {
+                State::Recording => self.record_buffer.push(event.clone()),
+                State::Overdub => self.overdub_buffer.push(event.clone()),
+                _ => (),
             }
         }
 
