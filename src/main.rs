@@ -193,15 +193,11 @@ fn main() {
                 },
 
                 Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
-                    match looper.state {
-                        State::Looping => looper.overdub(),
-                        State::Recording | State::Overdub => looper.looping(),
-                        _ => (),
-                    }
+                    looper.toggle_recording();
                 }
 
                 Event::KeyDown { keycode: Some(Keycode::Z), .. } => {
-                    looper.recording();
+                    looper.reset();
                 }
 
                 Event::KeyDown { keycode: Some(Keycode::Q), .. } => {
