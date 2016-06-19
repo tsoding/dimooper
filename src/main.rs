@@ -15,7 +15,7 @@ mod updatable;
 mod midi;
 
 use midi::Note;
-use looper::Looper;
+use looper::{Looper, State};
 use updatable::Updatable;
 
 macro_rules! colors {
@@ -193,11 +193,11 @@ fn main() {
                 },
 
                 Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
-                    looper.looping();
+                    looper.toggle_recording();
                 }
 
                 Event::KeyDown { keycode: Some(Keycode::Z), .. } => {
-                    looper.recording();
+                    looper.reset();
                 }
 
                 Event::KeyDown { keycode: Some(Keycode::Q), .. } => {
