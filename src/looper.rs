@@ -11,10 +11,10 @@ pub enum State {
 
 pub struct Looper<'a> {
     pub state: State,
+    pub next_state: Option<State>,
     pub record_buffer: Vec<MidiEvent>,
     pub overdub_buffer: Vec<MidiEvent>,
     pub next_event: usize,
-    pub record_start: u32,
     pub time_cursor: u32,
     pub out_port: &'a mut OutputPort,
 }
@@ -36,6 +36,8 @@ impl<'a> Updatable for Looper<'a> {
                         self.restart();
                     }
                 }
+            } else {
+                self.restart();
             }
         }
     }
@@ -45,16 +47,78 @@ impl<'a> Looper<'a> {
     pub fn new(out_port: &'a mut OutputPort) -> Looper<'a> {
         Looper {
             state: State::Recording,
+            next_state: None,
             record_buffer: Vec::new(),
             overdub_buffer: Vec::new(),
             next_event: 0,
-            record_start: 0,
             time_cursor: 0,
             out_port: out_port,
         }
     }
 
+    fn buffer_duration(buffer: &[MidiEvent]) -> u32 {
+        let n = buffer.len();
+        if n > 0 {
+            buffer[n - 1].timestamp - buffer[0].timestamp
+        } else {
+            0
+        }
+    }
+
+    fn merge_buffers(&mut self) {
+        let record_buffer_duration = Self::buffer_duration(&self.record_buffer);
+        let overdub_buffer_duration = Self::buffer_duration(&self.overdub_buffer);
+
+        let record_buffer_len = self.record_buffer.len();
+        let overdub_buffer_len = self.overdub_buffer.len();
+
+        let repeat_count = (overdub_buffer_duration + record_buffer_duration) / record_buffer_duration;
+
+        println!("{}", repeat_count);
+
+        let record_buffer_beginning = if !self.record_buffer.is_empty() {
+            self.record_buffer[0].timestamp
+        } else {
+            0
+        };
+
+        for i in 0..repeat_count {
+            for j in 0..record_buffer_len {
+                let mut event = self.record_buffer[j].clone();
+                event.timestamp += i * record_buffer_duration;
+                self.record_buffer.push(event);
+            }
+        }
+
+        if !self.overdub_buffer.is_empty() {
+            for i in 0..overdub_buffer_len {
+                let mut new_event = self.overdub_buffer[i].clone();
+                new_event.timestamp =
+                    record_buffer_beginning + (new_event.timestamp - self.overdub_buffer[0].timestamp);
+                self.record_buffer.push(new_event);
+            }
+        }
+
+        self.record_buffer.sort_by_key(|e| e.timestamp);
+    }
+
     pub fn restart(&mut self) {
+        match self.next_state.take() {
+            Some(state) => {
+                self.state = state;
+
+                if let State::Looping = self.state {
+                    if self.record_buffer.is_empty() {
+                        self.record_buffer = self.overdub_buffer.clone();
+                        self.overdub_buffer.clear();
+                    } else {
+                        self.merge_buffers();
+                    }
+                }
+            },
+            _ => (),
+        }
+
         self.time_cursor = 0;
         self.next_event = 0;
     }
@@ -63,22 +127,19 @@ impl<'a> Looper<'a> {
     pub fn reset(&mut self) {
         self.state = State::Recording;
         self.record_buffer.clear();
+        self.overdub_buffer.clear();
         self.restart();
     }
 
     pub fn toggle_recording(&mut self) {
         match self.state {
             State::Recording => {
-                self.state = State::Looping;
-                if !self.record_buffer.is_empty() {
-                    self.restart();
-                }
+                self.next_state = Some(State::Looping);
             },
 
             State::Looping => {
-                self.state = State::Recording;
+                self.next_state = Some(State::Recording);
                 self.overdub_buffer.clear();
-                self.record_start = self.time_cursor;
             }
 
             _ => ()
