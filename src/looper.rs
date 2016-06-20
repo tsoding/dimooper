@@ -138,7 +138,7 @@ impl<'a> Looper<'a> {
             },
 
             State::Looping => {
-                self.next_state = Some(State::Recording);
+                self.state = State::Recording;
                 self.overdub_buffer.clear();
             }
 
