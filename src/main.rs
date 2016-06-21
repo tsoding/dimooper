@@ -15,7 +15,7 @@ mod updatable;
 mod midi;
 
 use midi::Note;
-use looper::{Looper, State};
+use looper::Looper;
 use updatable::Updatable;
 
 macro_rules! colors {
