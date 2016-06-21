@@ -80,7 +80,7 @@ fn events_to_notes(record_buffer: &[MidiEvent]) -> Vec<Note> {
     result
 }
 
-fn midpoint_circle(renderer: &mut Renderer, cx: i32, cy: i32, r: i32) {
+fn fill_circle(renderer: &mut Renderer, cx: i32, cy: i32, r: i32) {
     let mut x = r;
     let mut y = 0;
     let mut err = 0;
@@ -90,6 +90,30 @@ fn midpoint_circle(renderer: &mut Renderer, cx: i32, cy: i32, r: i32) {
         renderer.draw_line(Point::new(cx + y, cy - x), Point::new(cx + y, cy + x)).unwrap();
         renderer.draw_line(Point::new(cx - y, cy - x), Point::new(cx - y, cy + x)).unwrap();
         renderer.draw_line(Point::new(cx - x, cy - y), Point::new(cx - x, cy + y)).unwrap();
+
+        y += 1;
+        err += 1 + 2*y;
+        if 2 * (err - x) + 1 > 0 {
+            x -= 1;
+            err += 1 - 2 * x;
+        }
+    }
+}
+
+fn draw_circle(renderer: &mut Renderer, cx: i32, cy: i32, r: i32) {
+    let mut x = r;
+    let mut y = 0;
+    let mut err = 0;
+
+    while x >= y {
+        renderer.draw_point(Point::new(cx + x, cy - y)).unwrap();
+        renderer.draw_point(Point::new(cx + x, cy + y)).unwrap();
+        renderer.draw_point(Point::new(cx + y, cy - x)).unwrap();
+        renderer.draw_point(Point::new(cx + y, cy + x)).unwrap();
+        renderer.draw_point(Point::new(cx - y, cy - x)).unwrap();
+        renderer.draw_point(Point::new(cx - y, cy + x)).unwrap();
+        renderer.draw_point(Point::new(cx - x, cy - y)).unwrap();
+        renderer.draw_point(Point::new(cx - x, cy + y)).unwrap();
 
         y += 1;
         err += 1 + 2*y;
@@ -150,14 +174,16 @@ fn render_looper(looper: &Looper,
         render_bar(looper.time_cursor, &record_buffer, renderer, window_width, window_height);
     }
 
-    if let State::Recording = looper.state {
-        let r = 15;
-        let p = 25;
-        let x = window_width as i32 - r - p;
-        let y = r + p;
+    let r = 15;
+    let p = 25;
+    let x = window_width as i32 - r - 2 * p;
+    let y = r + p;
+    renderer.set_draw_color(Color::RGB(255, 0, 0));
 
-        renderer.set_draw_color(Color::RGB(255, 0, 0));
-        midpoint_circle(renderer, x, y, r);
+    if let State::Recording = looper.state {
+        fill_circle(renderer, x, y, r);
+    } else {
+        draw_circle(renderer, x, y, r);
     }
 }
 
