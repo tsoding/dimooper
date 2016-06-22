@@ -74,8 +74,6 @@ impl<'a> Looper<'a> {
 
         let repeat_count = (overdub_buffer_duration + record_buffer_duration) / record_buffer_duration;
 
-        println!("{}", repeat_count);
-
         let record_buffer_beginning = if !self.record_buffer.is_empty() {
             self.record_buffer[0].timestamp
         } else {
