@@ -12,7 +12,7 @@ pub enum State {
 pub struct Looper<'a> {
     pub state: State,
     pub next_state: Option<State>,
-    pub record_buffer: Vec<MidiEvent>,
+    pub replay_buffer: Vec<MidiEvent>,
     pub overdub_buffer: Vec<MidiEvent>,
     pub next_event: usize,
     pub time_cursor: u32,
@@ -22,17 +22,17 @@ pub struct Looper<'a> {
 impl<'a> Updatable for Looper<'a> {
     fn update(&mut self, delta_time: u32) {
         if self.state != State::Pause {
-            if !self.record_buffer.is_empty() {
-                let t1 = self.record_buffer[0].timestamp;
+            if !self.replay_buffer.is_empty() {
+                let t1 = self.replay_buffer[0].timestamp;
                 self.time_cursor += delta_time;
 
-                let event_timestamp = self.record_buffer[self.next_event].timestamp - t1;
+                let event_timestamp = self.replay_buffer[self.next_event].timestamp - t1;
                 if self.time_cursor > event_timestamp {
-                    let event = self.record_buffer[self.next_event];
+                    let event = self.replay_buffer[self.next_event];
                     self.out_port.write_message(event.message).unwrap();
                     self.next_event += 1;
 
-                    if self.next_event >= self.record_buffer.len() {
+                    if self.next_event >= self.replay_buffer.len() {
                         self.restart();
                     }
                 }
@@ -48,7 +48,7 @@ impl<'a> Looper<'a> {
         Looper {
             state: State::Recording,
             next_state: None,
-            record_buffer: Vec::new(),
+            replay_buffer: Vec::new(),
             overdub_buffer: Vec::new(),
             next_event: 0,
             time_cursor: 0,
@@ -66,25 +66,25 @@ impl<'a> Looper<'a> {
     }
 
     fn merge_buffers(&mut self) {
-        let record_buffer_duration = Self::buffer_duration(&self.record_buffer);
+        let replay_buffer_duration = Self::buffer_duration(&self.replay_buffer);
         let overdub_buffer_duration = Self::buffer_duration(&self.overdub_buffer);
 
-        let record_buffer_len = self.record_buffer.len();
+        let replay_buffer_len = self.replay_buffer.len();
         let overdub_buffer_len = self.overdub_buffer.len();
 
-        let repeat_count = (overdub_buffer_duration + record_buffer_duration) / record_buffer_duration;
+        let repeat_count = (overdub_buffer_duration + replay_buffer_duration) / replay_buffer_duration;
 
-        let record_buffer_beginning = if !self.record_buffer.is_empty() {
-            self.record_buffer[0].timestamp
+        let replay_buffer_beginning = if !self.replay_buffer.is_empty() {
+            self.replay_buffer[0].timestamp
         } else {
             0
         };
 
         for i in 0..repeat_count {
-            for j in 0..record_buffer_len {
-                let mut event = self.record_buffer[j].clone();
-                event.timestamp += i * record_buffer_duration;
-                self.record_buffer.push(event);
+            for j in 0..replay_buffer_len {
+                let mut event = self.replay_buffer[j].clone();
+                event.timestamp += i * replay_buffer_duration;
+                self.replay_buffer.push(event);
             }
         }
 
@@ -92,12 +92,12 @@ impl<'a> Looper<'a> {
             for i in 0..overdub_buffer_len {
                 let mut new_event = self.overdub_buffer[i].clone();
                 new_event.timestamp =
-                    record_buffer_beginning + (new_event.timestamp - self.overdub_buffer[0].timestamp);
-                self.record_buffer.push(new_event);
+                    replay_buffer_beginning + (new_event.timestamp - self.overdub_buffer[0].timestamp);
+                self.replay_buffer.push(new_event);
             }
         }
 
-        self.record_buffer.sort_by_key(|e| e.timestamp);
+        self.replay_buffer.sort_by_key(|e| e.timestamp);
     }
 
     pub fn restart(&mut self) {
@@ -106,8 +106,8 @@ impl<'a> Looper<'a> {
                 self.state = state;
 
                 if let State::Looping = self.state {
-                    if self.record_buffer.is_empty() {
-                        self.record_buffer = self.overdub_buffer.clone();
+                    if self.replay_buffer.is_empty() {
+                        self.replay_buffer = self.overdub_buffer.clone();
                         self.overdub_buffer.clear();
                     } else {
                         self.merge_buffers();
@@ -124,7 +124,7 @@ impl<'a> Looper<'a> {
 
     pub fn reset(&mut self) {
         self.state = State::Recording;
-        self.record_buffer.clear();
+        self.replay_buffer.clear();
         self.overdub_buffer.clear();
         self.restart();
     }

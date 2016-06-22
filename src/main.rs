@@ -38,13 +38,13 @@ const CHANNEL_PALETTE: &'static [Color; 5] = colors![
     0x955BA5
 ];
 
-fn events_to_notes(record_buffer: &[MidiEvent]) -> Vec<Note> {
+fn events_to_notes(replay_buffer: &[MidiEvent]) -> Vec<Note> {
     let mut note_tracker: [[Option<u32>; 128]; 16] = [[None; 128]; 16];
     let mut result = Vec::new();
 
     use midi::MessageType::*;
 
-    for event in record_buffer {
+    for event in replay_buffer {
         let channel = midi::get_note_channel(&event.message);
         match (midi::get_message_type(&event.message), midi::get_note_key(&event.message)) {
             (NoteOn, key) => {
@@ -83,19 +83,19 @@ fn events_to_notes(record_buffer: &[MidiEvent]) -> Vec<Note> {
 }
 
 fn render_note(note: &Note,
-               record_buffer: &[MidiEvent],
+               replay_buffer: &[MidiEvent],
                renderer: &mut Renderer,
                window_width: u32,
                window_height: u32)
 {
     let row_height = window_height as f32 / 128.0;
-    let n = record_buffer.len();
-    let dt = (record_buffer[n - 1].timestamp - record_buffer[0].timestamp) as f32;
+    let n = replay_buffer.len();
+    let dt = (replay_buffer[n - 1].timestamp - replay_buffer[0].timestamp) as f32;
 
     let color = CHANNEL_PALETTE[note.channel as usize % CHANNEL_PALETTE.len()];
 
-    let t1 = (note.start_timestamp - record_buffer[0].timestamp) as f32;
-    let t2 = (note.end_timestamp - record_buffer[0].timestamp) as f32;
+    let t1 = (note.start_timestamp - replay_buffer[0].timestamp) as f32;
+    let t2 = (note.end_timestamp - replay_buffer[0].timestamp) as f32;
     let x1 = (t1 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
     let x2 = (t2 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
     let y = (row_height * (127 - note.key) as f32) as i32;
@@ -105,12 +105,12 @@ fn render_note(note: &Note,
 }
 
 fn render_bar(time_cursor: u32,
-              record_buffer: &[MidiEvent],
+              replay_buffer: &[MidiEvent],
               renderer: &mut Renderer,
               window_width: u32,
               window_height: u32) {
-    let n = record_buffer.len();
-    let dt = (record_buffer[n - 1].timestamp - record_buffer[0].timestamp) as f32;
+    let n = replay_buffer.len();
+    let dt = (replay_buffer[n - 1].timestamp - replay_buffer[0].timestamp) as f32;
     let x = ((time_cursor as f32) / dt * (window_width as f32 - 10.0) + 5.0) as i32;
     renderer.set_draw_color(Color::RGB(255, 255, 255));
     renderer.draw_line(Point::from((x, 0)),
@@ -121,15 +121,15 @@ fn render_looper(looper: &Looper,
                  renderer: &mut Renderer,
                  window_width: u32,
                  window_height: u32) {
-    if looper.record_buffer.len() > 1 {
-        let record_buffer = &looper.record_buffer;
-        let notes = events_to_notes(record_buffer);
+    if looper.replay_buffer.len() > 1 {
+        let replay_buffer = &looper.replay_buffer;
+        let notes = events_to_notes(replay_buffer);
 
         for note in notes {
-            render_note(&note, record_buffer, renderer, window_width, window_height);
+            render_note(&note, replay_buffer, renderer, window_width, window_height);
         }
 
-        render_bar(looper.time_cursor, &record_buffer, renderer, window_width, window_height);
+        render_bar(looper.time_cursor, &replay_buffer, renderer, window_width, window_height);
     }
 
     let r = 15;
@@ -233,6 +233,8 @@ fn main() {
         renderer.clear();
         render_looper(&looper, &mut renderer, window_width, window_height);
         renderer.present();
+
+        std::thread::sleep(std::time::Duration::from_millis(3));
     }
 }
 
