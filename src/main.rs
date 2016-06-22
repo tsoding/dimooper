@@ -80,46 +80,53 @@ fn events_to_notes(record_buffer: &[MidiEvent]) -> Vec<Note> {
     result
 }
 
-fn fill_circle(renderer: &mut Renderer, cx: i32, cy: i32, r: i32) {
-    let mut x = r;
-    let mut y = 0;
-    let mut err = 0;
-
-    while x >= y {
-        renderer.draw_line(Point::new(cx + x, cy - y), Point::new(cx + x, cy + y)).unwrap();
-        renderer.draw_line(Point::new(cx + y, cy - x), Point::new(cx + y, cy + x)).unwrap();
-        renderer.draw_line(Point::new(cx - y, cy - x), Point::new(cx - y, cy + x)).unwrap();
-        renderer.draw_line(Point::new(cx - x, cy - y), Point::new(cx - x, cy + y)).unwrap();
-
-        y += 1;
-        err += 1 + 2*y;
-        if 2 * (err - x) + 1 > 0 {
-            x -= 1;
-            err += 1 - 2 * x;
-        }
-    }
+trait GraphicsPrimitives {
+    fn fill_circle(&mut self, cx: i32, cy: i32, r: i32);
+    fn draw_circle(&mut self, cx: i32, cy: i32, r: i32);
 }
 
-fn draw_circle(renderer: &mut Renderer, cx: i32, cy: i32, r: i32) {
-    let mut x = r;
-    let mut y = 0;
-    let mut err = 0;
+impl<'a> GraphicsPrimitives for Renderer<'a> {
+    fn fill_circle(&mut self, cx: i32, cy: i32, r: i32) {
+        let mut x = r;
+        let mut y = 0;
+        let mut err = 0;
 
-    while x >= y {
-        renderer.draw_point(Point::new(cx + x, cy - y)).unwrap();
-        renderer.draw_point(Point::new(cx + x, cy + y)).unwrap();
-        renderer.draw_point(Point::new(cx + y, cy - x)).unwrap();
-        renderer.draw_point(Point::new(cx + y, cy + x)).unwrap();
-        renderer.draw_point(Point::new(cx - y, cy - x)).unwrap();
-        renderer.draw_point(Point::new(cx - y, cy + x)).unwrap();
-        renderer.draw_point(Point::new(cx - x, cy - y)).unwrap();
-        renderer.draw_point(Point::new(cx - x, cy + y)).unwrap();
+        while x >= y {
+            self.draw_line(Point::new(cx + x, cy - y), Point::new(cx + x, cy + y)).unwrap();
+            self.draw_line(Point::new(cx + y, cy - x), Point::new(cx + y, cy + x)).unwrap();
+            self.draw_line(Point::new(cx - y, cy - x), Point::new(cx - y, cy + x)).unwrap();
+            self.draw_line(Point::new(cx - x, cy - y), Point::new(cx - x, cy + y)).unwrap();
 
-        y += 1;
-        err += 1 + 2*y;
-        if 2 * (err - x) + 1 > 0 {
-            x -= 1;
-            err += 1 - 2 * x;
+            y += 1;
+            err += 1 + 2*y;
+            if 2 * (err - x) + 1 > 0 {
+                x -= 1;
+                err += 1 - 2 * x;
+            }
+        }
+    }
+
+    fn draw_circle(&mut self, cx: i32, cy: i32, r: i32) {
+        let mut x = r;
+        let mut y = 0;
+        let mut err = 0;
+
+        while x >= y {
+            self.draw_point(Point::new(cx + x, cy - y)).unwrap();
+            self.draw_point(Point::new(cx + x, cy + y)).unwrap();
+            self.draw_point(Point::new(cx + y, cy - x)).unwrap();
+            self.draw_point(Point::new(cx + y, cy + x)).unwrap();
+            self.draw_point(Point::new(cx - y, cy - x)).unwrap();
+            self.draw_point(Point::new(cx - y, cy + x)).unwrap();
+            self.draw_point(Point::new(cx - x, cy - y)).unwrap();
+            self.draw_point(Point::new(cx - x, cy + y)).unwrap();
+
+            y += 1;
+            err += 1 + 2*y;
+            if 2 * (err - x) + 1 > 0 {
+                x -= 1;
+                err += 1 - 2 * x;
+            }
         }
     }
 }
@@ -181,9 +188,9 @@ fn render_looper(looper: &Looper,
     renderer.set_draw_color(Color::RGB(255, 0, 0));
 
     if let State::Recording = looper.state {
-        fill_circle(renderer, x, y, r);
+        renderer.fill_circle(x, y, r);
     } else {
-        draw_circle(renderer, x, y, r);
+        renderer.draw_circle(x, y, r);
     }
 }
 
