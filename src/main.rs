@@ -18,7 +18,7 @@ mod graphicsprimitives;
 use midi::Note;
 use looper::{Looper, State};
 use updatable::Updatable;
-use graphicsprimitives::GraphicsPrimitives;
+use graphicsprimitives::CircleRenderer;
 
 macro_rules! colors {
     ($($hex:expr),*) => {

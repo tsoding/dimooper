@@ -1,12 +1,12 @@
 use sdl2::render::Renderer;
 use sdl2::rect::Point;
 
-pub trait GraphicsPrimitives {
+pub trait CircleRenderer {
     fn fill_circle(&mut self, cx: i32, cy: i32, r: i32);
     fn draw_circle(&mut self, cx: i32, cy: i32, r: i32);
 }
 
-impl<'a> GraphicsPrimitives for Renderer<'a> {
+impl<'a> CircleRenderer for Renderer<'a> {
     fn fill_circle(&mut self, cx: i32, cy: i32, r: i32) {
         let mut x = r;
         let mut y = 0;
