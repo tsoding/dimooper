@@ -46,7 +46,7 @@ impl<'a> Updatable for Looper<'a> {
 impl<'a> Looper<'a> {
     pub fn new(out_port: &'a mut OutputPort) -> Looper<'a> {
         Looper {
-            state: State::Recording,
+            state: State::Looping,
             next_state: None,
             replay_buffer: Vec::new(),
             overdub_buffer: Vec::new(),
@@ -123,7 +123,7 @@ impl<'a> Looper<'a> {
 
 
     pub fn reset(&mut self) {
-        self.state = State::Recording;
+        self.state = State::Looping;
         self.replay_buffer.clear();
         self.overdub_buffer.clear();
         self.restart();
