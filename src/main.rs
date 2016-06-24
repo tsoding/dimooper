@@ -20,6 +20,8 @@ use looper::{Looper, State};
 use updatable::Updatable;
 use graphicsprimitives::CircleRenderer;
 
+const EVENT_LOOP_SLEEP_TIMEOUT: u64 = 3;
+
 macro_rules! colors {
     ($($hex:expr),*) => {
         &[$(
@@ -234,7 +236,7 @@ fn main() {
         render_looper(&looper, &mut renderer, window_width, window_height);
         renderer.present();
 
-        std::thread::sleep(std::time::Duration::from_millis(3));
+        std::thread::sleep(std::time::Duration::from_millis(EVENT_LOOP_SLEEP_TIMEOUT));
     }
 }
 
