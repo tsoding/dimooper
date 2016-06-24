@@ -80,10 +80,10 @@ impl<'a> Looper<'a> {
             0
         };
 
-        for i in 0..repeat_count {
+        for i in 0..repeat_count - 1 {
             for j in 0..replay_buffer_len {
                 let mut event = self.replay_buffer[j].clone();
-                event.timestamp += i * replay_buffer_duration;
+                event.timestamp += (i + 1) * replay_buffer_duration;
                 self.replay_buffer.push(event);
             }
         }
