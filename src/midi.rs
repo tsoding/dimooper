@@ -1,5 +1,6 @@
 use pm::types::MidiMessage;
 
+#[derive(PartialEq)]
 pub enum MessageType {
     NoteOn,
     NoteOff,

@@ -2,7 +2,7 @@ extern crate sdl2;
 extern crate sdl2_sys;
 extern crate portmidi as pm;
 
-use pm::types::MidiEvent;
+use pm::types::{MidiEvent, MidiMessage};
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -21,6 +21,8 @@ use updatable::Updatable;
 use graphicsprimitives::CircleRenderer;
 
 const EVENT_LOOP_SLEEP_TIMEOUT: u64 = 3;
+const CONTROL_CHANNEL_NUMBER: u8 = 9;
+const CONTROL_KEY_NUMBER: u8 = 51;
 
 macro_rules! colors {
     ($($hex:expr),*) => {
@@ -226,7 +228,13 @@ fn main() {
 
         if let Ok(Some(events)) = in_port.read_n(1024) {
             for event in events {
-                looper.on_midi_event(&event);
+                if midi::is_note_message(&event.message) && midi::get_note_channel(&event.message) == CONTROL_CHANNEL_NUMBER {
+                    if midi::get_message_type(&event.message) == midi::MessageType::NoteOn && midi::get_note_key(&event.message) == CONTROL_KEY_NUMBER {
+                        looper.toggle_recording();
+                    }
+                } else {
+                    looper.on_midi_event(&event);
+                }
             }
         }
 
