@@ -2,7 +2,7 @@ extern crate sdl2;
 extern crate sdl2_sys;
 extern crate portmidi as pm;
 
-use pm::types::{MidiEvent, MidiMessage};
+use pm::types::MidiEvent;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -34,13 +34,8 @@ macro_rules! colors {
     }
 }
 
-const CHANNEL_PALETTE: &'static [Color; 5] = colors![
-    0xF15A5A,
-    0xF0C419,
-    0x4EBA6F,
-    0x2D95BF,
-    0x955BA5
-];
+const CHANNEL_PALETTE: &'static [Color; 5] = colors![0xF15A5A, 0xF0C419, 0x4EBA6F, 0x2D95BF,
+                                                     0x955BA5];
 
 fn events_to_notes(replay_buffer: &[MidiEvent]) -> Vec<Note> {
     let mut note_tracker: [[Option<u32>; 128]; 16] = [[None; 128]; 16];
@@ -61,25 +56,22 @@ fn events_to_notes(replay_buffer: &[MidiEvent]) -> Vec<Note> {
                             channel: channel,
                         });
                         note_tracker[channel as usize][key as usize] = Some(event.timestamp);
-                    },
-                    None => note_tracker[channel as usize][key as usize] = Some(event.timestamp)
+                    }
+                    None => note_tracker[channel as usize][key as usize] = Some(event.timestamp),
                 }
-            },
+            }
             (NoteOff, key) => {
-                match note_tracker[channel as usize][key as usize] {
-                    Some(start_timestamp) => {
-                        result.push(Note {
-                            start_timestamp: start_timestamp,
-                            end_timestamp: event.timestamp,
-                            key: key,
-                            channel: channel,
-                        });
-                        note_tracker[channel as usize][key as usize] = None;
-                    },
-                    None => ()
+                if let Some(start_timestamp) = note_tracker[channel as usize][key as usize] {
+                    result.push(Note {
+                        start_timestamp: start_timestamp,
+                        end_timestamp: event.timestamp,
+                        key: key,
+                        channel: channel,
+                    });
+                    note_tracker[channel as usize][key as usize] = None;
                 }
-            },
-            (Other, _) => ()
+            }
+            (Other, _) => (),
         }
     }
 
@@ -90,8 +82,7 @@ fn render_note(note: &Note,
                replay_buffer: &[MidiEvent],
                renderer: &mut Renderer,
                window_width: u32,
-               window_height: u32)
-{
+               window_height: u32) {
     let row_height = window_height as f32 / 128.0;
     let n = replay_buffer.len();
     let dt = (replay_buffer[n - 1].timestamp - replay_buffer[0].timestamp) as f32;
@@ -117,14 +108,11 @@ fn render_bar(time_cursor: u32,
     let dt = (replay_buffer[n - 1].timestamp - replay_buffer[0].timestamp) as f32;
     let x = ((time_cursor as f32) / dt * (window_width as f32 - 10.0) + 5.0) as i32;
     renderer.set_draw_color(Color::RGB(255, 255, 255));
-    renderer.draw_line(Point::from((x, 0)),
-                       Point::from((x, window_height as i32))).unwrap();
+    renderer.draw_line(Point::from((x, 0)), Point::from((x, window_height as i32)))
+        .unwrap();
 }
 
-fn render_looper(looper: &Looper,
-                 renderer: &mut Renderer,
-                 window_width: u32,
-                 window_height: u32) {
+fn render_looper(looper: &Looper, renderer: &mut Renderer, window_width: u32, window_height: u32) {
     if looper.replay_buffer.len() > 1 {
         let replay_buffer = &looper.replay_buffer;
         let notes = events_to_notes(replay_buffer);
@@ -133,7 +121,11 @@ fn render_looper(looper: &Looper,
             render_note(&note, replay_buffer, renderer, window_width, window_height);
         }
 
-        render_bar(looper.time_cursor, &replay_buffer, renderer, window_width, window_height);
+        render_bar(looper.time_cursor,
+                   replay_buffer,
+                   renderer,
+                   window_width,
+                   window_height);
     }
 
     let r = 15;
@@ -175,7 +167,9 @@ fn main() {
     let in_port = context.input_port(in_info, 1024).unwrap();
 
     let out_info = context.device(output_id).unwrap();
-    println!("Sending recorded events: {} {}", out_info.id(), out_info.name());
+    println!("Sending recorded events: {} {}",
+             out_info.id(),
+             out_info.name());
     let mut out_port = context.output_port(out_info, 1024).unwrap();
 
     let window_width = 800;
@@ -205,10 +199,10 @@ fn main() {
 
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit { .. }
-                | Event::KeyDown { keycode: Some(Keycode::Escape), ..  } => {
+                Event::Quit { .. } |
+                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     running = false;
-                },
+                }
 
                 Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
                     looper.toggle_recording();
@@ -228,8 +222,10 @@ fn main() {
 
         if let Ok(Some(events)) = in_port.read_n(1024) {
             for event in events {
-                if midi::is_note_message(&event.message) && midi::get_note_channel(&event.message) == CONTROL_CHANNEL_NUMBER {
-                    if midi::get_message_type(&event.message) == midi::MessageType::NoteOn && midi::get_note_key(&event.message) == CONTROL_KEY_NUMBER {
+                if midi::is_note_message(&event.message) &&
+                   midi::get_note_channel(&event.message) == CONTROL_CHANNEL_NUMBER {
+                    if midi::get_message_type(&event.message) == midi::MessageType::NoteOn &&
+                       midi::get_note_key(&event.message) == CONTROL_KEY_NUMBER {
                         looper.toggle_recording();
                     }
                 } else {
