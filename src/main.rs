@@ -79,6 +79,16 @@ fn events_to_notes(replay_buffer: &[MidiEvent]) -> Vec<Note> {
     result
 }
 
+fn multiply_color_vector(color: Color, factor: f32) -> Color {
+    match color {
+        Color::RGB(r, g, b) | Color::RGBA(r, g, b, _) => {
+            Color::RGB((r as f32 * factor) as u8,
+                       (g as f32 * factor) as u8,
+                       (b as f32 * factor) as u8)
+        }
+    }
+}
+
 fn render_note(note: &Note,
                replay_buffer: &[MidiEvent],
                renderer: &mut Renderer,
@@ -88,7 +98,9 @@ fn render_note(note: &Note,
     let n = replay_buffer.len();
     let dt = (replay_buffer[n - 1].timestamp - replay_buffer[0].timestamp) as f32;
 
-    let color = CHANNEL_PALETTE[note.channel as usize % CHANNEL_PALETTE.len()];
+    let brightness_factor =  note.velocity as f32 / 127.0;
+    let base_color = CHANNEL_PALETTE[note.channel as usize % CHANNEL_PALETTE.len()];
+    let color = multiply_color_vector(base_color, brightness_factor);
 
     let t1 = (note.start_timestamp - replay_buffer[0].timestamp) as f32;
     let t2 = (note.end_timestamp - replay_buffer[0].timestamp) as f32;
