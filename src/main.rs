@@ -38,7 +38,7 @@ const CHANNEL_PALETTE: &'static [Color; 5] = colors![0xF15A5A, 0xF0C419, 0x4EBA6
                                                      0x955BA5];
 
 fn events_to_notes(replay_buffer: &[MidiEvent]) -> Vec<Note> {
-    let mut note_tracker: [[Option<u32>; 128]; 16] = [[None; 128]; 16];
+    let mut note_tracker: [[Option<Note>; 128]; 16] = [[None; 128]; 16];
     let mut result = Vec::new();
 
     use midi::MessageType::*;
@@ -48,26 +48,27 @@ fn events_to_notes(replay_buffer: &[MidiEvent]) -> Vec<Note> {
         match (midi::get_message_type(&event.message), midi::get_note_key(&event.message)) {
             (NoteOn, key) => {
                 match note_tracker[channel as usize][key as usize] {
-                    Some(start_timestamp) => {
-                        result.push(Note {
-                            start_timestamp: start_timestamp,
-                            end_timestamp: event.timestamp,
-                            key: key,
-                            channel: channel,
-                        });
-                        note_tracker[channel as usize][key as usize] = Some(event.timestamp);
+                    Some(mut note) => {
+                        note.end_timestamp = event.timestamp;
+                        result.push(note);
+
+                        note.start_timestamp = event.timestamp;
+                        note_tracker[channel as usize][key as usize] = Some(note);
                     }
-                    None => note_tracker[channel as usize][key as usize] = Some(event.timestamp),
-                }
-            }
-            (NoteOff, key) => {
-                if let Some(start_timestamp) = note_tracker[channel as usize][key as usize] {
-                    result.push(Note {
-                        start_timestamp: start_timestamp,
-                        end_timestamp: event.timestamp,
+                    None => note_tracker[channel as usize][key as usize] = Some(Note {
+                        start_timestamp: event.timestamp,
+                        end_timestamp: 0,
                         key: key,
                         channel: channel,
-                    });
+                        velocity: midi::get_note_velocity(&event.message),
+                    }),
+                }
+            },
+
+            (NoteOff, key) => {
+                if let Some(mut note) = note_tracker[channel as usize][key as usize] {
+                    note.end_timestamp = event.timestamp;
+                    result.push(note);
                     note_tracker[channel as usize][key as usize] = None;
                 }
             }
@@ -222,6 +223,8 @@ fn main() {
 
         if let Ok(Some(events)) = in_port.read_n(1024) {
             for event in events {
+                println!("{:?}", event.message);
+
                 if midi::is_note_message(&event.message) &&
                    midi::get_note_channel(&event.message) == CONTROL_CHANNEL_NUMBER {
                     if midi::get_message_type(&event.message) == midi::MessageType::NoteOn &&

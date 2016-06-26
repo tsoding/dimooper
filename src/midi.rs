@@ -7,11 +7,13 @@ pub enum MessageType {
     Other,
 }
 
+#[derive(Clone, Copy)]
 pub struct Note {
     pub start_timestamp: u32,
     pub end_timestamp: u32,
     pub key: u8,
     pub channel: u8,
+    pub velocity: u8,
 }
 
 pub fn get_message_type_code(message: &MidiMessage) -> u8 {
@@ -46,4 +48,8 @@ pub fn get_note_key(message: &MidiMessage) -> u8 {
 
 pub fn get_note_channel(message: &MidiMessage) -> u8 {
     message.status & 0b00001111
+}
+
+pub fn get_note_velocity(message: &MidiMessage) -> u8 {
+    message.data2
 }
