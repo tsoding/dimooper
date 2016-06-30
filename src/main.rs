@@ -24,6 +24,10 @@ const EVENT_LOOP_SLEEP_TIMEOUT: u64 = 3;
 const CONTROL_CHANNEL_NUMBER: u8 = 9;
 const CONTROL_KEY_NUMBER: u8 = 51;
 
+const RATIO_WIDTH: u32 = 16;
+const RATIO_HEIGHT: u32 = 9;
+const RATIO_FACTOR: u32 = 90;
+
 macro_rules! colors {
     ($($hex:expr),*) => {
         &[$(
@@ -185,8 +189,8 @@ fn main() {
              out_info.name());
     let mut out_port = context.output_port(out_info, 1024).unwrap();
 
-    let window_width = 800;
-    let window_height = 600;
+    let window_width = RATIO_WIDTH * RATIO_FACTOR;
+    let window_height = RATIO_HEIGHT * RATIO_FACTOR;
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let mut timer_subsystem = sdl_context.timer().unwrap();
