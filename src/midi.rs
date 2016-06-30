@@ -1,6 +1,9 @@
 use pm::types::MidiMessage;
 use pm::types::MidiEvent;
 
+const NOTE_ON_STATUS: u8 = 0b10010000;
+const NOTE_OFF_STATUS: u8 = 0b10000000;
+
 #[derive(PartialEq)]
 pub enum MessageType {
     NoteOn,
@@ -10,14 +13,34 @@ pub enum MessageType {
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum TypedMidiMessage {
-    NoteOn {channel: u8, key: u8},
-    NoteOff {channel: u8, key: u8},
+    NoteOn {channel: u8, key: u8, velocity: u8},
+    NoteOff {channel: u8, key: u8, velocity: u8},
+}
+
+impl Into<MidiMessage> for TypedMidiMessage {
+    fn into(self) -> MidiMessage {
+        match self {
+            TypedMidiMessage::NoteOn {channel, key, velocity } =>
+                MidiMessage {
+                    status: NOTE_ON_STATUS | channel,
+                    data1: key,
+                    data2: velocity,
+                },
+
+            TypedMidiMessage::NoteOff {channel, key, velocity } =>
+                MidiMessage {
+                    status: NOTE_OFF_STATUS | channel,
+                    data1: key,
+                    data2: velocity,
+                }
+        }
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct TypedMidiEvent {
-    message: TypedMidiMessage,
-    timestamp: u32,
+    pub message: TypedMidiMessage,
+    pub timestamp: u32,
 }
 
 #[derive(Clone, Copy)]
@@ -42,11 +65,13 @@ pub fn parse_midi_message(raw_message: &MidiMessage) -> Option<TypedMidiMessage>
         MessageType::NoteOn => Some(TypedMidiMessage::NoteOn {
             channel: get_note_channel(raw_message),
             key: get_note_key(raw_message),
+            velocity: get_note_velocity(raw_message),
         }),
 
         MessageType::NoteOff => Some(TypedMidiMessage::NoteOff {
             channel: get_note_channel(raw_message),
             key: get_note_key(raw_message),
+            velocity: get_note_velocity(raw_message),
         }),
 
         MessageType::Other => None,
@@ -59,8 +84,8 @@ pub fn get_message_type_code(message: &MidiMessage) -> u8 {
 
 pub fn get_message_type(message: &MidiMessage) -> MessageType {
     match get_message_type_code(message) {
-        0b10010000 => MessageType::NoteOn,
-        0b10000000 => MessageType::NoteOff,
+        NOTE_ON_STATUS => MessageType::NoteOn,
+        NOTE_OFF_STATUS => MessageType::NoteOff,
         _ => MessageType::Other
     }
 }

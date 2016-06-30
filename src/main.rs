@@ -2,8 +2,6 @@ extern crate sdl2;
 extern crate sdl2_sys;
 extern crate portmidi as pm;
 
-use pm::types::MidiEvent;
-
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
@@ -15,7 +13,7 @@ mod updatable;
 mod midi;
 mod graphicsprimitives;
 
-use midi::Note;
+use midi::{TypedMidiEvent, TypedMidiMessage, Note};
 use looper::{Looper, State};
 use updatable::Updatable;
 use graphicsprimitives::CircleRenderer;
@@ -41,16 +39,13 @@ macro_rules! colors {
 const CHANNEL_PALETTE: &'static [Color; 5] = colors![0xF15A5A, 0xF0C419, 0x4EBA6F, 0x2D95BF,
                                                      0x955BA5];
 
-fn events_to_notes(replay_buffer: &[MidiEvent]) -> Vec<Note> {
+fn events_to_notes(replay_buffer: &[TypedMidiEvent]) -> Vec<Note> {
     let mut note_tracker: [[Option<Note>; 128]; 16] = [[None; 128]; 16];
     let mut result = Vec::new();
 
-    use midi::MessageType::*;
-
     for event in replay_buffer {
-        let channel = midi::get_note_channel(&event.message);
-        match (midi::get_message_type(&event.message), midi::get_note_key(&event.message)) {
-            (NoteOn, key) => {
+        match event.message {
+            TypedMidiMessage::NoteOn { channel, key, velocity } => {
                 match note_tracker[channel as usize][key as usize] {
                     Some(mut note) => {
                         note.end_timestamp = event.timestamp;
@@ -64,19 +59,18 @@ fn events_to_notes(replay_buffer: &[MidiEvent]) -> Vec<Note> {
                         end_timestamp: 0,
                         key: key,
                         channel: channel,
-                        velocity: midi::get_note_velocity(&event.message),
+                        velocity: velocity,
                     }),
                 }
             },
 
-            (NoteOff, key) => {
+            TypedMidiMessage::NoteOff { channel, key, .. } => {
                 if let Some(mut note) = note_tracker[channel as usize][key as usize] {
                     note.end_timestamp = event.timestamp;
                     result.push(note);
                     note_tracker[channel as usize][key as usize] = None;
                 }
             }
-            (Other, _) => (),
         }
     }
 
@@ -94,7 +88,7 @@ fn multiply_color_vector(color: Color, factor: f32) -> Color {
 }
 
 fn render_note(note: &Note,
-               replay_buffer: &[MidiEvent],
+               replay_buffer: &[TypedMidiEvent],
                renderer: &mut Renderer,
                window_width: u32,
                window_height: u32) {
@@ -117,7 +111,7 @@ fn render_note(note: &Note,
 }
 
 fn render_bar(time_cursor: u32,
-              replay_buffer: &[MidiEvent],
+              replay_buffer: &[TypedMidiEvent],
               renderer: &mut Renderer,
               window_width: u32,
               window_height: u32) {
@@ -242,13 +236,15 @@ fn main() {
                 println!("{:?}", event.message);
 
                 if midi::is_note_message(&event.message) &&
-                   midi::get_note_channel(&event.message) == CONTROL_CHANNEL_NUMBER {
-                    if midi::get_message_type(&event.message) == midi::MessageType::NoteOn &&
+                    midi::get_note_channel(&event.message) == CONTROL_CHANNEL_NUMBER {
+                        if midi::get_message_type(&event.message) == midi::MessageType::NoteOn &&
                        midi::get_note_key(&event.message) == CONTROL_KEY_NUMBER {
                         looper.toggle_recording();
                     }
                 } else {
-                    looper.on_midi_event(&event);
+                    if let Some(event) = midi::parse_midi_event(&event) {
+                        looper.on_midi_event(&event);
+                    }
                 }
             }
         }
