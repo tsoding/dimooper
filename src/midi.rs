@@ -1,10 +1,23 @@
 use pm::types::MidiMessage;
+use pm::types::MidiEvent;
 
 #[derive(PartialEq)]
 pub enum MessageType {
     NoteOn,
     NoteOff,
     Other,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum TypedMidiMessage {
+    NoteOn {channel: u8, key: u8},
+    NoteOff {channel: u8, key: u8},
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct TypedMidiEvent {
+    message: TypedMidiMessage,
+    timestamp: u32,
 }
 
 #[derive(Clone, Copy)]
@@ -14,6 +27,30 @@ pub struct Note {
     pub key: u8,
     pub channel: u8,
     pub velocity: u8,
+}
+
+pub fn parse_midi_event(raw_event: &MidiEvent) -> Option<TypedMidiEvent> {
+    parse_midi_message(&raw_event.message)
+        .map(|message| TypedMidiEvent {
+            message: message,
+            timestamp: raw_event.timestamp,
+        })
+}
+
+pub fn parse_midi_message(raw_message: &MidiMessage) -> Option<TypedMidiMessage> {
+    match get_message_type(raw_message) {
+        MessageType::NoteOn => Some(TypedMidiMessage::NoteOn {
+            channel: get_note_channel(raw_message),
+            key: get_note_key(raw_message),
+        }),
+
+        MessageType::NoteOff => Some(TypedMidiMessage::NoteOff {
+            channel: get_note_channel(raw_message),
+            key: get_note_key(raw_message),
+        }),
+
+        MessageType::Other => None,
+    }
 }
 
 pub fn get_message_type_code(message: &MidiMessage) -> u8 {
