@@ -89,9 +89,10 @@ fn multiply_color_vector(color: Color, factor: f32) -> Color {
 
 fn render_note(note: &Note,
                replay_buffer: &[TypedMidiEvent],
-               renderer: &mut Renderer,
-               window_width: u32,
-               window_height: u32) {
+               renderer: &mut Renderer) {
+    let window_width = renderer.viewport().width();
+    let window_height = renderer.viewport().height();
+
     let row_height = window_height as f32 / 128.0;
     let n = replay_buffer.len();
     let dt = (replay_buffer[n - 1].timestamp - replay_buffer[0].timestamp) as f32;
@@ -112,9 +113,10 @@ fn render_note(note: &Note,
 
 fn render_bar(time_cursor: u32,
               replay_buffer: &[TypedMidiEvent],
-              renderer: &mut Renderer,
-              window_width: u32,
-              window_height: u32) {
+              renderer: &mut Renderer) {
+    let window_width = renderer.viewport().width();
+    let window_height = renderer.viewport().height();
+
     let n = replay_buffer.len();
     let dt = (replay_buffer[n - 1].timestamp - replay_buffer[0].timestamp) as f32;
     let x = ((time_cursor as f32) / dt * (window_width as f32 - 10.0) + 5.0) as i32;
@@ -125,21 +127,18 @@ fn render_bar(time_cursor: u32,
 
 fn render_looper(looper: &Looper, renderer: &mut Renderer) {
     let window_width = renderer.viewport().width();
-    let window_height = renderer.viewport().height();
 
     if looper.replay_buffer.len() > 1 {
         let replay_buffer = &looper.replay_buffer;
         let notes = events_to_notes(replay_buffer);
 
         for note in notes {
-            render_note(&note, replay_buffer, renderer, window_width, window_height);
+            render_note(&note, replay_buffer, renderer);
         }
 
         render_bar(looper.time_cursor,
                    replay_buffer,
-                   renderer,
-                   window_width,
-                   window_height);
+                   renderer);
     }
 
     let r = 15;
