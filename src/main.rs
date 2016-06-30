@@ -123,7 +123,10 @@ fn render_bar(time_cursor: u32,
         .unwrap();
 }
 
-fn render_looper(looper: &Looper, renderer: &mut Renderer, window_width: u32, window_height: u32) {
+fn render_looper(looper: &Looper, renderer: &mut Renderer) {
+    let window_width = renderer.viewport().width();
+    let window_height = renderer.viewport().height();
+
     if looper.replay_buffer.len() > 1 {
         let replay_buffer = &looper.replay_buffer;
         let notes = events_to_notes(replay_buffer);
@@ -252,7 +255,7 @@ fn main() {
         looper.update(delta_time);
         renderer.set_draw_color(Color::RGB(0, 0, 0));
         renderer.clear();
-        render_looper(&looper, &mut renderer, window_width, window_height);
+        render_looper(&looper, &mut renderer);
         renderer.present();
 
         std::thread::sleep(std::time::Duration::from_millis(EVENT_LOOP_SLEEP_TIMEOUT));
