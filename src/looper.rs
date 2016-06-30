@@ -1,6 +1,6 @@
-use pm::types::MidiEvent;
 use pm::OutputPort;
 use updatable::Updatable;
+use midi::TypedMidiEvent;
 
 #[derive(PartialEq)]
 pub enum State {
@@ -12,8 +12,8 @@ pub enum State {
 pub struct Looper<'a> {
     pub state: State,
     pub next_state: Option<State>,
-    pub replay_buffer: Vec<MidiEvent>,
-    pub overdub_buffer: Vec<MidiEvent>,
+    pub replay_buffer: Vec<TypedMidiEvent>,
+    pub overdub_buffer: Vec<TypedMidiEvent>,
     pub next_event: usize,
     pub time_cursor: u32,
     pub out_port: &'a mut OutputPort,
@@ -56,7 +56,7 @@ impl<'a> Looper<'a> {
         }
     }
 
-    fn buffer_duration(buffer: &[MidiEvent]) -> u32 {
+    fn buffer_duration(buffer: &[TypedMidiEvent]) -> u32 {
         let n = buffer.len();
         if n > 0 {
             buffer[n - 1].timestamp - buffer[0].timestamp
@@ -147,11 +147,9 @@ impl<'a> Looper<'a> {
         }
     }
 
-    pub fn on_midi_event(&mut self, event: &MidiEvent) {
-        if ::midi::is_note_message(&event.message) {
-            if let State::Recording = self.state {
-                self.overdub_buffer.push(*event);
-            }
+    pub fn on_midi_event(&mut self, event: &TypedMidiEvent) {
+        if let State::Recording = self.state {
+            self.overdub_buffer.push(*event);
         }
 
         self.out_port.write_message(event.message).unwrap();
