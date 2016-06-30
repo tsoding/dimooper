@@ -13,7 +13,7 @@ mod updatable;
 mod midi;
 mod graphicsprimitives;
 
-use midi::{TypedMidiEvent, TypedMidiMessage, Note};
+use midi::{TypedMidiEvent, Note};
 use looper::{Looper, State};
 use updatable::Updatable;
 use graphicsprimitives::CircleRenderer;
@@ -38,44 +38,6 @@ macro_rules! colors {
 
 const CHANNEL_PALETTE: &'static [Color; 5] = colors![0xF15A5A, 0xF0C419, 0x4EBA6F, 0x2D95BF,
                                                      0x955BA5];
-
-fn events_to_notes(replay_buffer: &[TypedMidiEvent]) -> Vec<Note> {
-    let mut note_tracker: [[Option<Note>; 128]; 16] = [[None; 128]; 16];
-    let mut result = Vec::new();
-
-    for event in replay_buffer {
-        match event.message {
-            TypedMidiMessage::NoteOn { channel, key, velocity } => {
-                match note_tracker[channel as usize][key as usize] {
-                    Some(mut note) => {
-                        note.end_timestamp = event.timestamp;
-                        result.push(note);
-
-                        note.start_timestamp = event.timestamp;
-                        note_tracker[channel as usize][key as usize] = Some(note);
-                    }
-                    None => note_tracker[channel as usize][key as usize] = Some(Note {
-                        start_timestamp: event.timestamp,
-                        end_timestamp: 0,
-                        key: key,
-                        channel: channel,
-                        velocity: velocity,
-                    }),
-                }
-            },
-
-            TypedMidiMessage::NoteOff { channel, key, .. } => {
-                if let Some(mut note) = note_tracker[channel as usize][key as usize] {
-                    note.end_timestamp = event.timestamp;
-                    result.push(note);
-                    note_tracker[channel as usize][key as usize] = None;
-                }
-            }
-        }
-    }
-
-    result
-}
 
 fn multiply_color_vector(color: Color, factor: f32) -> Color {
     match color {
@@ -130,7 +92,7 @@ fn render_looper(looper: &Looper, renderer: &mut Renderer) {
 
     if looper.replay_buffer.len() > 1 {
         let replay_buffer = &looper.replay_buffer;
-        let notes = events_to_notes(replay_buffer);
+        let notes = midi::events_to_notes(replay_buffer);
 
         for note in notes {
             render_note(&note, replay_buffer, renderer);

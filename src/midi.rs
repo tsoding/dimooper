@@ -78,6 +78,44 @@ pub fn parse_midi_message(raw_message: &MidiMessage) -> Option<TypedMidiMessage>
     }
 }
 
+pub fn events_to_notes(replay_buffer: &[TypedMidiEvent]) -> Vec<Note> {
+    let mut note_tracker: [[Option<Note>; 128]; 16] = [[None; 128]; 16];
+    let mut result = Vec::new();
+
+    for event in replay_buffer {
+        match event.message {
+            TypedMidiMessage::NoteOn { channel, key, velocity } => {
+                match note_tracker[channel as usize][key as usize] {
+                    Some(mut note) => {
+                        note.end_timestamp = event.timestamp;
+                        result.push(note);
+
+                        note.start_timestamp = event.timestamp;
+                        note_tracker[channel as usize][key as usize] = Some(note);
+                    }
+                    None => note_tracker[channel as usize][key as usize] = Some(Note {
+                        start_timestamp: event.timestamp,
+                        end_timestamp: 0,
+                        key: key,
+                        channel: channel,
+                        velocity: velocity,
+                    }),
+                }
+            },
+
+            TypedMidiMessage::NoteOff { channel, key, .. } => {
+                if let Some(mut note) = note_tracker[channel as usize][key as usize] {
+                    note.end_timestamp = event.timestamp;
+                    result.push(note);
+                    note_tracker[channel as usize][key as usize] = None;
+                }
+            }
+        }
+    }
+
+    result
+}
+
 pub fn get_message_type_code(message: &MidiMessage) -> u8 {
     message.status & 0b11110000
 }
