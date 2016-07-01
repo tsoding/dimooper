@@ -84,16 +84,15 @@ impl<'a> Renderable for Looper<'a> {
             let n = self.replay_buffer.len();
             let dt = (self.replay_buffer[n - 1].timestamp - self.replay_buffer[0].timestamp) as f32;
 
-            let replay_buffer = &self.replay_buffer;
-            let notes = midi::events_to_notes(replay_buffer);
+            let notes = midi::events_to_notes(&self.replay_buffer);
 
             for note in notes {
                 let brightness_factor =  note.velocity as f32 / 127.0;
                 let base_color = CHANNEL_PALETTE[note.channel as usize % CHANNEL_PALETTE.len()];
                 let color = multiply_color_vector(base_color, brightness_factor);
 
-                let t1 = (note.start_timestamp - replay_buffer[0].timestamp) as f32;
-                let t2 = (note.end_timestamp - replay_buffer[0].timestamp) as f32;
+                let t1 = (note.start_timestamp - self.replay_buffer[0].timestamp) as f32;
+                let t2 = (note.end_timestamp - self.replay_buffer[0].timestamp) as f32;
                 let x1 = (t1 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
                 let x2 = (t2 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
                 let y = (row_height * (127 - note.key) as f32) as i32;
