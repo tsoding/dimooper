@@ -1,6 +1,14 @@
 use pm::OutputPort;
-use updatable::Updatable;
 use midi::TypedMidiEvent;
+use midi;
+
+use updatable::Updatable;
+use renderable::Renderable;
+use graphicsprimitives::CircleRenderer;
+
+use sdl2::render::Renderer;
+use sdl2::pixels::Color;
+use sdl2::rect::{Point, Rect};
 
 #[derive(PartialEq)]
 pub enum State {
@@ -39,6 +47,90 @@ impl<'a> Updatable for Looper<'a> {
             } else {
                 self.restart();
             }
+        }
+    }
+}
+
+macro_rules! colors {
+    ($($hex:expr),*) => {
+        &[$(
+            Color::RGB((($hex & 0xFF0000) >> 16) as u8,
+                       (($hex & 0xFF00) >> 8) as u8,
+                       ($hex & 0xFF) as u8)
+        ),*]
+    }
+}
+
+const CHANNEL_PALETTE: &'static [Color; 5] = colors![0xF15A5A, 0xF0C419, 0x4EBA6F, 0x2D95BF,
+                                                     0x955BA5];
+
+fn multiply_color_vector(color: Color, factor: f32) -> Color {
+    match color {
+        Color::RGB(r, g, b) | Color::RGBA(r, g, b, _) => {
+            Color::RGB((r as f32 * factor) as u8,
+                       (g as f32 * factor) as u8,
+                       (b as f32 * factor) as u8)
+        }
+    }
+}
+
+fn render_note(note: &midi::Note,
+               replay_buffer: &[TypedMidiEvent],
+               renderer: &mut Renderer) {
+    let window_width = renderer.viewport().width();
+    let window_height = renderer.viewport().height();
+
+    let row_height = window_height as f32 / 128.0;
+    let n = replay_buffer.len();
+    let dt = (replay_buffer[n - 1].timestamp - replay_buffer[0].timestamp) as f32;
+
+    let brightness_factor =  note.velocity as f32 / 127.0;
+    let base_color = CHANNEL_PALETTE[note.channel as usize % CHANNEL_PALETTE.len()];
+    let color = multiply_color_vector(base_color, brightness_factor);
+
+    let t1 = (note.start_timestamp - replay_buffer[0].timestamp) as f32;
+    let t2 = (note.end_timestamp - replay_buffer[0].timestamp) as f32;
+    let x1 = (t1 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
+    let x2 = (t2 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
+    let y = (row_height * (127 - note.key) as f32) as i32;
+
+    renderer.set_draw_color(color);
+    renderer.fill_rect(Rect::new(x1, y, (x2 - x1 + 1) as u32, row_height as u32)).unwrap();
+}
+
+impl<'a> Renderable for Looper<'a> {
+    fn render(&self, renderer: &mut Renderer) {
+        let window_width = renderer.viewport().width();
+        let window_height = renderer.viewport().height();
+
+        if self.replay_buffer.len() > 1 {
+            let n = self.replay_buffer.len();
+            let dt = (self.replay_buffer[n - 1].timestamp - self.replay_buffer[0].timestamp) as f32;
+
+            let replay_buffer = &self.replay_buffer;
+            let notes = midi::events_to_notes(replay_buffer);
+
+            for note in notes {
+                render_note(&note, replay_buffer, renderer);
+            }
+
+            let x = ((self.time_cursor as f32) / dt * (window_width as f32 - 10.0) + 5.0) as i32;
+            renderer.set_draw_color(Color::RGB(255, 255, 255));
+            renderer.draw_line(Point::from((x, 0)),
+                               Point::from((x, window_height as i32))).unwrap();
+
+        }
+
+        let r = 15;
+        let p = 25;
+        let x = window_width as i32 - r - 2 * p;
+        let y = r + p;
+        renderer.set_draw_color(Color::RGB(255, 0, 0));
+
+        if let State::Recording = self.state {
+            renderer.fill_circle(x, y, r);
+        } else {
+            renderer.draw_circle(x, y, r);
         }
     }
 }
