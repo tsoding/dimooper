@@ -82,7 +82,9 @@ impl<'a> Renderable for Looper<'a> {
         if self.replay_buffer.len() > 1 {
             let row_height = window_height as f32 / 128.0;
             let n = self.replay_buffer.len();
-            let dt = (self.replay_buffer[n - 1].timestamp - self.replay_buffer[0].timestamp) as f32;
+            let t0 = self.replay_buffer[0].timestamp;
+            let tn = self.replay_buffer[n - 1].timestamp;
+            let dt = (tn - t0) as f32;
 
             let notes = midi::events_to_notes(&self.replay_buffer);
 
@@ -91,8 +93,8 @@ impl<'a> Renderable for Looper<'a> {
                 let base_color = CHANNEL_PALETTE[note.channel as usize % CHANNEL_PALETTE.len()];
                 let color = multiply_color_vector(base_color, brightness_factor);
 
-                let t1 = (note.start_timestamp - self.replay_buffer[0].timestamp) as f32;
-                let t2 = (note.end_timestamp - self.replay_buffer[0].timestamp) as f32;
+                let t1 = (note.start_timestamp - t0) as f32;
+                let t2 = (note.end_timestamp - t0) as f32;
                 let x1 = (t1 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
                 let x2 = (t2 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
                 let y = (row_height * (127 - note.key) as f32) as i32;
