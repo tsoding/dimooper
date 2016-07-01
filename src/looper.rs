@@ -1,6 +1,14 @@
 use pm::OutputPort;
+use midi::{TypedMidiEvent, Note};
+use midi;
+
 use updatable::Updatable;
-use midi::TypedMidiEvent;
+use renderable::Renderable;
+use graphicsprimitives::CircleRenderer;
+
+use sdl2::render::Renderer;
+use sdl2::pixels::Color;
+use sdl2::rect::Point;
 
 #[derive(PartialEq)]
 pub enum State {
@@ -39,6 +47,67 @@ impl<'a> Updatable for Looper<'a> {
             } else {
                 self.restart();
             }
+        }
+    }
+}
+
+macro_rules! colors {
+    ($($hex:expr),*) => {
+        &[$(
+            Color::RGB((($hex & 0xFF0000) >> 16) as u8,
+                       (($hex & 0xFF00) >> 8) as u8,
+                       ($hex & 0xFF) as u8)
+        ),*]
+    }
+}
+
+const CHANNEL_PALETTE: &'static [Color; 5] = colors![0xF15A5A, 0xF0C419, 0x4EBA6F, 0x2D95BF,
+                                                     0x955BA5];
+
+fn multiply_color_vector(color: Color, factor: f32) -> Color {
+    match color {
+        Color::RGB(r, g, b) | Color::RGBA(r, g, b, _) => {
+            Color::RGB((r as f32 * factor) as u8,
+                       (g as f32 * factor) as u8,
+                       (b as f32 * factor) as u8)
+        }
+    }
+}
+
+impl<'a> Renderable for Looper<'a> {
+    fn render(&self, renderer: &mut Renderer) {
+        let window_width = renderer.viewport().width();
+        let window_height = renderer.viewport().height();
+
+        if self.replay_buffer.len() > 1 {
+            let n = self.replay_buffer.len();
+            let t0 = self.replay_buffer[0].timestamp;
+            let tn = self.replay_buffer[n - 1].timestamp;
+            let dt = (tn - t0) as f32;
+
+            let notes = midi::events_to_notes(&self.replay_buffer);
+
+            for note in notes {
+                note.render(renderer, t0, dt);
+            }
+
+            let x = ((self.time_cursor as f32) / dt * (window_width as f32 - 10.0) + 5.0) as i32;
+            renderer.set_draw_color(Color::RGB(255, 255, 255));
+            renderer.draw_line(Point::from((x, 0)),
+                               Point::from((x, window_height as i32))).unwrap();
+
+        }
+
+        let r = 15;
+        let p = 25;
+        let x = window_width as i32 - r - 2 * p;
+        let y = r + p;
+        renderer.set_draw_color(Color::RGB(255, 0, 0));
+
+        if let State::Recording = self.state {
+            renderer.fill_circle(x, y, r);
+        } else {
+            renderer.draw_circle(x, y, r);
         }
     }
 }

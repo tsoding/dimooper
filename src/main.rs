@@ -5,18 +5,15 @@ extern crate portmidi as pm;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
-use sdl2::render::Renderer;
-use sdl2::rect::{Point, Rect};
 
 mod looper;
 mod updatable;
+mod renderable;
 mod midi;
 mod graphicsprimitives;
 
-use midi::{TypedMidiEvent, TypedMidiMessage, Note};
-use looper::{Looper, State};
 use updatable::Updatable;
-use graphicsprimitives::CircleRenderer;
+use renderable::Renderable;
 
 const EVENT_LOOP_SLEEP_TIMEOUT: u64 = 3;
 const CONTROL_CHANNEL_NUMBER: u8 = 9;
@@ -25,132 +22,6 @@ const CONTROL_KEY_NUMBER: u8 = 51;
 const RATIO_WIDTH: u32 = 16;
 const RATIO_HEIGHT: u32 = 9;
 const RATIO_FACTOR: u32 = 90;
-
-macro_rules! colors {
-    ($($hex:expr),*) => {
-        &[$(
-            Color::RGB((($hex & 0xFF0000) >> 16) as u8,
-                       (($hex & 0xFF00) >> 8) as u8,
-                       ($hex & 0xFF) as u8)
-        ),*]
-    }
-}
-
-const CHANNEL_PALETTE: &'static [Color; 5] = colors![0xF15A5A, 0xF0C419, 0x4EBA6F, 0x2D95BF,
-                                                     0x955BA5];
-
-fn events_to_notes(replay_buffer: &[TypedMidiEvent]) -> Vec<Note> {
-    let mut note_tracker: [[Option<Note>; 128]; 16] = [[None; 128]; 16];
-    let mut result = Vec::new();
-
-    for event in replay_buffer {
-        match event.message {
-            TypedMidiMessage::NoteOn { channel, key, velocity } => {
-                match note_tracker[channel as usize][key as usize] {
-                    Some(mut note) => {
-                        note.end_timestamp = event.timestamp;
-                        result.push(note);
-
-                        note.start_timestamp = event.timestamp;
-                        note_tracker[channel as usize][key as usize] = Some(note);
-                    }
-                    None => note_tracker[channel as usize][key as usize] = Some(Note {
-                        start_timestamp: event.timestamp,
-                        end_timestamp: 0,
-                        key: key,
-                        channel: channel,
-                        velocity: velocity,
-                    }),
-                }
-            },
-
-            TypedMidiMessage::NoteOff { channel, key, .. } => {
-                if let Some(mut note) = note_tracker[channel as usize][key as usize] {
-                    note.end_timestamp = event.timestamp;
-                    result.push(note);
-                    note_tracker[channel as usize][key as usize] = None;
-                }
-            }
-        }
-    }
-
-    result
-}
-
-fn multiply_color_vector(color: Color, factor: f32) -> Color {
-    match color {
-        Color::RGB(r, g, b) | Color::RGBA(r, g, b, _) => {
-            Color::RGB((r as f32 * factor) as u8,
-                       (g as f32 * factor) as u8,
-                       (b as f32 * factor) as u8)
-        }
-    }
-}
-
-fn render_note(note: &Note,
-               replay_buffer: &[TypedMidiEvent],
-               renderer: &mut Renderer,
-               window_width: u32,
-               window_height: u32) {
-    let row_height = window_height as f32 / 128.0;
-    let n = replay_buffer.len();
-    let dt = (replay_buffer[n - 1].timestamp - replay_buffer[0].timestamp) as f32;
-
-    let brightness_factor =  note.velocity as f32 / 127.0;
-    let base_color = CHANNEL_PALETTE[note.channel as usize % CHANNEL_PALETTE.len()];
-    let color = multiply_color_vector(base_color, brightness_factor);
-
-    let t1 = (note.start_timestamp - replay_buffer[0].timestamp) as f32;
-    let t2 = (note.end_timestamp - replay_buffer[0].timestamp) as f32;
-    let x1 = (t1 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
-    let x2 = (t2 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
-    let y = (row_height * (127 - note.key) as f32) as i32;
-
-    renderer.set_draw_color(color);
-    renderer.fill_rect(Rect::new(x1, y, (x2 - x1 + 1) as u32, row_height as u32)).unwrap();
-}
-
-fn render_bar(time_cursor: u32,
-              replay_buffer: &[TypedMidiEvent],
-              renderer: &mut Renderer,
-              window_width: u32,
-              window_height: u32) {
-    let n = replay_buffer.len();
-    let dt = (replay_buffer[n - 1].timestamp - replay_buffer[0].timestamp) as f32;
-    let x = ((time_cursor as f32) / dt * (window_width as f32 - 10.0) + 5.0) as i32;
-    renderer.set_draw_color(Color::RGB(255, 255, 255));
-    renderer.draw_line(Point::from((x, 0)), Point::from((x, window_height as i32)))
-        .unwrap();
-}
-
-fn render_looper(looper: &Looper, renderer: &mut Renderer, window_width: u32, window_height: u32) {
-    if looper.replay_buffer.len() > 1 {
-        let replay_buffer = &looper.replay_buffer;
-        let notes = events_to_notes(replay_buffer);
-
-        for note in notes {
-            render_note(&note, replay_buffer, renderer, window_width, window_height);
-        }
-
-        render_bar(looper.time_cursor,
-                   replay_buffer,
-                   renderer,
-                   window_width,
-                   window_height);
-    }
-
-    let r = 15;
-    let p = 25;
-    let x = window_width as i32 - r - 2 * p;
-    let y = r + p;
-    renderer.set_draw_color(Color::RGB(255, 0, 0));
-
-    if let State::Recording = looper.state {
-        renderer.fill_circle(x, y, r);
-    } else {
-        renderer.draw_circle(x, y, r);
-    }
-}
 
 fn print_devices(pm: &pm::PortMidi) {
     for dev in pm.devices().unwrap() {
@@ -252,7 +123,7 @@ fn main() {
         looper.update(delta_time);
         renderer.set_draw_color(Color::RGB(0, 0, 0));
         renderer.clear();
-        render_looper(&looper, &mut renderer, window_width, window_height);
+        looper.render(&mut renderer);
         renderer.present();
 
         std::thread::sleep(std::time::Duration::from_millis(EVENT_LOOP_SLEEP_TIMEOUT));
