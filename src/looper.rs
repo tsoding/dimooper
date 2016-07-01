@@ -74,36 +74,13 @@ fn multiply_color_vector(color: Color, factor: f32) -> Color {
     }
 }
 
-fn render_note(note: &midi::Note,
-               replay_buffer: &[TypedMidiEvent],
-               renderer: &mut Renderer) {
-    let window_width = renderer.viewport().width();
-    let window_height = renderer.viewport().height();
-
-    let row_height = window_height as f32 / 128.0;
-    let n = replay_buffer.len();
-    let dt = (replay_buffer[n - 1].timestamp - replay_buffer[0].timestamp) as f32;
-
-    let brightness_factor =  note.velocity as f32 / 127.0;
-    let base_color = CHANNEL_PALETTE[note.channel as usize % CHANNEL_PALETTE.len()];
-    let color = multiply_color_vector(base_color, brightness_factor);
-
-    let t1 = (note.start_timestamp - replay_buffer[0].timestamp) as f32;
-    let t2 = (note.end_timestamp - replay_buffer[0].timestamp) as f32;
-    let x1 = (t1 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
-    let x2 = (t2 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
-    let y = (row_height * (127 - note.key) as f32) as i32;
-
-    renderer.set_draw_color(color);
-    renderer.fill_rect(Rect::new(x1, y, (x2 - x1 + 1) as u32, row_height as u32)).unwrap();
-}
-
 impl<'a> Renderable for Looper<'a> {
     fn render(&self, renderer: &mut Renderer) {
         let window_width = renderer.viewport().width();
         let window_height = renderer.viewport().height();
 
         if self.replay_buffer.len() > 1 {
+            let row_height = window_height as f32 / 128.0;
             let n = self.replay_buffer.len();
             let dt = (self.replay_buffer[n - 1].timestamp - self.replay_buffer[0].timestamp) as f32;
 
@@ -111,7 +88,18 @@ impl<'a> Renderable for Looper<'a> {
             let notes = midi::events_to_notes(replay_buffer);
 
             for note in notes {
-                render_note(&note, replay_buffer, renderer);
+                let brightness_factor =  note.velocity as f32 / 127.0;
+                let base_color = CHANNEL_PALETTE[note.channel as usize % CHANNEL_PALETTE.len()];
+                let color = multiply_color_vector(base_color, brightness_factor);
+
+                let t1 = (note.start_timestamp - replay_buffer[0].timestamp) as f32;
+                let t2 = (note.end_timestamp - replay_buffer[0].timestamp) as f32;
+                let x1 = (t1 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
+                let x2 = (t2 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
+                let y = (row_height * (127 - note.key) as f32) as i32;
+
+                renderer.set_draw_color(color);
+                renderer.fill_rect(Rect::new(x1, y, (x2 - x1 + 1) as u32, row_height as u32)).unwrap();
             }
 
             let x = ((self.time_cursor as f32) / dt * (window_width as f32 - 10.0) + 5.0) as i32;
