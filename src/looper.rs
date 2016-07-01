@@ -1,5 +1,5 @@
 use pm::OutputPort;
-use midi::TypedMidiEvent;
+use midi::{TypedMidiEvent, Note};
 use midi;
 
 use updatable::Updatable;
@@ -8,7 +8,7 @@ use graphicsprimitives::CircleRenderer;
 
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;
-use sdl2::rect::{Point, Rect};
+use sdl2::rect::Point;
 
 #[derive(PartialEq)]
 pub enum State {
@@ -80,7 +80,6 @@ impl<'a> Renderable for Looper<'a> {
         let window_height = renderer.viewport().height();
 
         if self.replay_buffer.len() > 1 {
-            let row_height = window_height as f32 / 128.0;
             let n = self.replay_buffer.len();
             let t0 = self.replay_buffer[0].timestamp;
             let tn = self.replay_buffer[n - 1].timestamp;
@@ -89,18 +88,7 @@ impl<'a> Renderable for Looper<'a> {
             let notes = midi::events_to_notes(&self.replay_buffer);
 
             for note in notes {
-                let brightness_factor =  note.velocity as f32 / 127.0;
-                let base_color = CHANNEL_PALETTE[note.channel as usize % CHANNEL_PALETTE.len()];
-                let color = multiply_color_vector(base_color, brightness_factor);
-
-                let t1 = (note.start_timestamp - t0) as f32;
-                let t2 = (note.end_timestamp - t0) as f32;
-                let x1 = (t1 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
-                let x2 = (t2 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
-                let y = (row_height * (127 - note.key) as f32) as i32;
-
-                renderer.set_draw_color(color);
-                renderer.fill_rect(Rect::new(x1, y, (x2 - x1 + 1) as u32, row_height as u32)).unwrap();
+                note.render(renderer, t0, dt);
             }
 
             let x = ((self.time_cursor as f32) / dt * (window_width as f32 - 10.0) + 5.0) as i32;

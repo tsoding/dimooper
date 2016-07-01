@@ -1,6 +1,10 @@
 use pm::types::MidiMessage;
 use pm::types::MidiEvent;
 
+use sdl2::render::Renderer;
+use sdl2::pixels::Color;
+use sdl2::rect::Rect;
+
 const NOTE_ON_STATUS: u8 = 0b10010000;
 const NOTE_OFF_STATUS: u8 = 0b10000000;
 
@@ -50,6 +54,50 @@ pub struct Note {
     pub key: u8,
     pub channel: u8,
     pub velocity: u8,
+}
+
+macro_rules! colors {
+    ($($hex:expr),*) => {
+        &[$(
+            Color::RGB((($hex & 0xFF0000) >> 16) as u8,
+                       (($hex & 0xFF00) >> 8) as u8,
+                       ($hex & 0xFF) as u8)
+        ),*]
+    }
+}
+
+const CHANNEL_PALETTE: &'static [Color; 5] = colors![0xF15A5A, 0xF0C419, 0x4EBA6F, 0x2D95BF,
+                                                     0x955BA5];
+
+fn multiply_color_vector(color: Color, factor: f32) -> Color {
+    match color {
+        Color::RGB(r, g, b) | Color::RGBA(r, g, b, _) => {
+            Color::RGB((r as f32 * factor) as u8,
+                       (g as f32 * factor) as u8,
+                       (b as f32 * factor) as u8)
+        }
+    }
+}
+
+impl Note {
+    pub fn render(&self, renderer: &mut Renderer, t0: u32, dt: f32) {
+        let window_width = renderer.viewport().width();
+        let window_height = renderer.viewport().height();
+        let row_height = window_height as f32 / 128.0;
+
+        let brightness_factor =  self.velocity as f32 / 127.0;
+        let base_color = CHANNEL_PALETTE[self.channel as usize % CHANNEL_PALETTE.len()];
+        let color = multiply_color_vector(base_color, brightness_factor);
+
+        let t1 = (self.start_timestamp - t0) as f32;
+        let t2 = (self.end_timestamp - t0) as f32;
+        let x1 = (t1 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
+        let x2 = (t2 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
+        let y = (row_height * (127 - self.key) as f32) as i32;
+
+        renderer.set_draw_color(color);
+        renderer.fill_rect(Rect::new(x1, y, (x2 - x1 + 1) as u32, row_height as u32)).unwrap();
+    }
 }
 
 pub fn parse_midi_event(raw_event: &MidiEvent) -> Option<TypedMidiEvent> {
