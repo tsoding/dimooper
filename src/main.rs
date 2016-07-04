@@ -37,7 +37,7 @@ fn main() {
 
         if args.len() < 2 {
             print_devices(&context);
-            println!("Usage: ./midi-looper <input-port> <output-port>");
+            println!("Usage: ./dimooper <input-port> <output-port>");
             std::process::exit(1);
         }
 
