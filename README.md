@@ -21,5 +21,5 @@ Having installed all of that just run `$ cargo run`
 
 ### NixOS ###
 
-    $ nix-shell dimooper.nix -A midiLooperEnv
+    $ nix-shell dimooper.nix -A dimooperEnv
     $ cargo run
