@@ -1,8 +1,8 @@
-[![Build Status](https://travis-ci.org/tsoding/midi-looper.svg?branch=master)](https://travis-ci.org/tsoding/midi-looper)
+[![Build Status](https://travis-ci.org/tsoding/dimooper.svg?branch=master)](https://travis-ci.org/tsoding/dimooper)
 
-# Midi Looper #
+# dimooper #
 
-Midi Looper application focused on live performance.
+Digital Music Looper application focused on live performance.
 
 ![screenshot01](http://i.imgur.com/zviXXXm.png)
 ![screenshot02](http://i.imgur.com/eedQ7d2.png)
@@ -21,5 +21,5 @@ Having installed all of that just run `$ cargo run`
 
 ### NixOS ###
 
-    $ nix-shell midi-looper.nix -A midiLooperEnv
+    $ nix-shell dimooper.nix -A midiLooperEnv
     $ cargo run
