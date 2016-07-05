@@ -1,6 +1,6 @@
 extern crate sdl2;
-extern crate sdl2_sys;
 extern crate portmidi as pm;
+extern crate num;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -11,17 +11,12 @@ mod updatable;
 mod renderable;
 mod midi;
 mod graphicsprimitives;
+mod config;
 
 use updatable::Updatable;
 use renderable::Renderable;
 
-const EVENT_LOOP_SLEEP_TIMEOUT: u64 = 3;
-const CONTROL_CHANNEL_NUMBER: u8 = 9;
-const CONTROL_KEY_NUMBER: u8 = 51;
-
-const RATIO_WIDTH: u32 = 16;
-const RATIO_HEIGHT: u32 = 9;
-const RATIO_FACTOR: u32 = 90;
+use config::*;
 
 fn print_devices(pm: &pm::PortMidi) {
     for dev in pm.devices().unwrap() {
@@ -110,7 +105,7 @@ fn main() {
                     midi::get_note_channel(&event.message) == CONTROL_CHANNEL_NUMBER {
                         if midi::get_message_type(&event.message) == midi::MessageType::NoteOn &&
                        midi::get_note_key(&event.message) == CONTROL_KEY_NUMBER {
-                        looper.toggle_recording();
+                           looper.toggle_recording();
                     }
                 } else {
                     if let Some(event) = midi::parse_midi_event(&event) {
