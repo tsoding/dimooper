@@ -60,7 +60,7 @@ fn main() {
     let video_subsystem = sdl_context.video().unwrap();
     let mut timer_subsystem = sdl_context.timer().unwrap();
 
-    let window = video_subsystem.window("Midi Looper", window_width, window_height)
+    let window = video_subsystem.window("Dimooper", window_width, window_height)
         .position_centered()
         .opengl()
         .build()
