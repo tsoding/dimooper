@@ -1,5 +1,5 @@
 use pm::OutputPort;
-use midi::{TypedMidiEvent, Note};
+use midi::{TypedMidiEvent};
 use midi;
 
 use updatable::Updatable;
@@ -47,29 +47,6 @@ impl<'a> Updatable for Looper<'a> {
             } else {
                 self.restart();
             }
-        }
-    }
-}
-
-macro_rules! colors {
-    ($($hex:expr),*) => {
-        &[$(
-            Color::RGB((($hex & 0xFF0000) >> 16) as u8,
-                       (($hex & 0xFF00) >> 8) as u8,
-                       ($hex & 0xFF) as u8)
-        ),*]
-    }
-}
-
-const CHANNEL_PALETTE: &'static [Color; 5] = colors![0xF15A5A, 0xF0C419, 0x4EBA6F, 0x2D95BF,
-                                                     0x955BA5];
-
-fn multiply_color_vector(color: Color, factor: f32) -> Color {
-    match color {
-        Color::RGB(r, g, b) | Color::RGBA(r, g, b, _) => {
-            Color::RGB((r as f32 * factor) as u8,
-                       (g as f32 * factor) as u8,
-                       (b as f32 * factor) as u8)
         }
     }
 }
