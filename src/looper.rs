@@ -10,6 +10,9 @@ use sdl2::render::Renderer;
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
 
+const DEFAULT_TEMPO_BPM: u32 = 120;
+const DEFAULT_MEASURE_SIZE: u32 = 4;
+
 #[derive(PartialEq)]
 pub enum State {
     Recording,
@@ -20,10 +23,16 @@ pub enum State {
 pub struct Looper<'a> {
     pub state: State,
     pub next_state: Option<State>,
+
     pub replay_buffer: Vec<TypedMidiEvent>,
     pub overdub_buffer: Vec<TypedMidiEvent>,
+
     pub next_event: usize,
     pub time_cursor: u32,
+
+    pub tempo_bpm: u32,
+    pub measure_size: u32,
+
     pub out_port: &'a mut OutputPort,
 }
 
@@ -98,6 +107,8 @@ impl<'a> Looper<'a> {
             overdub_buffer: Vec::new(),
             next_event: 0,
             time_cursor: 0,
+            tempo_bpm: DEFAULT_TEMPO_BPM,
+            measure_size: DEFAULT_MEASURE_SIZE,
             out_port: out_port,
         }
     }
