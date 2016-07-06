@@ -1,4 +1,5 @@
 use pm::OutputPort;
+use midi;
 use midi::{TypedMidiEvent, TypedMidiMessage};
 use config::*;
 use num::integer::lcm;
@@ -97,8 +98,8 @@ impl<'a> Updatable for Looper<'a> {
 
             if self.measure_time_cursor >= measure_size_millis {
                 self.measure_time_cursor %= measure_size_millis;
-                self.on_measure_bar();
                 self.measure_cursor = (self.measure_cursor + 1) % self.amount_of_measures;
+                self.on_measure_bar();
             }
 
             for sample in self.composition.iter_mut() {
@@ -117,36 +118,53 @@ impl<'a> Renderable for Looper<'a> {
         let measure_size_millis = self.calc_measure_size();
         let beat_size_millis = self.calc_beat_size();
 
-        // if self.replay_buffer.len() > 1 {
-        //     let n = self.replay_buffer.len();
-        //     let t0 = self.replay_buffer[0].timestamp;
-        //     let tn = self.replay_buffer[n - 1].timestamp;
-        //     let dt = (tn - t0) as f32;
+        let render_buffer = {
+            let mut result = Vec::new();
 
-        //     let notes = midi::events_to_notes(&self.replay_buffer);
+            for sample in self.composition.iter() {
+                let repeat_count = self.amount_of_measures / sample.amount_of_measures;
+                for i in 0..repeat_count {
+                    for event in sample.buffer.iter() {
+                        result.push(TypedMidiEvent {
+                            timestamp: event.timestamp + sample.amount_of_measures * measure_size_millis * i,
+                            message: event.message,
+                        })
+                    }
+                }
+            }
 
-        //     for note in notes {
-        //         note.render(renderer, t0, dt);
-        //     }
+            result
+        };
 
-        //     let x = ((self.calc_abs_time_cursor() as f32) / dt * (window_width as f32 - 10.0) + 5.0) as i32;
-        //     renderer.set_draw_color(Color::RGB(255, 255, 255));
-        //     renderer.draw_line(Point::from((x, 0)),
-        //                        Point::from((x, window_height as i32))).unwrap();
+        let dt = (measure_size_millis * self.amount_of_measures) as f32;
 
-        // }
+        let notes = midi::events_to_notes(&render_buffer);
+
+        for note in notes {
+            note.render(renderer, dt);
+        }
+
+        let x = (((measure_size_millis * self.measure_cursor + self.measure_time_cursor) as f32) / dt *
+                 (window_width as f32 - 10.0) + 5.0) as i32;
+        renderer.set_draw_color(Color::RGB(255, 255, 255));
+        renderer.draw_line(Point::from((x, 0)),
+                           Point::from((x, window_height as i32))).unwrap();
+
 
         { // Time Cursor
-            let x = ((self.measure_time_cursor as f32) / measure_size_millis as f32 * (window_width as f32 - 10.0) + 5.0) as i32;
+            let x = (((measure_size_millis * self.measure_cursor + self.measure_time_cursor) as f32) /
+                     (measure_size_millis * self.amount_of_measures) as f32 *
+                     (window_width as f32 - 10.0) + 5.0) as i32;
             renderer.set_draw_color(Color::RGB(255, 255, 255));
             renderer.draw_line(Point::from((x, 0)),
                                Point::from((x, window_height as i32))).unwrap();
         }
 
         { // Measure Beats
-            for i in 0 .. self.measure_size_bpm + 1 {
-                let x = (((i * beat_size_millis) as f32) / measure_size_millis as f32 * (window_width as f32 - 10.0) + 5.0) as i32;
-                renderer.set_draw_color(Color::RGB(100, 100, 100));
+            for i in 0 .. self.measure_size_bpm * self.amount_of_measures {
+                let x = (((i * beat_size_millis) as f32) / (measure_size_millis * self.amount_of_measures) as f32 *
+                         (window_width as f32 - 10.0) + 5.0) as i32;
+                renderer.set_draw_color(Color::RGB(50, 50, 50));
                 renderer.draw_line(Point::from((x, 0)),
                                    Point::from((x, window_height as i32))).unwrap();
             }
@@ -245,6 +263,9 @@ impl<'a> Looper<'a> {
                                              measure_size_millis);
                     self.amount_of_measures = lcm(self.amount_of_measures, sample.amount_of_measures);
                     self.composition.push(sample);
+
+                    self.measure_cursor = 0;
+                    self.measure_time_cursor = 0;
                 },
 
                 _ => ()
