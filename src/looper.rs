@@ -76,7 +76,6 @@ pub struct Looper<'a> {
 
     pub composition: Vec<Sample>,
     pub record_buffer: Vec<TypedMidiEvent>,
-    pub recording_started_at: u32,
 
     pub tempo_bpm: u32,
     pub measure_size_bpm: u32,
@@ -176,7 +175,6 @@ impl<'a> Looper<'a> {
             measure_size_bpm: DEFAULT_MEASURE_SIZE_BPM,
             out_port: out_port,
             measure_time_cursor: 0,
-            recording_started_at: 0,
         };
         looper.reset();
         looper
@@ -244,9 +242,7 @@ impl<'a> Looper<'a> {
 
     pub fn on_midi_event(&mut self, event: &TypedMidiEvent) {
         if let State::Recording = self.state {
-            let mut aligned_event = event.clone();
-            aligned_event.timestamp -= self.recording_started_at;
-            self.record_buffer.push(aligned_event);
+            self.record_buffer.push(event.clone());
         }
 
         self.out_port.write_message(event.message).unwrap();
