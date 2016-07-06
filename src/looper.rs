@@ -98,6 +98,7 @@ impl<'a> Updatable for Looper<'a> {
             if self.measure_time_cursor >= measure_size_millis {
                 self.measure_time_cursor %= measure_size_millis;
                 self.on_measure_bar();
+                self.measure_cursor = (self.measure_cursor + 1) % self.amount_of_measures;
             }
 
             for sample in self.composition.iter_mut() {
@@ -196,11 +197,14 @@ impl<'a> Looper<'a> {
     pub fn reset(&mut self) {
         let beats = self.beat_sample();
 
-        self.measure_time_cursor = 0;
+
         self.state = State::Looping;
         self.composition.clear();
         self.composition.push(beats);
         self.record_buffer.clear();
+
+        self.measure_time_cursor = 0;
+        self.measure_cursor = 0;
         self.amount_of_measures = 1;
     }
 
