@@ -1,6 +1,8 @@
 use pm::OutputPort;
-use midi::{TypedMidiEvent};
 use midi;
+use midi::{TypedMidiEvent, TypedMidiMessage};
+use config::*;
+use num::integer::lcm;
 
 use updatable::Updatable;
 use renderable::Renderable;
@@ -17,35 +19,93 @@ pub enum State {
     Pause,
 }
 
+pub struct Sample {
+    pub buffer: Vec<TypedMidiEvent>,
+    amount_of_measures: u32,
+    measure_size_millis: u32,
+    time_cursor: u32,
+}
+
+impl Sample {
+
+    fn amount_of_measures_in_buffer(buffer: &[TypedMidiEvent], measure_size_millis: u32) -> u32 {
+        let n = buffer.len();
+
+        if n > 0 {
+            (buffer[n - 1].timestamp - buffer[0].timestamp + measure_size_millis) / measure_size_millis
+        } else {
+            1
+        }
+    }
+
+    pub fn new(buffer: Vec<TypedMidiEvent>, measure_size_millis: u32) -> Sample {
+        let amount_of_measures = Self::amount_of_measures_in_buffer(&buffer, measure_size_millis);
+        Sample {
+            buffer: buffer,
+            amount_of_measures: amount_of_measures,
+            measure_size_millis: measure_size_millis,
+            time_cursor: 0,
+        }
+    }
+
+    pub fn get_next_messages(&mut self, delta_time: u32) -> Vec<TypedMidiMessage> {
+        let next_time_cursor = self.time_cursor + delta_time;
+        let sample_size_millis = self.measure_size_millis * self.amount_of_measures;
+        let mut result = Vec::new();
+
+        self.gather_messages_in_timerange(&mut result, self.time_cursor, next_time_cursor);
+        self.time_cursor = next_time_cursor % sample_size_millis;
+
+        if next_time_cursor >= sample_size_millis {
+            self.gather_messages_in_timerange(&mut result, 0, self.time_cursor);
+        }
+
+        result
+    }
+
+    fn gather_messages_in_timerange(&self, result: &mut Vec<TypedMidiMessage>, start: u32, end: u32) {
+        for event in self.buffer.iter() {
+            if start <= event.timestamp && event.timestamp <= end {
+                result.push(event.message);
+            }
+        }
+    }
+}
+
 pub struct Looper<'a> {
     pub state: State,
     pub next_state: Option<State>,
-    pub replay_buffer: Vec<TypedMidiEvent>,
-    pub overdub_buffer: Vec<TypedMidiEvent>,
-    pub next_event: usize,
-    pub time_cursor: u32,
+
+    pub composition: Vec<Sample>,
+    pub record_buffer: Vec<TypedMidiEvent>,
+
+    pub tempo_bpm: u32,
+    pub measure_size_bpm: u32,
+
     pub out_port: &'a mut OutputPort,
+
+    measure_time_cursor: u32,
+    measure_cursor: u32,
+    amount_of_measures: u32,
 }
 
 impl<'a> Updatable for Looper<'a> {
     fn update(&mut self, delta_time: u32) {
         if self.state != State::Pause {
-            if !self.replay_buffer.is_empty() {
-                let t1 = self.replay_buffer[0].timestamp;
-                self.time_cursor += delta_time;
+            let measure_size_millis = self.calc_measure_size();
 
-                let event_timestamp = self.replay_buffer[self.next_event].timestamp - t1;
-                if self.time_cursor > event_timestamp {
-                    let event = self.replay_buffer[self.next_event];
-                    self.out_port.write_message(event.message).unwrap();
-                    self.next_event += 1;
+            self.measure_time_cursor += delta_time;
 
-                    if self.next_event >= self.replay_buffer.len() {
-                        self.restart();
-                    }
+            if self.measure_time_cursor >= measure_size_millis {
+                self.measure_time_cursor %= measure_size_millis;
+                self.measure_cursor = (self.measure_cursor + 1) % self.amount_of_measures;
+                self.on_measure_bar();
+            }
+
+            for sample in self.composition.iter_mut() {
+                for message in sample.get_next_messages(delta_time) {
+                    self.out_port.write_message(message).unwrap();
                 }
-            } else {
-                self.restart();
             }
         }
     }
@@ -55,118 +115,115 @@ impl<'a> Renderable for Looper<'a> {
     fn render(&self, renderer: &mut Renderer) {
         let window_width = renderer.viewport().width();
         let window_height = renderer.viewport().height();
+        let measure_size_millis = self.calc_measure_size();
+        let beat_size_millis = self.calc_beat_size();
 
-        if self.replay_buffer.len() > 1 {
-            let n = self.replay_buffer.len();
-            let t0 = self.replay_buffer[0].timestamp;
-            let tn = self.replay_buffer[n - 1].timestamp;
-            let dt = (tn - t0) as f32;
+        let render_buffer = {
+            let mut result = Vec::new();
 
-            let notes = midi::events_to_notes(&self.replay_buffer);
-
-            for note in notes {
-                note.render(renderer, t0, dt);
+            for sample in self.composition.iter() {
+                let repeat_count = self.amount_of_measures / sample.amount_of_measures;
+                for i in 0..repeat_count {
+                    for event in sample.buffer.iter() {
+                        result.push(TypedMidiEvent {
+                            timestamp: event.timestamp + sample.amount_of_measures * measure_size_millis * i,
+                            message: event.message,
+                        })
+                    }
+                }
             }
 
-            let x = ((self.time_cursor as f32) / dt * (window_width as f32 - 10.0) + 5.0) as i32;
+            result
+        };
+
+        let dt = (measure_size_millis * self.amount_of_measures) as f32;
+
+        let notes = midi::events_to_notes(&render_buffer);
+
+        for note in notes {
+            note.render(renderer, dt);
+        }
+
+        let x = (((measure_size_millis * self.measure_cursor + self.measure_time_cursor) as f32) / dt *
+                 (window_width as f32 - 10.0) + 5.0) as i32;
+        renderer.set_draw_color(Color::RGB(255, 255, 255));
+        renderer.draw_line(Point::from((x, 0)),
+                           Point::from((x, window_height as i32))).unwrap();
+
+
+        { // Time Cursor
+            let x = (((measure_size_millis * self.measure_cursor + self.measure_time_cursor) as f32) /
+                     (measure_size_millis * self.amount_of_measures) as f32 *
+                     (window_width as f32 - 10.0) + 5.0) as i32;
             renderer.set_draw_color(Color::RGB(255, 255, 255));
             renderer.draw_line(Point::from((x, 0)),
                                Point::from((x, window_height as i32))).unwrap();
-
         }
 
-        let r = 15;
-        let p = 25;
-        let x = window_width as i32 - r - 2 * p;
-        let y = r + p;
-        renderer.set_draw_color(Color::RGB(255, 0, 0));
+        { // Measure Beats
+            for i in 0 .. self.measure_size_bpm * self.amount_of_measures {
+                let x = (((i * beat_size_millis) as f32) / (measure_size_millis * self.amount_of_measures) as f32 *
+                         (window_width as f32 - 10.0) + 5.0) as i32;
+                renderer.set_draw_color(Color::RGB(50, 50, 50));
+                renderer.draw_line(Point::from((x, 0)),
+                                   Point::from((x, window_height as i32))).unwrap();
+            }
+        }
 
-        if let State::Recording = self.state {
-            renderer.fill_circle(x, y, r);
-        } else {
-            renderer.draw_circle(x, y, r);
+        { // Circle
+            let r = 15;
+            let p = 25;
+            let x = window_width as i32 - r - 2 * p;
+            let y = r + p;
+            renderer.set_draw_color(Color::RGB(255, 0, 0));
+
+            if let State::Recording = self.state {
+                renderer.fill_circle(x, y, r);
+            } else {
+                renderer.draw_circle(x, y, r);
+            }
         }
     }
 }
 
 impl<'a> Looper<'a> {
     pub fn new(out_port: &'a mut OutputPort) -> Looper<'a> {
-        Looper {
+        let mut looper = Looper {
             state: State::Looping,
             next_state: None,
-            replay_buffer: Vec::new(),
-            overdub_buffer: Vec::new(),
-            next_event: 0,
-            time_cursor: 0,
+            composition: Vec::new(),
+            record_buffer: Vec::new(),
+            tempo_bpm: DEFAULT_TEMPO_BPM,
+            measure_size_bpm: DEFAULT_MEASURE_SIZE_BPM,
             out_port: out_port,
-        }
-    }
-
-    fn buffer_duration(buffer: &[TypedMidiEvent]) -> u32 {
-        let n = buffer.len();
-        if n > 0 {
-            buffer[n - 1].timestamp - buffer[0].timestamp
-        } else {
-            0
-        }
-    }
-
-    fn merge_buffers(&mut self) {
-        let replay_buffer_duration = Self::buffer_duration(&self.replay_buffer);
-        let overdub_buffer_duration = Self::buffer_duration(&self.overdub_buffer);
-
-        let replay_buffer_len = self.replay_buffer.len();
-
-        let repeat_count = (overdub_buffer_duration + replay_buffer_duration) /
-                           replay_buffer_duration;
-
-        let replay_buffer_beginning = if !self.replay_buffer.is_empty() {
-            self.replay_buffer[0].timestamp
-        } else {
-            0
+            measure_time_cursor: 0,
+            measure_cursor: 0,
+            amount_of_measures: 1,
         };
-
-        for i in 0..repeat_count - 1 {
-            for j in 0..replay_buffer_len {
-                let mut event = self.replay_buffer[j];
-                event.timestamp += (i + 1) * replay_buffer_duration;
-                self.replay_buffer.push(event);
-            }
-        }
-
-        for mut event in self.overdub_buffer.iter().cloned() {
-            event.timestamp = replay_buffer_beginning +
-                              (event.timestamp - self.overdub_buffer[0].timestamp);
-            self.replay_buffer.push(event);
-        }
-
-        self.replay_buffer.sort_by_key(|e| e.timestamp);
+        looper.reset();
+        looper
     }
 
-    pub fn restart(&mut self) {
-        if let Some(state) = self.next_state.take() {
-            self.state = state;
-
-            if let State::Looping = self.state {
-                if self.replay_buffer.is_empty() {
-                    self.replay_buffer = self.overdub_buffer.clone();
-                    self.overdub_buffer.clear();
-                } else {
-                    self.merge_buffers();
-                }
-            }
-        }
-
-        self.time_cursor = 0;
-        self.next_event = 0;
+    pub fn calc_beat_size(&self) -> u32 {
+        (60.0 * 1000.0 / self.tempo_bpm as f32) as u32
     }
 
+    pub fn calc_measure_size(&self) -> u32 {
+        (60.0 * 1000.0 / self.tempo_bpm as f32 * self.measure_size_bpm as f32) as u32
+    }
 
     pub fn reset(&mut self) {
+        let beats = self.beat_sample();
+
+
         self.state = State::Looping;
-        self.replay_buffer.clear();
-        self.overdub_buffer.clear();
-        self.restart();
+        self.composition.clear();
+        self.composition.push(beats);
+        self.record_buffer.clear();
+
+        self.measure_time_cursor = 0;
+        self.measure_cursor = 0;
+        self.amount_of_measures = 1;
     }
 
     pub fn toggle_recording(&mut self) {
@@ -177,7 +234,7 @@ impl<'a> Looper<'a> {
 
             State::Looping => {
                 self.state = State::Recording;
-                self.overdub_buffer.clear();
+                self.record_buffer.clear();
             }
 
             _ => (),
@@ -193,11 +250,72 @@ impl<'a> Looper<'a> {
         }
     }
 
+    pub fn on_measure_bar(&mut self) {
+        let measure_size_millis = self.calc_measure_size();
+
+        if let Some(state) = self.next_state.take() {
+            self.state = state;
+
+            match self.state {
+                State::Looping => {
+                    self.normalize_record_buffer();
+                    let sample = Sample::new(self.record_buffer.clone(),
+                                             measure_size_millis);
+                    self.amount_of_measures = lcm(self.amount_of_measures, sample.amount_of_measures);
+                    self.composition.push(sample);
+
+                    self.measure_cursor = 0;
+                    self.measure_time_cursor = 0;
+                },
+
+                _ => ()
+            }
+        }
+    }
+
     pub fn on_midi_event(&mut self, event: &TypedMidiEvent) {
         if let State::Recording = self.state {
-            self.overdub_buffer.push(*event);
+            self.record_buffer.push(event.clone());
         }
 
         self.out_port.write_message(event.message).unwrap();
+    }
+
+    fn beat_sample(&self) -> Sample {
+        let beat_size_millis = self.calc_beat_size();
+
+        let mut buffer = Vec::new();
+
+        for i in 0..self.measure_size_bpm {
+            buffer.push(TypedMidiEvent {
+                message: TypedMidiMessage::NoteOn {
+                    channel: CONTROL_CHANNEL_NUMBER,
+                    key: BEAT_KEY_NUMBER,
+                    velocity: if i == 0 { BEAT_ACCENT_VELOCITY } else { BEAT_VELOCITY },
+                },
+                timestamp: i * beat_size_millis,
+            });
+
+            buffer.push(TypedMidiEvent {
+                message: TypedMidiMessage::NoteOff {
+                    channel: CONTROL_CHANNEL_NUMBER,
+                    key: BEAT_KEY_NUMBER,
+                    velocity: 0,
+                },
+                timestamp: i * beat_size_millis + 1,
+            })
+        }
+
+        Sample::new(buffer, self.calc_measure_size())
+    }
+
+    fn normalize_record_buffer(&mut self) {
+        if !self.record_buffer.is_empty() {
+            let t0 = self.record_buffer[0].timestamp;
+
+            for event in self.record_buffer.iter_mut() {
+                event.timestamp -= t0;
+            }
+        }
     }
 }
