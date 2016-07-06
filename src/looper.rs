@@ -1,6 +1,7 @@
 use pm::OutputPort;
 use midi::{TypedMidiEvent, TypedMidiMessage};
 use config::*;
+use num::integer::lcm;
 
 use updatable::Updatable;
 use renderable::Renderable;
@@ -83,6 +84,8 @@ pub struct Looper<'a> {
     pub out_port: &'a mut OutputPort,
 
     measure_time_cursor: u32,
+    measure_cursor: u32,
+    amount_of_measures: u32,
 }
 
 impl<'a> Updatable for Looper<'a> {
@@ -175,6 +178,8 @@ impl<'a> Looper<'a> {
             measure_size_bpm: DEFAULT_MEASURE_SIZE_BPM,
             out_port: out_port,
             measure_time_cursor: 0,
+            measure_cursor: 0,
+            amount_of_measures: 1,
         };
         looper.reset();
         looper
@@ -196,6 +201,7 @@ impl<'a> Looper<'a> {
         self.composition.clear();
         self.composition.push(beats);
         self.record_buffer.clear();
+        self.amount_of_measures = 1;
     }
 
     pub fn toggle_recording(&mut self) {
@@ -231,8 +237,10 @@ impl<'a> Looper<'a> {
             match self.state {
                 State::Looping => {
                     self.normalize_record_buffer();
-                    self.composition.push(Sample::new(self.record_buffer.clone(),
-                                                      measure_size_millis))
+                    let sample = Sample::new(self.record_buffer.clone(),
+                                             measure_size_millis);
+                    self.amount_of_measures = lcm(self.amount_of_measures, sample.amount_of_measures);
+                    self.composition.push(sample);
                 },
 
                 _ => ()
