@@ -250,6 +250,15 @@ impl<'a> Looper<'a> {
         }
     }
 
+    pub fn undo_last_recording(&mut self) {
+        self.composition.pop();
+        self.amount_of_measures = 1;
+        for sample in &self.composition {
+            self.amount_of_measures = lcm(self.amount_of_measures,
+                                          sample.amount_of_measures);
+        }
+    }
+
     pub fn on_measure_bar(&mut self) {
         let measure_size_millis = self.calc_measure_size();
 
