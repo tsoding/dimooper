@@ -272,9 +272,6 @@ impl<'a> Looper<'a> {
                                              measure_size_millis);
                     self.amount_of_measures = lcm(self.amount_of_measures, sample.amount_of_measures);
                     self.composition.push(sample);
-
-                    self.measure_cursor = 0;
-                    self.measure_time_cursor = 0;
                 },
 
                 _ => ()
