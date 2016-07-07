@@ -90,7 +90,7 @@ fn main() {
                 }
 
                 Event::KeyDown { keycode: Some(Keycode::Q), .. } => {
-                    looper.toggle_pause();
+                    looper.undo_last_recording();
                 }
 
                 _ => {}
