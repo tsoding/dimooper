@@ -49,7 +49,7 @@ fn main() {
     println!("Sending recorded events: {} {}",
              out_info.id(),
              out_info.name());
-    let mut out_port = context.output_port(out_info, 1024).unwrap();
+    let out_port = context.output_port(out_info, 1024).unwrap();
 
     let window_width = RATIO_WIDTH * RATIO_FACTOR;
     let window_height = RATIO_HEIGHT * RATIO_FACTOR;
@@ -95,6 +95,10 @@ fn main() {
                     looper.undo_last_recording();
                 }
 
+                Event::KeyDown { keycode: Some(Keycode::P), .. } => {
+                    looper.toggle_pause();
+                }
+
                 _ => {}
             }
         }
@@ -125,6 +129,8 @@ fn main() {
 
         std::thread::sleep(std::time::Duration::from_millis(EVENT_LOOP_SLEEP_TIMEOUT));
     }
+
+    looper.reset();
 }
 
 #[cfg(test)]

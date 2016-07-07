@@ -27,7 +27,7 @@ impl MidiAdapter {
         self.out_port.write_message(midi_message)
     }
 
-    pub fn panic(&mut self) {
+    pub fn close_notes(&mut self) {
         for channel in 0..AMOUNT_OF_MIDI_CHANNELS {
             for key in 0..AMOUNT_OF_MIDI_KEYS {
                 if self.notes[channel][key] {

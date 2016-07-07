@@ -215,7 +215,6 @@ impl Looper {
     pub fn reset(&mut self) {
         let beats = self.beat_sample();
 
-
         self.state = State::Looping;
         self.composition.clear();
         self.composition.push(beats);
@@ -224,6 +223,8 @@ impl Looper {
         self.measure_time_cursor = 0;
         self.measure_cursor = 0;
         self.amount_of_measures = 1;
+
+        self.midi_adapter.close_notes();
     }
 
     pub fn toggle_recording(&mut self) {
@@ -244,7 +245,10 @@ impl Looper {
 
     pub fn toggle_pause(&mut self) {
         match self.state {
-            State::Looping => self.state = State::Pause,
+            State::Looping => {
+                self.state = State::Pause;
+                self.midi_adapter.close_notes();
+            },
             State::Pause => self.state = State::Looping,
             _ => (),
         }
@@ -257,6 +261,7 @@ impl Looper {
             self.amount_of_measures = lcm(self.amount_of_measures,
                                           sample.amount_of_measures);
         }
+        self.midi_adapter.close_notes();
     }
 
     pub fn on_measure_bar(&mut self) {
