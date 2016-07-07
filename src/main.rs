@@ -10,6 +10,7 @@ mod looper;
 mod updatable;
 mod renderable;
 mod midi;
+mod midi_adapter;
 mod graphicsprimitives;
 mod config;
 

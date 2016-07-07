@@ -13,3 +13,6 @@ pub const CONTROL_KEY_NUMBER: u8 = 51;
 pub const RATIO_WIDTH: u32 = 16;
 pub const RATIO_HEIGHT: u32 = 9;
 pub const RATIO_FACTOR: u32 = 90;
+
+pub const AMOUNT_OF_MIDI_CHANNELS: usize = 16;
+pub const AMOUNT_OF_MIDI_KEYS: usize = 128;
