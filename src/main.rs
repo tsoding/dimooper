@@ -10,11 +10,13 @@ mod looper;
 mod updatable;
 mod renderable;
 mod midi;
+mod midi_adapter;
 mod graphicsprimitives;
 mod config;
 
 use updatable::Updatable;
 use renderable::Renderable;
+use midi_adapter::MidiAdapter;
 
 use config::*;
 
@@ -47,7 +49,7 @@ fn main() {
     println!("Sending recorded events: {} {}",
              out_info.id(),
              out_info.name());
-    let mut out_port = context.output_port(out_info, 1024).unwrap();
+    let out_port = context.output_port(out_info, 1024).unwrap();
 
     let window_width = RATIO_WIDTH * RATIO_FACTOR;
     let window_height = RATIO_HEIGHT * RATIO_FACTOR;
@@ -64,7 +66,7 @@ fn main() {
     let mut renderer = window.renderer().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let mut looper = looper::Looper::new(&mut out_port);
+    let mut looper = looper::Looper::new(MidiAdapter::new(out_port));
     let mut running = true;
 
     let mut previuos_ticks = timer_subsystem.ticks();
@@ -91,6 +93,10 @@ fn main() {
 
                 Event::KeyDown { keycode: Some(Keycode::Q), .. } => {
                     looper.undo_last_recording();
+                }
+
+                Event::KeyDown { keycode: Some(Keycode::P), .. } => {
+                    looper.toggle_pause();
                 }
 
                 _ => {}
@@ -123,6 +129,8 @@ fn main() {
 
         std::thread::sleep(std::time::Duration::from_millis(EVENT_LOOP_SLEEP_TIMEOUT));
     }
+
+    looper.reset();
 }
 
 #[cfg(test)]
