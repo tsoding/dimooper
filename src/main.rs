@@ -16,6 +16,7 @@ mod config;
 
 use updatable::Updatable;
 use renderable::Renderable;
+use midi_adapter::MidiAdapter;
 
 use config::*;
 
@@ -65,7 +66,7 @@ fn main() {
     let mut renderer = window.renderer().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let mut looper = looper::Looper::new(&mut out_port);
+    let mut looper = looper::Looper::new(MidiAdapter::new(out_port));
     let mut running = true;
 
     let mut previuos_ticks = timer_subsystem.ticks();

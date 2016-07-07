@@ -1,8 +1,8 @@
-use pm::OutputPort;
 use midi;
 use midi::{TypedMidiEvent, TypedMidiMessage};
 use config::*;
 use num::integer::lcm;
+use midi_adapter::MidiAdapter;
 
 use updatable::Updatable;
 use renderable::Renderable;
@@ -72,7 +72,7 @@ impl Sample {
     }
 }
 
-pub struct Looper<'a> {
+pub struct Looper {
     pub state: State,
     pub next_state: Option<State>,
 
@@ -82,14 +82,14 @@ pub struct Looper<'a> {
     pub tempo_bpm: u32,
     pub measure_size_bpm: u32,
 
-    pub out_port: &'a mut OutputPort,
+    pub midi_adapter: MidiAdapter,
 
     measure_time_cursor: u32,
     measure_cursor: u32,
     amount_of_measures: u32,
 }
 
-impl<'a> Updatable for Looper<'a> {
+impl Updatable for Looper {
     fn update(&mut self, delta_time: u32) {
         if self.state != State::Pause {
             let measure_size_millis = self.calc_measure_size();
@@ -104,14 +104,14 @@ impl<'a> Updatable for Looper<'a> {
 
             for sample in self.composition.iter_mut() {
                 for message in sample.get_next_messages(delta_time) {
-                    self.out_port.write_message(message).unwrap();
+                    self.midi_adapter.write_message(message).unwrap();
                 }
             }
         }
     }
 }
 
-impl<'a> Renderable for Looper<'a> {
+impl Renderable for Looper {
     fn render(&self, renderer: &mut Renderer) {
         let window_width = renderer.viewport().width();
         let window_height = renderer.viewport().height();
@@ -186,8 +186,8 @@ impl<'a> Renderable for Looper<'a> {
     }
 }
 
-impl<'a> Looper<'a> {
-    pub fn new(out_port: &'a mut OutputPort) -> Looper<'a> {
+impl Looper {
+    pub fn new(midi_adapter: MidiAdapter) -> Looper {
         let mut looper = Looper {
             state: State::Looping,
             next_state: None,
@@ -195,7 +195,7 @@ impl<'a> Looper<'a> {
             record_buffer: Vec::new(),
             tempo_bpm: DEFAULT_TEMPO_BPM,
             measure_size_bpm: DEFAULT_MEASURE_SIZE_BPM,
-            out_port: out_port,
+            midi_adapter: midi_adapter,
             measure_time_cursor: 0,
             measure_cursor: 0,
             amount_of_measures: 1,
@@ -284,7 +284,7 @@ impl<'a> Looper<'a> {
             self.record_buffer.push(event.clone());
         }
 
-        self.out_port.write_message(event.message).unwrap();
+        self.midi_adapter.write_message(event.message).unwrap();
     }
 
     fn beat_sample(&self) -> Sample {
