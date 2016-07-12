@@ -7,6 +7,7 @@ use sdl2::rect::Rect;
 
 const NOTE_ON_STATUS: u8 = 0b10010000;
 const NOTE_OFF_STATUS: u8 = 0b10000000;
+const CONTROL_CHANGE_STATUS: u8 = 0b10110000;
 
 #[derive(PartialEq)]
 pub enum MessageType {
@@ -19,6 +20,7 @@ pub enum MessageType {
 pub enum TypedMidiMessage {
     NoteOn {channel: u8, key: u8, velocity: u8},
     NoteOff {channel: u8, key: u8, velocity: u8},
+    ControlChange {channel: u8, number: u8, value: u8},
 }
 
 impl Into<MidiMessage> for TypedMidiMessage {
@@ -36,6 +38,13 @@ impl Into<MidiMessage> for TypedMidiMessage {
                     status: NOTE_OFF_STATUS | channel,
                     data1: key,
                     data2: velocity,
+                },
+
+            TypedMidiMessage::ControlChange {channel, number, value} =>
+                MidiMessage {
+                    status: CONTROL_CHANGE_STATUS | channel,
+                    data1: number,
+                    data2: value,
                 }
         }
     }
@@ -111,20 +120,26 @@ pub fn parse_midi_event(raw_event: &MidiEvent) -> Option<TypedMidiEvent> {
 }
 
 pub fn parse_midi_message(raw_message: &MidiMessage) -> Option<TypedMidiMessage> {
-    match get_message_type(raw_message) {
-        MessageType::NoteOn => Some(TypedMidiMessage::NoteOn {
+    match get_message_type_code(raw_message) {
+        NOTE_ON_STATUS => Some(TypedMidiMessage::NoteOn {
             channel: get_note_channel(raw_message),
             key: get_note_key(raw_message),
             velocity: get_note_velocity(raw_message),
         }),
 
-        MessageType::NoteOff => Some(TypedMidiMessage::NoteOff {
+        NOTE_OFF_STATUS => Some(TypedMidiMessage::NoteOff {
             channel: get_note_channel(raw_message),
             key: get_note_key(raw_message),
             velocity: get_note_velocity(raw_message),
         }),
 
-        MessageType::Other => None,
+        CONTROL_CHANGE_STATUS => Some(TypedMidiMessage::ControlChange {
+            channel: get_note_channel(raw_message),
+            number: raw_message.data1,
+            value: raw_message.data2,
+        }),
+
+        _ => None,
     }
 }
 
@@ -160,7 +175,9 @@ pub fn events_to_notes(replay_buffer: &[TypedMidiEvent]) -> Vec<Note> {
                     result.push(note);
                     note_tracker[channel as usize][key as usize] = None;
                 }
-            }
+            },
+
+            _ => ()
         }
     }
 
