@@ -28,18 +28,18 @@ pub struct Sample {
 
 impl Sample {
 
-    fn amount_of_measures_in_buffer(buffer: &[TypedMidiEvent], measure_size_millis: u32) -> u32 {
+    fn amount_of_measures_in_buffer(buffer: &[TypedMidiEvent], measure: &Measure) -> u32 {
         let n = buffer.len();
 
         if n > 0 {
-            (buffer[n - 1].timestamp - buffer[0].timestamp + measure_size_millis) / measure_size_millis
+            (buffer[n - 1].timestamp - buffer[0].timestamp + measure.measure_size_millis()) / measure.measure_size_millis()
         } else {
             1
         }
     }
 
     pub fn new(mut buffer: Vec<TypedMidiEvent>, measure: &Measure) -> Sample {
-        let amount_of_measures = Self::amount_of_measures_in_buffer(&buffer, measure.measure_size_millis());
+        let amount_of_measures = Self::amount_of_measures_in_buffer(&buffer, &measure);
 
         for event in buffer.iter_mut() {
             event.timestamp = (event.timestamp + measure.quant_size_millis() / 2) /
@@ -269,16 +269,13 @@ impl Looper {
     }
 
     pub fn on_measure_bar(&mut self) {
-        let measure_size_millis = self.measure.measure_size_millis();
-
         if let Some(state) = self.next_state.take() {
             self.state = state;
 
             match self.state {
                 State::Looping => {
                     self.normalize_record_buffer();
-                    let sample = Sample::new(self.record_buffer.clone(),
-                                             &self.measure);
+                    let sample = Sample::new(self.record_buffer.clone(), &self.measure);
                     self.amount_of_measures = lcm(self.amount_of_measures, sample.amount_of_measures);
                     self.composition.push(sample);
                 },
