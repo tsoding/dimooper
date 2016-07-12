@@ -223,7 +223,7 @@ impl Looper {
     pub fn calc_quantation_cell_size(&self) -> u32 {
         let mut result = self.calc_measure_size() as f32;
 
-        for i in 0..self.quantation_level {
+        for _ in 0..self.quantation_level {
             result /= self.measure_size_bpm as f32
         }
 
