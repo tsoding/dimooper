@@ -26,15 +26,15 @@ impl Measure {
         measure
     }
 
-    fn measure_size_millis(&self) -> u32 {
+    pub fn measure_size_millis(&self) -> u32 {
         return self.measure_size_millis
     }
 
-    fn beat_size_millis(&self) -> u32 {
+    pub fn beat_size_millis(&self) -> u32 {
         return self.beat_size_millis
     }
 
-    fn quant_size_millis(&self) -> u32 {
+    pub fn quant_size_millis(&self) -> u32 {
         return self.quant_size_millis
     }
 
