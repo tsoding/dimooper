@@ -38,8 +38,13 @@ impl Sample {
         }
     }
 
-    pub fn new(buffer: Vec<TypedMidiEvent>, measure_size_millis: u32) -> Sample {
+    pub fn new(mut buffer: Vec<TypedMidiEvent>, measure_size_millis: u32, quantation_cell_size: u32) -> Sample {
         let amount_of_measures = Self::amount_of_measures_in_buffer(&buffer, measure_size_millis);
+
+        for event in buffer.iter_mut() {
+            event.timestamp = (event.timestamp + quantation_cell_size / 2) / quantation_cell_size * quantation_cell_size
+        }
+
         Sample {
             buffer: buffer,
             amount_of_measures: amount_of_measures,
@@ -87,6 +92,8 @@ pub struct Looper {
     measure_time_cursor: u32,
     measure_cursor: u32,
     amount_of_measures: u32,
+
+    quantation_level: u32,
 }
 
 impl Updatable for Looper {
@@ -199,6 +206,7 @@ impl Looper {
             measure_time_cursor: 0,
             measure_cursor: 0,
             amount_of_measures: 1,
+            quantation_level: DEFAULT_QUANTATION_LEVEL,
         };
         looper.reset();
         looper
@@ -210,6 +218,16 @@ impl Looper {
 
     pub fn calc_measure_size(&self) -> u32 {
         (60.0 * 1000.0 / self.tempo_bpm as f32 * self.measure_size_bpm as f32) as u32
+    }
+
+    pub fn calc_quantation_cell_size(&self) -> u32 {
+        let mut result = self.calc_measure_size() as f32;
+
+        for i in 0..self.quantation_level {
+            result /= self.measure_size_bpm as f32
+        }
+
+        result as u32
     }
 
     pub fn reset(&mut self) {
@@ -274,7 +292,8 @@ impl Looper {
                 State::Looping => {
                     self.normalize_record_buffer();
                     let sample = Sample::new(self.record_buffer.clone(),
-                                             measure_size_millis);
+                                             measure_size_millis,
+                                             self.calc_quantation_cell_size());
                     self.amount_of_measures = lcm(self.amount_of_measures, sample.amount_of_measures);
                     self.composition.push(sample);
                 },
@@ -317,7 +336,7 @@ impl Looper {
             })
         }
 
-        Sample::new(buffer, self.calc_measure_size())
+        Sample::new(buffer, self.calc_measure_size(), self.calc_quantation_cell_size())
     }
 
     fn normalize_record_buffer(&mut self) {
