@@ -231,7 +231,7 @@ impl Looper {
     }
 
     pub fn reset(&mut self) {
-        let beats = self.beat_sample();
+        let beats = self.make_metronome();
 
         self.state = State::Looping;
         self.composition.clear();
@@ -311,7 +311,7 @@ impl Looper {
         self.midi_adapter.write_message(event.message).unwrap();
     }
 
-    fn beat_sample(&self) -> Sample {
+    fn make_metronome(&self) -> Sample {
         let beat_size_millis = self.calc_beat_size();
 
         let mut buffer = Vec::new();
