@@ -38,8 +38,14 @@ impl Sample {
         }
     }
 
-    pub fn new(buffer: Vec<TypedMidiEvent>, measure_size_millis: u32) -> Sample {
+    pub fn new(mut buffer: Vec<TypedMidiEvent>, measure_size_millis: u32, measure_size_bpm: u32) -> Sample {
         let amount_of_measures = Self::amount_of_measures_in_buffer(&buffer, measure_size_millis);
+        let quantation_cell_size: u32 = measure_size_millis / measure_size_bpm / measure_size_bpm;
+
+        for event in buffer.iter_mut() {
+            event.timestamp = (event.timestamp + quantation_cell_size / 2) / quantation_cell_size * quantation_cell_size
+        }
+
         Sample {
             buffer: buffer,
             amount_of_measures: amount_of_measures,
@@ -274,7 +280,8 @@ impl Looper {
                 State::Looping => {
                     self.normalize_record_buffer();
                     let sample = Sample::new(self.record_buffer.clone(),
-                                             measure_size_millis);
+                                             measure_size_millis,
+                                             self.measure_size_bpm);
                     self.amount_of_measures = lcm(self.amount_of_measures, sample.amount_of_measures);
                     self.composition.push(sample);
                 },
@@ -317,7 +324,7 @@ impl Looper {
             })
         }
 
-        Sample::new(buffer, self.calc_measure_size())
+        Sample::new(buffer, self.calc_measure_size(), self.measure_size_bpm)
     }
 
     fn normalize_record_buffer(&mut self) {
