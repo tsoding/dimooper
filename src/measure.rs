@@ -1,8 +1,8 @@
 #[derive(Debug)]
 pub struct Measure {
-    pub tempo_bpm: u32,
-    pub measure_size_bpm: u32,
-    pub quantation_level: u32,
+    tempo_bpm: u32,
+    measure_size_bpm: u32,
+    quantation_level: u32,
 
     measure_size_millis: u32,
     beat_size_millis: u32,
@@ -38,7 +38,34 @@ impl Measure {
         return self.quant_size_millis
     }
 
-    pub fn update(&mut self) {
+    pub fn tempo_bpm(&self) -> u32 {
+        return self.tempo_bpm;
+    }
+
+    pub fn measure_size_bpm(&self) -> u32 {
+        return self.measure_size_bpm;
+    }
+
+    pub fn quantation_level(&self) -> u32 {
+        return self.quantation_level;
+    }
+
+    pub fn update_tempo_bpm(&mut self, tempo_bpm: u32) {
+        self.tempo_bpm = tempo_bpm;
+        self.update();
+    }
+
+    pub fn update_measure_size_bpm(&mut self, measure_size_bpm: u32) {
+        self.measure_size_bpm = measure_size_bpm;
+        self.update();
+    }
+
+    pub fn update_quantation_level(&mut self, quantation_level: u32) {
+        self.quantation_level = quantation_level;
+        self.update();
+    }
+
+    fn update(&mut self) {
         self.beat_size_millis = (60000.0 / self.tempo_bpm as f32) as u32;
         self.measure_size_millis = self.beat_size_millis * self.measure_size_bpm;
 
@@ -71,9 +98,9 @@ mod tests {
     fn test_measure_new() {
         let measure = Measure::new(TEMPO_BPM, MEASURE_SIZE_BPM, QUANTATION_LEVEL);
 
-        assert_eq!(TEMPO_BPM, measure.tempo_bpm);
-        assert_eq!(MEASURE_SIZE_BPM, measure.measure_size_bpm);
-        assert_eq!(QUANTATION_LEVEL, measure.quantation_level);
+        assert_eq!(TEMPO_BPM, measure.tempo_bpm());
+        assert_eq!(MEASURE_SIZE_BPM, measure.measure_size_bpm());
+        assert_eq!(QUANTATION_LEVEL, measure.quantation_level());
 
         assert_eq!(MEASURE_SIZE_MILLIS, measure.measure_size_millis());
         assert_eq!(BEAT_SIZE_MILLIS, measure.beat_size_millis());
@@ -84,13 +111,11 @@ mod tests {
     fn test_measure_update() {
         let mut measure = Measure::new(TEMPO_BPM, MEASURE_SIZE_BPM, QUANTATION_LEVEL);
 
-        measure.tempo_bpm = TEMPO_BPM + 40;
-
         assert_eq!(MEASURE_SIZE_MILLIS, measure.measure_size_millis());
         assert_eq!(BEAT_SIZE_MILLIS, measure.beat_size_millis());
         assert_eq!(QUANT_SIZE_MILLIS, measure.quant_size_millis());
 
-        measure.update();
+        measure.update_tempo_bpm(TEMPO_BPM + 40);
 
         assert_eq!(1500, measure.measure_size_millis());
         assert_eq!(375, measure.beat_size_millis());

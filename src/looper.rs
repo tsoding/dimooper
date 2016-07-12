@@ -23,7 +23,6 @@ pub enum State {
 pub struct Sample {
     pub buffer: Vec<TypedMidiEvent>,
     amount_of_measures: u32,
-    measure_size_millis: u32,
     time_cursor: u32,
 }
 
@@ -39,24 +38,24 @@ impl Sample {
         }
     }
 
-    pub fn new(mut buffer: Vec<TypedMidiEvent>, measure_size_millis: u32, quantation_cell_size: u32) -> Sample {
-        let amount_of_measures = Self::amount_of_measures_in_buffer(&buffer, measure_size_millis);
+    pub fn new(mut buffer: Vec<TypedMidiEvent>, measure: &Measure) -> Sample {
+        let amount_of_measures = Self::amount_of_measures_in_buffer(&buffer, measure.measure_size_millis());
 
         for event in buffer.iter_mut() {
-            event.timestamp = (event.timestamp + quantation_cell_size / 2) / quantation_cell_size * quantation_cell_size
+            event.timestamp = (event.timestamp + measure.quant_size_millis() / 2) /
+                measure.quant_size_millis() * measure.quant_size_millis()
         }
 
         Sample {
             buffer: buffer,
             amount_of_measures: amount_of_measures,
-            measure_size_millis: measure_size_millis,
             time_cursor: 0,
         }
     }
 
-    pub fn get_next_messages(&mut self, delta_time: u32) -> Vec<TypedMidiMessage> {
+    pub fn get_next_messages(&mut self, delta_time: u32, measure: &Measure) -> Vec<TypedMidiMessage> {
         let next_time_cursor = self.time_cursor + delta_time;
-        let sample_size_millis = self.measure_size_millis * self.amount_of_measures;
+        let sample_size_millis = measure.measure_size_millis() * self.amount_of_measures;
         let mut result = Vec::new();
 
         self.gather_messages_in_timerange(&mut result, self.time_cursor, next_time_cursor);
@@ -109,7 +108,7 @@ impl Updatable for Looper {
             }
 
             for sample in self.composition.iter_mut() {
-                for message in sample.get_next_messages(delta_time) {
+                for message in sample.get_next_messages(delta_time, &self.measure) {
                     self.midi_adapter.write_message(message).unwrap();
                 }
             }
@@ -167,7 +166,7 @@ impl Renderable for Looper {
         }
 
         { // Measure Beats
-            for i in 0 .. self.measure.measure_size_bpm * self.amount_of_measures {
+            for i in 0 .. self.measure.measure_size_bpm() * self.amount_of_measures {
                 let x = (((i * beat_size_millis) as f32) / (measure_size_millis * self.amount_of_measures) as f32 *
                          (window_width as f32 - 10.0) + 5.0) as i32;
                 renderer.set_draw_color(Color::RGB(50, 50, 50));
@@ -279,8 +278,7 @@ impl Looper {
                 State::Looping => {
                     self.normalize_record_buffer();
                     let sample = Sample::new(self.record_buffer.clone(),
-                                             measure_size_millis,
-                                             self.measure.quant_size_millis());
+                                             &self.measure);
                     self.amount_of_measures = lcm(self.amount_of_measures, sample.amount_of_measures);
                     self.composition.push(sample);
                 },
@@ -303,7 +301,7 @@ impl Looper {
 
         let mut buffer = Vec::new();
 
-        for i in 0..self.measure.measure_size_bpm {
+        for i in 0..self.measure.measure_size_bpm() {
             buffer.push(TypedMidiEvent {
                 message: TypedMidiMessage::NoteOn {
                     channel: CONTROL_CHANNEL_NUMBER,
@@ -323,7 +321,7 @@ impl Looper {
             })
         }
 
-        Sample::new(buffer, self.measure.measure_size_millis(), self.measure.quant_size_millis())
+        Sample::new(buffer, &self.measure)
     }
 
     fn normalize_record_buffer(&mut self) {
