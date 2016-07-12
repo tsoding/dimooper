@@ -273,13 +273,19 @@ impl Looper {
     }
 
     pub fn undo_last_recording(&mut self) {
-        self.composition.pop();
-        self.amount_of_measures = 1;
-        for sample in &self.composition {
-            self.amount_of_measures = lcm(self.amount_of_measures,
-                                          sample.amount_of_measures);
+        if let State::Recording = self.state {
+            self.record_buffer.clear();
+        } else {
+            if self.composition.len() > 1 {
+                self.composition.pop();
+                self.amount_of_measures = 1;
+                for sample in &self.composition {
+                    self.amount_of_measures = lcm(self.amount_of_measures,
+                                                  sample.amount_of_measures);
+                }
+                self.midi_adapter.close_notes();
+            }
         }
-        self.midi_adapter.close_notes();
     }
 
     pub fn on_measure_bar(&mut self) {
