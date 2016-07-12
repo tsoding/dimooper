@@ -13,6 +13,7 @@ mod midi;
 mod midi_adapter;
 mod graphicsprimitives;
 mod config;
+mod measure;
 
 use updatable::Updatable;
 use renderable::Renderable;
