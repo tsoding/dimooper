@@ -223,7 +223,7 @@ impl Looper {
     pub fn calc_quantation_cell_size(&self) -> u32 {
         let mut result = self.calc_measure_size() as f32;
 
-        for i in 0..self.quantation_level {
+        for _ in 0..self.quantation_level {
             result /= self.measure_size_bpm as f32
         }
 
@@ -231,7 +231,7 @@ impl Looper {
     }
 
     pub fn reset(&mut self) {
-        let beats = self.beat_sample();
+        let beats = self.make_metronome();
 
         self.state = State::Looping;
         self.composition.clear();
@@ -273,13 +273,19 @@ impl Looper {
     }
 
     pub fn undo_last_recording(&mut self) {
-        self.composition.pop();
-        self.amount_of_measures = 1;
-        for sample in &self.composition {
-            self.amount_of_measures = lcm(self.amount_of_measures,
-                                          sample.amount_of_measures);
+        if let State::Recording = self.state {
+            self.record_buffer.clear();
+        } else {
+            if self.composition.len() > 1 {
+                self.composition.pop();
+                self.amount_of_measures = 1;
+                for sample in &self.composition {
+                    self.amount_of_measures = lcm(self.amount_of_measures,
+                                                  sample.amount_of_measures);
+                }
+                self.midi_adapter.close_notes();
+            }
         }
-        self.midi_adapter.close_notes();
     }
 
     pub fn on_measure_bar(&mut self) {
@@ -311,7 +317,7 @@ impl Looper {
         self.midi_adapter.write_message(event.message).unwrap();
     }
 
-    fn beat_sample(&self) -> Sample {
+    fn make_metronome(&self) -> Sample {
         let beat_size_millis = self.calc_beat_size();
 
         let mut buffer = Vec::new();
