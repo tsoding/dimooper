@@ -2,6 +2,7 @@ pub const CONTROL_CHANNEL_NUMBER: u8 = 9;
 
 pub const DEFAULT_TEMPO_BPM: u32 = 120;
 pub const DEFAULT_MEASURE_SIZE_BPM: u32 = 4;
+pub const DEFAULT_QUANTATION_LEVEL: u32 = 2;
 
 pub const BEAT_KEY_NUMBER: u8 = 62;
 pub const BEAT_VELOCITY: u8 = 60;
@@ -17,4 +18,4 @@ pub const RATIO_FACTOR: u32 = 90;
 pub const AMOUNT_OF_MIDI_CHANNELS: usize = 16;
 pub const AMOUNT_OF_MIDI_KEYS: usize = 128;
 
-pub const DEFAULT_QUANTATION_LEVEL: u32 = 2;
+pub const TEMPO_CHANGE_CONTROL_NUMBER: u8 = 21;

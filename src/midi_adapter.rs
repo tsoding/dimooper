@@ -22,6 +22,7 @@ impl MidiAdapter {
                 self.notes[channel as usize][key as usize] = true,
             TypedMidiMessage::NoteOff { channel, key, .. } =>
                 self.notes[channel as usize][key as usize] = false,
+            _ => (),
         }
 
         self.out_port.write_message(midi_message)

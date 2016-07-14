@@ -13,10 +13,12 @@ mod midi;
 mod midi_adapter;
 mod graphicsprimitives;
 mod config;
+mod measure;
 
 use updatable::Updatable;
 use renderable::Renderable;
 use midi_adapter::MidiAdapter;
+use midi::{TypedMidiEvent, TypedMidiMessage};
 
 use config::*;
 
@@ -115,7 +117,18 @@ fn main() {
                     }
                 } else {
                     if let Some(event) = midi::parse_midi_event(&event) {
-                        looper.on_midi_event(&event);
+                        match event {
+                            TypedMidiEvent {
+                                message: TypedMidiMessage::ControlChange {
+                                    number: TEMPO_CHANGE_CONTROL_NUMBER,
+                                    value,
+                                    ..
+                                },
+                                ..
+                            } => looper.update_tempo_bpm(value as u32 + 90),
+
+                            _ => looper.on_midi_event(&event),
+                        }
                     }
                 }
             }
