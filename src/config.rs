@@ -17,3 +17,5 @@ pub const RATIO_FACTOR: u32 = 90;
 
 pub const AMOUNT_OF_MIDI_CHANNELS: usize = 16;
 pub const AMOUNT_OF_MIDI_KEYS: usize = 128;
+
+pub const TEMPO_CHANGE_CONTROL_NUMBER: u8 = 21;

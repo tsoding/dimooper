@@ -20,8 +20,14 @@ pub enum State {
     Pause,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct QuantMidiEvent {
+    pub message: TypedMidiMessage,
+    pub quant: u32,
+}
+
 pub struct Sample {
-    pub buffer: Vec<TypedMidiEvent>,
+    pub buffer: Vec<QuantMidiEvent>,
     amount_of_measures: u32,
     time_cursor: u32,
 }
@@ -38,16 +44,24 @@ impl Sample {
         }
     }
 
-    pub fn new(mut buffer: Vec<TypedMidiEvent>, measure: &Measure) -> Sample {
+    pub fn new(buffer: &[TypedMidiEvent], measure: &Measure) -> Sample {
         let amount_of_measures = Self::amount_of_measures_in_buffer(&buffer, &measure);
 
-        for event in buffer.iter_mut() {
-            event.timestamp = (event.timestamp + measure.quant_size_millis() / 2) /
-                measure.quant_size_millis() * measure.quant_size_millis()
-        }
+        let quant_buffer = {
+            let mut result = Vec::new();
+
+            for event in buffer {
+                result.push(QuantMidiEvent {
+                    message: event.message,
+                    quant: measure.timestamp_to_quant(event.timestamp),
+                })
+            }
+
+            result
+        };
 
         Sample {
-            buffer: buffer,
+            buffer: quant_buffer,
             amount_of_measures: amount_of_measures,
             time_cursor: 0,
         }
@@ -58,19 +72,20 @@ impl Sample {
         let sample_size_millis = measure.measure_size_millis() * self.amount_of_measures;
         let mut result = Vec::new();
 
-        self.gather_messages_in_timerange(&mut result, self.time_cursor, next_time_cursor);
+        self.gather_messages_in_timerange(measure, &mut result, self.time_cursor, next_time_cursor);
         self.time_cursor = next_time_cursor % sample_size_millis;
 
         if next_time_cursor >= sample_size_millis {
-            self.gather_messages_in_timerange(&mut result, 0, self.time_cursor);
+            self.gather_messages_in_timerange(measure, &mut result, 0, self.time_cursor);
         }
 
         result
     }
 
-    fn gather_messages_in_timerange(&self, result: &mut Vec<TypedMidiMessage>, start: u32, end: u32) {
+    fn gather_messages_in_timerange(&self, measure: &Measure, result: &mut Vec<TypedMidiMessage>, start: u32, end: u32) {
         for event in self.buffer.iter() {
-            if start <= event.timestamp && event.timestamp <= end {
+            let timestamp = measure.quant_to_timestamp(event.quant);
+            if start <= timestamp && timestamp <= end {
                 result.push(event.message);
             }
         }
@@ -131,7 +146,8 @@ impl Renderable for Looper {
                 for i in 0..repeat_count {
                     for event in sample.buffer.iter() {
                         result.push(TypedMidiEvent {
-                            timestamp: event.timestamp + sample.amount_of_measures * measure_size_millis * i,
+                            timestamp: self.measure.quant_to_timestamp(event.quant) +
+                                sample.amount_of_measures * measure_size_millis * i,
                             message: event.message,
                         })
                     }
@@ -275,7 +291,7 @@ impl Looper {
             match self.state {
                 State::Looping => {
                     self.normalize_record_buffer();
-                    let sample = Sample::new(self.record_buffer.clone(), &self.measure);
+                    let sample = Sample::new(&self.record_buffer, &self.measure);
                     self.amount_of_measures = lcm(self.amount_of_measures, sample.amount_of_measures);
                     self.composition.push(sample);
                 },
@@ -291,6 +307,10 @@ impl Looper {
         }
 
         self.midi_adapter.write_message(event.message).unwrap();
+    }
+
+    pub fn update_tempo_bpm(&mut self, tempo_bpm: u32) {
+        self.measure.update_tempo_bpm(tempo_bpm);
     }
 
     fn make_metronome(&self) -> Sample {
@@ -318,7 +338,7 @@ impl Looper {
             })
         }
 
-        Sample::new(buffer, &self.measure)
+        Sample::new(&buffer, &self.measure)
     }
 
     fn normalize_record_buffer(&mut self) {

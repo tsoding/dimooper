@@ -26,6 +26,14 @@ impl Measure {
         measure
     }
 
+    pub fn timestamp_to_quant(&self, timestamp: u32) -> u32 {
+        (timestamp + self.quant_size_millis() / 2) / self.quant_size_millis()
+    }
+
+    pub fn quant_to_timestamp(&self, quant: u32) -> u32 {
+        quant * self.quant_size_millis()
+    }
+
     pub fn measure_size_millis(&self) -> u32 {
         return self.measure_size_millis
     }
@@ -120,5 +128,19 @@ mod tests {
         assert_eq!(1500, measure.measure_size_millis());
         assert_eq!(375, measure.beat_size_millis());
         assert_eq!(93, measure.quant_size_millis());
+    }
+
+    #[test]
+    fn test_timestamp_quant_conversion() {
+        let measure = Measure::new(TEMPO_BPM, MEASURE_SIZE_BPM, QUANTATION_LEVEL);
+
+        // timestamp to quant
+        assert_eq!(0, measure.timestamp_to_quant(0));
+        assert_eq!(1, measure.timestamp_to_quant(measure.quant_size_millis()));
+        assert_eq!(0, measure.timestamp_to_quant(measure.quant_size_millis() / 2 - 1));
+        assert_eq!(1, measure.timestamp_to_quant(measure.quant_size_millis() / 2 + 1));
+
+        // quant to timestamp
+        assert_eq!(5 * measure.quant_size_millis(), measure.quant_to_timestamp(5));
     }
 }
