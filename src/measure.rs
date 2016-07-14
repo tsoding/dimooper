@@ -1,3 +1,13 @@
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Quant(u32);
+
+impl Quant {
+    pub fn map<F>(&self, f: F) -> Quant where F: FnOnce(u32) -> u32  {
+        let Quant(value) = *self;
+        Quant(f(value))
+    }
+}
+
 #[derive(Debug)]
 pub struct Measure {
     tempo_bpm: u32,
@@ -26,12 +36,12 @@ impl Measure {
         measure
     }
 
-    pub fn timestamp_to_quant(&self, timestamp: u32) -> u32 {
-        (timestamp + self.quant_size_millis() / 2) / self.quant_size_millis()
+    pub fn timestamp_to_quant(&self, timestamp: u32) -> Quant {
+        Quant((timestamp + self.quant_size_millis() / 2) / self.quant_size_millis())
     }
 
-    pub fn quant_to_timestamp(&self, quant: u32) -> u32 {
-        quant * self.quant_size_millis()
+    pub fn quant_to_timestamp(&self, Quant(quant_value): Quant) -> u32 {
+        quant_value * self.quant_size_millis()
     }
 
     pub fn measure_size_millis(&self) -> u32 {
@@ -91,7 +101,7 @@ impl Measure {
 
 #[cfg(test)]
 mod tests {
-    use super::Measure;
+    use super::{Measure, Quant};
 
     const TEMPO_BPM: u32 = 120;
     const MEASURE_SIZE_BPM: u32 = 4;
@@ -135,12 +145,12 @@ mod tests {
         let measure = Measure::new(TEMPO_BPM, MEASURE_SIZE_BPM, QUANTATION_LEVEL);
 
         // timestamp to quant
-        assert_eq!(0, measure.timestamp_to_quant(0));
-        assert_eq!(1, measure.timestamp_to_quant(measure.quant_size_millis()));
-        assert_eq!(0, measure.timestamp_to_quant(measure.quant_size_millis() / 2 - 1));
-        assert_eq!(1, measure.timestamp_to_quant(measure.quant_size_millis() / 2 + 1));
+        assert_eq!(Quant(0), measure.timestamp_to_quant(0));
+        assert_eq!(Quant(1), measure.timestamp_to_quant(measure.quant_size_millis()));
+        assert_eq!(Quant(0), measure.timestamp_to_quant(measure.quant_size_millis() / 2 - 1));
+        assert_eq!(Quant(1), measure.timestamp_to_quant(measure.quant_size_millis() / 2 + 1));
 
         // quant to timestamp
-        assert_eq!(5 * measure.quant_size_millis(), measure.quant_to_timestamp(5));
+        assert_eq!(5 * measure.quant_size_millis(), measure.quant_to_timestamp(Quant(5)));
     }
 }
