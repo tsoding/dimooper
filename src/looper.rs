@@ -7,7 +7,7 @@ use midi_adapter::MidiAdapter;
 use updatable::Updatable;
 use renderable::Renderable;
 use graphicsprimitives::CircleRenderer;
-use measure::Measure;
+use measure::{Measure, Quant};
 
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;
@@ -23,7 +23,7 @@ pub enum State {
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct QuantMidiEvent {
     pub message: TypedMidiMessage,
-    pub quant: u32,
+    pub quant: Quant,
 }
 
 pub struct Sample {
@@ -146,7 +146,7 @@ impl Renderable for Looper {
                 for i in 0..repeat_count {
                     for event in sample.buffer.iter() {
                         result.push(TypedMidiEvent {
-                            timestamp: self.measure.quant_to_timestamp(event.quant + sample.amount_of_measures * i),
+                            timestamp: self.measure.quant_to_timestamp(event.quant.map(|x| x + sample.amount_of_measures * i)),
                             message: event.message,
                         })
                     }
