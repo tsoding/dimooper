@@ -82,3 +82,45 @@ impl Sample {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Sample;
+    use config::*;
+
+    use measure::Measure;
+    use midi::{TypedMidiEvent, TypedMidiMessage};
+
+    #[test]
+    fn test_amount_of_measure_calculation() {
+        let dummy_message = TypedMidiMessage::NoteOn {
+            channel: 0,
+            key: 0,
+            velocity: 0,
+        };
+        let expected_amount_of_measures = 2;
+
+        let measure = Measure {
+            tempo_bpm: DEFAULT_TEMPO_BPM,
+            measure_size_bpm: DEFAULT_MEASURE_SIZE_BPM,
+            quantation_level: DEFAULT_QUANTATION_LEVEL,
+        };
+
+        let buffer = [
+            TypedMidiEvent {
+                timestamp: 0,
+                message: dummy_message,
+            },
+            TypedMidiEvent {
+                timestamp: measure.measure_size_millis() * expected_amount_of_measures - 1,
+                message: dummy_message,
+            },
+        ];
+
+        let sample = Sample::new(&buffer, &measure);
+
+        println!("{}", sample.amount_of_measures);
+
+        assert_eq!(expected_amount_of_measures, sample.amount_of_measures);
+    }
+}
