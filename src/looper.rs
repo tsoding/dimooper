@@ -178,7 +178,7 @@ impl Renderable for Looper {
                          renderer);
 
         // Measure Beats
-        for i in 0 .. self.measure.measure_size_bpm() * self.amount_of_measures {
+        for i in 0 .. self.measure.measure_size_bpm * self.amount_of_measures {
             renderer.set_draw_color(Color::RGB(50, 50, 50));
             draw_time_cursor(i * beat_size_millis, renderer);
         }
@@ -210,9 +210,11 @@ impl Looper {
             measure_time_cursor: 0,
             measure_cursor: 0,
             amount_of_measures: 1,
-            measure: Measure::new(DEFAULT_TEMPO_BPM,
-                                  DEFAULT_MEASURE_SIZE_BPM,
-                                  DEFAULT_QUANTATION_LEVEL),
+            measure: Measure {
+                tempo_bpm: DEFAULT_TEMPO_BPM,
+                measure_size_bpm: DEFAULT_MEASURE_SIZE_BPM,
+                quantation_level: DEFAULT_QUANTATION_LEVEL,
+            },
         };
         looper.reset();
         looper
@@ -302,7 +304,7 @@ impl Looper {
     }
 
     pub fn update_tempo_bpm(&mut self, tempo_bpm: u32) {
-        self.measure.update_tempo_bpm(tempo_bpm);
+        self.measure.tempo_bpm = tempo_bpm;
     }
 
     fn make_metronome(&self) -> Sample {
@@ -310,7 +312,7 @@ impl Looper {
 
         let mut buffer = Vec::new();
 
-        for i in 0..self.measure.measure_size_bpm() {
+        for i in 0..self.measure.measure_size_bpm {
             buffer.push(TypedMidiEvent {
                 message: TypedMidiMessage::NoteOn {
                     channel: CONTROL_CHANNEL_NUMBER,
