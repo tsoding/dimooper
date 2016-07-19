@@ -11,6 +11,7 @@ pub struct Sample {
     pub buffer: Vec<QuantMidiEvent>,
     pub amount_of_measures: u32,
     time_cursor: u32,
+    measure: Measure,
 }
 
 impl Sample {
@@ -44,27 +45,37 @@ impl Sample {
             buffer: quant_buffer,
             amount_of_measures: amount_of_measures,
             time_cursor: 0,
+            measure: measure.clone(),
         }
     }
 
-    pub fn get_next_messages(&mut self, delta_time: u32, measure: &Measure) -> Vec<TypedMidiMessage> {
+    pub fn update_measure(&mut self, new_measure: &Measure) {
+        self.time_cursor =
+            self.measure.scale_time_cursor(new_measure,
+                                           self.amount_of_measures,
+                                           self.time_cursor);
+
+        self.measure = new_measure.clone();
+    }
+
+    pub fn get_next_messages(&mut self, delta_time: u32) -> Vec<TypedMidiMessage> {
         let next_time_cursor = self.time_cursor + delta_time;
-        let sample_size_millis = measure.measure_size_millis() * self.amount_of_measures;
+        let sample_size_millis = self.measure.measure_size_millis() * self.amount_of_measures;
         let mut result = Vec::new();
 
-        self.gather_messages_in_timerange(measure, &mut result, self.time_cursor, next_time_cursor);
+        self.gather_messages_in_timerange(&mut result, self.time_cursor, next_time_cursor);
         self.time_cursor = next_time_cursor % sample_size_millis;
 
         if next_time_cursor >= sample_size_millis {
-            self.gather_messages_in_timerange(measure, &mut result, 0, self.time_cursor);
+            self.gather_messages_in_timerange(&mut result, 0, self.time_cursor);
         }
 
         result
     }
 
-    fn gather_messages_in_timerange(&self, measure: &Measure, result: &mut Vec<TypedMidiMessage>, start: u32, end: u32) {
+    fn gather_messages_in_timerange(&self, result: &mut Vec<TypedMidiMessage>, start: u32, end: u32) {
         for event in self.buffer.iter() {
-            let timestamp = measure.quant_to_timestamp(event.quant);
+            let timestamp = self.measure.quant_to_timestamp(event.quant);
             if start <= timestamp && timestamp <= end {
                 result.push(event.message);
             }

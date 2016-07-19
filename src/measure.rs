@@ -34,6 +34,12 @@ impl Measure {
 
         result as u32
     }
+
+    pub fn scale_time_cursor(&self, new_measure: &Measure, amount_of_measures: u32, time_cursor: u32) -> u32 {
+        let s0 = (amount_of_measures * self.measure_size_millis()) as f32;
+        let s1 = (amount_of_measures * new_measure.measure_size_millis()) as f32;
+        (time_cursor as f32 / s0 * s1) as u32
+    }
 }
 
 #[cfg(test)]

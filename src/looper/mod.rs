@@ -55,7 +55,7 @@ impl Updatable for Looper {
             }
 
             for sample in self.composition.iter_mut() {
-                for message in sample.get_next_messages(delta_time, &self.measure) {
+                for message in sample.get_next_messages(delta_time) {
                     self.midi_adapter.write_message(message).unwrap();
                 }
             }
@@ -236,7 +236,18 @@ impl Looper {
     }
 
     pub fn update_tempo_bpm(&mut self, tempo_bpm: u32) {
-        self.measure.tempo_bpm = tempo_bpm;
+        let new_measure = Measure { tempo_bpm: tempo_bpm, .. self.measure };
+
+        self.measure_time_cursor =
+            self.measure.scale_time_cursor(&new_measure,
+                                           self.amount_of_measures,
+                                           self.measure_time_cursor);
+
+        for sample in self.composition.iter_mut() {
+            sample.update_measure(&new_measure)
+        }
+
+        self.measure = new_measure;
     }
 
     fn make_metronome(&self) -> Sample {
