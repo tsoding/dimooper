@@ -146,7 +146,7 @@ impl Renderable for Looper {
                 for i in 0..repeat_count {
                     for event in sample.buffer.iter() {
                         result.push(TypedMidiEvent {
-                            timestamp: self.measure.quant_to_timestamp(event.quant.map(|x| x + sample.amount_of_measures * i)),
+                            timestamp: self.measure.quant_to_timestamp(event.quant) + i * measure_size_millis,
                             message: event.message,
                         })
                     }
