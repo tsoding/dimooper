@@ -146,7 +146,7 @@ impl Renderable for Looper {
                 for i in 0..repeat_count {
                     for event in sample.buffer.iter() {
                         result.push(TypedMidiEvent {
-                            timestamp: self.measure.quant_to_timestamp(event.quant.map(|x| x + sample.amount_of_measures * i)),
+                            timestamp: self.measure.quant_to_timestamp(event.quant) + i * measure_size_millis,
                             message: event.message,
                         })
                     }
@@ -164,30 +164,23 @@ impl Renderable for Looper {
             note.render(renderer, dt);
         }
 
-        let x = (((measure_size_millis * self.measure_cursor + self.measure_time_cursor) as f32) / dt *
-                 (window_width as f32 - 10.0) + 5.0) as i32;
-        renderer.set_draw_color(Color::RGB(255, 255, 255));
-        renderer.draw_line(Point::from((x, 0)),
-                           Point::from((x, window_height as i32))).unwrap();
-
-
-        { // Time Cursor
-            let x = (((measure_size_millis * self.measure_cursor + self.measure_time_cursor) as f32) /
+        let draw_time_cursor = |time_cursor: u32, renderer: &mut Renderer| {
+            let x = ((time_cursor as f32) /
                      (measure_size_millis * self.amount_of_measures) as f32 *
                      (window_width as f32 - 10.0) + 5.0) as i32;
-            renderer.set_draw_color(Color::RGB(255, 255, 255));
             renderer.draw_line(Point::from((x, 0)),
                                Point::from((x, window_height as i32))).unwrap();
-        }
+        };
 
-        { // Measure Beats
-            for i in 0 .. self.measure.measure_size_bpm() * self.amount_of_measures {
-                let x = (((i * beat_size_millis) as f32) / (measure_size_millis * self.amount_of_measures) as f32 *
-                         (window_width as f32 - 10.0) + 5.0) as i32;
-                renderer.set_draw_color(Color::RGB(50, 50, 50));
-                renderer.draw_line(Point::from((x, 0)),
-                                   Point::from((x, window_height as i32))).unwrap();
-            }
+        // Time Cursor
+        renderer.set_draw_color(Color::RGB(255, 255, 255));
+        draw_time_cursor(measure_size_millis * self.measure_cursor + self.measure_time_cursor,
+                         renderer);
+
+        // Measure Beats
+        for i in 0 .. self.measure.measure_size_bpm() * self.amount_of_measures {
+            renderer.set_draw_color(Color::RGB(50, 50, 50));
+            draw_time_cursor(i * beat_size_millis, renderer);
         }
 
         { // Circle
