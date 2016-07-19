@@ -164,13 +164,6 @@ impl Renderable for Looper {
             note.render(renderer, dt);
         }
 
-        let x = (((measure_size_millis * self.measure_cursor + self.measure_time_cursor) as f32) / dt *
-                 (window_width as f32 - 10.0) + 5.0) as i32;
-        renderer.set_draw_color(Color::RGB(255, 255, 255));
-        renderer.draw_line(Point::from((x, 0)),
-                           Point::from((x, window_height as i32))).unwrap();
-
-
         { // Time Cursor
             let x = (((measure_size_millis * self.measure_cursor + self.measure_time_cursor) as f32) /
                      (measure_size_millis * self.amount_of_measures) as f32 *
