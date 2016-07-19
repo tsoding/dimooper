@@ -1,41 +1,14 @@
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Quant(u32);
 
-impl Quant {
-    pub fn map<F>(&self, f: F) -> Quant where F: FnOnce(u32) -> u32  {
-        let Quant(value) = *self;
-        Quant(f(value))
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Measure {
-    tempo_bpm: u32,
-    measure_size_bpm: u32,
-    quantation_level: u32,
-
-    measure_size_millis: u32,
-    beat_size_millis: u32,
-    quant_size_millis: u32,
+    pub tempo_bpm: u32,
+    pub measure_size_bpm: u32,
+    pub quantation_level: u32,
 }
 
 impl Measure {
-    pub fn new(tempo_bpm: u32, measure_size_bpm: u32, quantation_level: u32) -> Measure {
-        let mut measure = Measure {
-            tempo_bpm: tempo_bpm,
-            measure_size_bpm: measure_size_bpm,
-            quantation_level: quantation_level,
-
-            beat_size_millis: 0,
-            measure_size_millis: 0,
-            quant_size_millis: 0,
-        };
-
-        measure.update();
-
-        measure
-    }
-
     pub fn timestamp_to_quant(&self, timestamp: u32) -> Quant {
         Quant((timestamp + self.quant_size_millis() / 2) / self.quant_size_millis())
     }
@@ -45,57 +18,27 @@ impl Measure {
     }
 
     pub fn measure_size_millis(&self) -> u32 {
-        return self.measure_size_millis
+        self.beat_size_millis() * self.measure_size_bpm
     }
 
     pub fn beat_size_millis(&self) -> u32 {
-        return self.beat_size_millis
+        (60000.0 / self.tempo_bpm as f32) as u32
     }
 
     pub fn quant_size_millis(&self) -> u32 {
-        return self.quant_size_millis
+        let mut result = self.measure_size_millis() as f32;
+
+        for _ in 0..self.quantation_level {
+            result /= self.measure_size_bpm as f32
+        }
+
+        result as u32
     }
 
-    pub fn tempo_bpm(&self) -> u32 {
-        return self.tempo_bpm;
-    }
-
-    pub fn measure_size_bpm(&self) -> u32 {
-        return self.measure_size_bpm;
-    }
-
-    pub fn quantation_level(&self) -> u32 {
-        return self.quantation_level;
-    }
-
-    pub fn update_tempo_bpm(&mut self, tempo_bpm: u32) {
-        self.tempo_bpm = tempo_bpm;
-        self.update();
-    }
-
-    pub fn update_measure_size_bpm(&mut self, measure_size_bpm: u32) {
-        self.measure_size_bpm = measure_size_bpm;
-        self.update();
-    }
-
-    pub fn update_quantation_level(&mut self, quantation_level: u32) {
-        self.quantation_level = quantation_level;
-        self.update();
-    }
-
-    fn update(&mut self) {
-        self.beat_size_millis = (60000.0 / self.tempo_bpm as f32) as u32;
-        self.measure_size_millis = self.beat_size_millis * self.measure_size_bpm;
-
-        self.quant_size_millis = {
-            let mut result = self.measure_size_millis as f32;
-
-            for _ in 0..self.quantation_level {
-                result /= self.measure_size_bpm as f32
-            }
-
-            result as u32
-        };
+    pub fn scale_time_cursor(&self, new_measure: &Measure, amount_of_measures: u32, time_cursor: u32) -> u32 {
+        let s0 = (amount_of_measures * self.measure_size_millis()) as f32;
+        let s1 = (amount_of_measures * new_measure.measure_size_millis()) as f32;
+        (time_cursor as f32 / s0 * s1) as u32
     }
 }
 
@@ -114,11 +57,15 @@ mod tests {
 
     #[test]
     fn test_measure_new() {
-        let measure = Measure::new(TEMPO_BPM, MEASURE_SIZE_BPM, QUANTATION_LEVEL);
+        let measure = Measure {
+            tempo_bpm: TEMPO_BPM,
+            measure_size_bpm: MEASURE_SIZE_BPM,
+            quantation_level: QUANTATION_LEVEL,
+        };
 
-        assert_eq!(TEMPO_BPM, measure.tempo_bpm());
-        assert_eq!(MEASURE_SIZE_BPM, measure.measure_size_bpm());
-        assert_eq!(QUANTATION_LEVEL, measure.quantation_level());
+        assert_eq!(TEMPO_BPM, measure.tempo_bpm);
+        assert_eq!(MEASURE_SIZE_BPM, measure.measure_size_bpm);
+        assert_eq!(QUANTATION_LEVEL, measure.quantation_level);
 
         assert_eq!(MEASURE_SIZE_MILLIS, measure.measure_size_millis());
         assert_eq!(BEAT_SIZE_MILLIS, measure.beat_size_millis());
@@ -127,13 +74,17 @@ mod tests {
 
     #[test]
     fn test_measure_update() {
-        let mut measure = Measure::new(TEMPO_BPM, MEASURE_SIZE_BPM, QUANTATION_LEVEL);
+        let mut measure = Measure {
+            tempo_bpm: TEMPO_BPM,
+            measure_size_bpm: MEASURE_SIZE_BPM,
+            quantation_level: QUANTATION_LEVEL
+        };
 
         assert_eq!(MEASURE_SIZE_MILLIS, measure.measure_size_millis());
         assert_eq!(BEAT_SIZE_MILLIS, measure.beat_size_millis());
         assert_eq!(QUANT_SIZE_MILLIS, measure.quant_size_millis());
 
-        measure.update_tempo_bpm(TEMPO_BPM + 40);
+        measure = Measure { tempo_bpm: TEMPO_BPM + 40, .. measure };
 
         assert_eq!(1500, measure.measure_size_millis());
         assert_eq!(375, measure.beat_size_millis());
@@ -142,7 +93,11 @@ mod tests {
 
     #[test]
     fn test_timestamp_quant_conversion() {
-        let measure = Measure::new(TEMPO_BPM, MEASURE_SIZE_BPM, QUANTATION_LEVEL);
+        let measure = Measure {
+            tempo_bpm: TEMPO_BPM,
+            measure_size_bpm: MEASURE_SIZE_BPM,
+            quantation_level: QUANTATION_LEVEL,
+        };
 
         // timestamp to quant
         assert_eq!(Quant(0), measure.timestamp_to_quant(0));
@@ -152,5 +107,24 @@ mod tests {
 
         // quant to timestamp
         assert_eq!(5 * measure.quant_size_millis(), measure.quant_to_timestamp(Quant(5)));
+    }
+
+    #[test]
+    fn test_scale_time_cursor() {
+        let measure = Measure {
+            tempo_bpm: TEMPO_BPM,
+            measure_size_bpm: MEASURE_SIZE_BPM,
+            quantation_level: QUANTATION_LEVEL,
+        };
+
+        let amount_of_measures = 2;
+        let time_cursor = measure.measure_size_millis();
+
+        let new_measure = Measure { tempo_bpm: TEMPO_BPM + 45, .. measure };
+
+        assert_eq!(new_measure.measure_size_millis(),
+                   measure.scale_time_cursor(&new_measure,
+                                             amount_of_measures,
+                                             time_cursor))
     }
 }

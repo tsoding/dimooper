@@ -7,89 +7,21 @@ use midi_adapter::MidiAdapter;
 use updatable::Updatable;
 use renderable::Renderable;
 use graphicsprimitives::CircleRenderer;
-use measure::{Measure, Quant};
+use measure::Measure;
 
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
+
+mod sample;
+
+use self::sample::Sample;
 
 #[derive(PartialEq)]
 pub enum State {
     Recording,
     Looping,
     Pause,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct QuantMidiEvent {
-    pub message: TypedMidiMessage,
-    pub quant: Quant,
-}
-
-pub struct Sample {
-    pub buffer: Vec<QuantMidiEvent>,
-    amount_of_measures: u32,
-    time_cursor: u32,
-}
-
-impl Sample {
-
-    fn amount_of_measures_in_buffer(buffer: &[TypedMidiEvent], measure: &Measure) -> u32 {
-        let n = buffer.len();
-
-        if n > 0 {
-            (buffer[n - 1].timestamp - buffer[0].timestamp + measure.measure_size_millis()) / measure.measure_size_millis()
-        } else {
-            1
-        }
-    }
-
-    pub fn new(buffer: &[TypedMidiEvent], measure: &Measure) -> Sample {
-        let amount_of_measures = Self::amount_of_measures_in_buffer(&buffer, &measure);
-
-        let quant_buffer = {
-            let mut result = Vec::new();
-
-            for event in buffer {
-                result.push(QuantMidiEvent {
-                    message: event.message,
-                    quant: measure.timestamp_to_quant(event.timestamp),
-                })
-            }
-
-            result
-        };
-
-        Sample {
-            buffer: quant_buffer,
-            amount_of_measures: amount_of_measures,
-            time_cursor: 0,
-        }
-    }
-
-    pub fn get_next_messages(&mut self, delta_time: u32, measure: &Measure) -> Vec<TypedMidiMessage> {
-        let next_time_cursor = self.time_cursor + delta_time;
-        let sample_size_millis = measure.measure_size_millis() * self.amount_of_measures;
-        let mut result = Vec::new();
-
-        self.gather_messages_in_timerange(measure, &mut result, self.time_cursor, next_time_cursor);
-        self.time_cursor = next_time_cursor % sample_size_millis;
-
-        if next_time_cursor >= sample_size_millis {
-            self.gather_messages_in_timerange(measure, &mut result, 0, self.time_cursor);
-        }
-
-        result
-    }
-
-    fn gather_messages_in_timerange(&self, measure: &Measure, result: &mut Vec<TypedMidiMessage>, start: u32, end: u32) {
-        for event in self.buffer.iter() {
-            let timestamp = measure.quant_to_timestamp(event.quant);
-            if start <= timestamp && timestamp <= end {
-                result.push(event.message);
-            }
-        }
-    }
 }
 
 pub struct Looper {
@@ -123,7 +55,7 @@ impl Updatable for Looper {
             }
 
             for sample in self.composition.iter_mut() {
-                for message in sample.get_next_messages(delta_time, &self.measure) {
+                for message in sample.get_next_messages(delta_time) {
                     self.midi_adapter.write_message(message).unwrap();
                 }
             }
@@ -178,7 +110,7 @@ impl Renderable for Looper {
                          renderer);
 
         // Measure Beats
-        for i in 0 .. self.measure.measure_size_bpm() * self.amount_of_measures {
+        for i in 0 .. self.measure.measure_size_bpm * self.amount_of_measures {
             renderer.set_draw_color(Color::RGB(50, 50, 50));
             draw_time_cursor(i * beat_size_millis, renderer);
         }
@@ -210,9 +142,11 @@ impl Looper {
             measure_time_cursor: 0,
             measure_cursor: 0,
             amount_of_measures: 1,
-            measure: Measure::new(DEFAULT_TEMPO_BPM,
-                                  DEFAULT_MEASURE_SIZE_BPM,
-                                  DEFAULT_QUANTATION_LEVEL),
+            measure: Measure {
+                tempo_bpm: DEFAULT_TEMPO_BPM,
+                measure_size_bpm: DEFAULT_MEASURE_SIZE_BPM,
+                quantation_level: DEFAULT_QUANTATION_LEVEL,
+            },
         };
         looper.reset();
         looper
@@ -302,7 +236,18 @@ impl Looper {
     }
 
     pub fn update_tempo_bpm(&mut self, tempo_bpm: u32) {
-        self.measure.update_tempo_bpm(tempo_bpm);
+        let new_measure = Measure { tempo_bpm: tempo_bpm, .. self.measure };
+
+        self.measure_time_cursor =
+            self.measure.scale_time_cursor(&new_measure,
+                                           self.amount_of_measures,
+                                           self.measure_time_cursor);
+
+        for sample in self.composition.iter_mut() {
+            sample.update_measure(&new_measure)
+        }
+
+        self.measure = new_measure;
     }
 
     fn make_metronome(&self) -> Sample {
@@ -310,7 +255,7 @@ impl Looper {
 
         let mut buffer = Vec::new();
 
-        for i in 0..self.measure.measure_size_bpm() {
+        for i in 0..self.measure.measure_size_bpm {
             buffer.push(TypedMidiEvent {
                 message: TypedMidiMessage::NoteOn {
                     channel: CONTROL_CHANNEL_NUMBER,
