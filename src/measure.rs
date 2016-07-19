@@ -108,4 +108,23 @@ mod tests {
         // quant to timestamp
         assert_eq!(5 * measure.quant_size_millis(), measure.quant_to_timestamp(Quant(5)));
     }
+
+    #[test]
+    fn test_scale_time_cursor() {
+        let measure = Measure {
+            tempo_bpm: TEMPO_BPM,
+            measure_size_bpm: MEASURE_SIZE_BPM,
+            quantation_level: QUANTATION_LEVEL,
+        };
+
+        let amount_of_measures = 2;
+        let time_cursor = measure.measure_size_millis();
+
+        let new_measure = Measure { tempo_bpm: TEMPO_BPM + 45, .. measure };
+
+        assert_eq!(new_measure.measure_size_millis(),
+                   measure.scale_time_cursor(&new_measure,
+                                             amount_of_measures,
+                                             time_cursor))
+    }
 }
