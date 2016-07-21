@@ -91,33 +91,105 @@ mod tests {
     use measure::Measure;
     use midi::{TypedMidiEvent, TypedMidiMessage};
 
+    const DEFAULT_MEASURE: Measure = Measure {
+        tempo_bpm: DEFAULT_TEMPO_BPM,
+        measure_size_bpm: DEFAULT_MEASURE_SIZE_BPM,
+        quantation_level: DEFAULT_QUANTATION_LEVEL,
+    };
+
+    macro_rules! test_sample_data {
+        (
+            $([$key: expr, $start: expr, $duration: expr]),*
+        ) => {
+            &[$(TypedMidiEvent {
+                timestamp: $start,
+                message: TypedMidiMessage::NoteOn {
+                    channel: 0,
+                    key: $key,
+                    velocity: 0,
+                }
+            },
+
+            TypedMidiEvent {
+                timestamp: $start + $duration - 1,
+                message: TypedMidiMessage::NoteOff {
+                    channel: 0,
+                    key: $key,
+                    velocity: 0,
+                }
+            }),*]
+        }
+    }
+
     #[test]
-    fn test_amount_of_measure_calculation() {
-        let dummy_message = TypedMidiMessage::NoteOn {
-            channel: 0,
-            key: 0,
-            velocity: 0,
-        };
-        let expected_amount_of_measures = 2;
-
-        let measure = Measure {
-            tempo_bpm: DEFAULT_TEMPO_BPM,
-            measure_size_bpm: DEFAULT_MEASURE_SIZE_BPM,
-            quantation_level: DEFAULT_QUANTATION_LEVEL,
-        };
-
-        let buffer = [
-            TypedMidiEvent {
-                timestamp: 0,
-                message: dummy_message,
-            },
-            TypedMidiEvent {
-                timestamp: measure.measure_size_millis() * expected_amount_of_measures - 1,
-                message: dummy_message,
-            },
+    fn test_get_next_messages() {
+        let buffer = test_sample_data! [
+            [1,
+             0,
+             DEFAULT_MEASURE.measure_size_millis()],
+            [2,
+             DEFAULT_MEASURE.measure_size_millis() + DEFAULT_MEASURE.quant_size_millis(),
+             DEFAULT_MEASURE.measure_size_millis() - DEFAULT_MEASURE.quant_size_millis()]
         ];
 
-        let sample = Sample::new(&buffer, &measure);
+        let mut sample = Sample::new(buffer, &DEFAULT_MEASURE);
+        assert_eq!(2, sample.amount_of_measures);
+
+        { // First Iteration
+            let message = sample.get_next_messages(DEFAULT_MEASURE.measure_size_millis());
+            assert_eq!(vec![
+                TypedMidiMessage::NoteOn {
+                    channel: 0,
+                    key: 1,
+                    velocity: 0,
+                },
+
+                TypedMidiMessage::NoteOff {
+                    channel: 0,
+                    key: 1,
+                    velocity: 0,
+                },
+            ], message);
+        }
+
+        { // Second Iteration
+            let message = sample.get_next_messages(DEFAULT_MEASURE.measure_size_millis() / 2);
+            assert_eq!(vec![
+                TypedMidiMessage::NoteOn {
+                    channel: 0,
+                    key: 2,
+                    velocity: 0,
+                },
+            ], message);
+        }
+
+        { // Third Iteration
+            let message = sample.get_next_messages(DEFAULT_MEASURE.measure_size_millis());
+            assert_eq!(vec![
+                TypedMidiMessage::NoteOff {
+                    channel: 0,
+                    key: 2,
+                    velocity: 0,
+                },
+
+                TypedMidiMessage::NoteOn {
+                    channel: 0,
+                    key: 1,
+                    velocity: 0,
+                },
+            ], message);
+        }
+    }
+
+    #[test]
+    fn test_amount_of_measure_calculation() {
+        let expected_amount_of_measures = 2;
+
+        let buffer = test_sample_data! [
+            [0, 0, DEFAULT_MEASURE.measure_size_millis() * expected_amount_of_measures]
+        ];
+
+        let sample = Sample::new(buffer, &DEFAULT_MEASURE);
 
         println!("{}", sample.amount_of_measures);
 
