@@ -44,7 +44,7 @@ impl Sample {
         Sample {
             buffer: quant_buffer,
             amount_of_measures: amount_of_measures,
-            time_cursor: 0,
+            time_cursor: amount_of_measures * measure.measure_size_millis(),
             measure: measure.clone(),
         }
     }
@@ -63,7 +63,7 @@ impl Sample {
         let sample_size_millis = self.measure.measure_size_millis() * self.amount_of_measures;
         let mut result = Vec::new();
 
-        self.gather_messages_in_timerange(&mut result, self.time_cursor, next_time_cursor);
+        self.gather_messages_in_timerange(&mut result, self.time_cursor + 1, next_time_cursor);
         self.time_cursor = next_time_cursor % sample_size_millis;
 
         if next_time_cursor >= sample_size_millis {
