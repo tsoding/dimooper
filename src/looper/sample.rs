@@ -44,7 +44,7 @@ impl Sample {
         Sample {
             buffer: quant_buffer,
             amount_of_measures: amount_of_measures,
-            time_cursor: 0,
+            time_cursor: amount_of_measures * measure.measure_size_millis(),
             measure: measure.clone(),
         }
     }
@@ -63,7 +63,7 @@ impl Sample {
         let sample_size_millis = self.measure.measure_size_millis() * self.amount_of_measures;
         let mut result = Vec::new();
 
-        self.gather_messages_in_timerange(&mut result, self.time_cursor, next_time_cursor);
+        self.gather_messages_in_timerange(&mut result, self.time_cursor + 1, next_time_cursor);
         self.time_cursor = next_time_cursor % sample_size_millis;
 
         if next_time_cursor >= sample_size_millis {
@@ -91,33 +91,101 @@ mod tests {
     use measure::Measure;
     use midi::{TypedMidiEvent, TypedMidiMessage};
 
+    const DEFAULT_MEASURE: Measure = Measure {
+        tempo_bpm: DEFAULT_TEMPO_BPM,
+        measure_size_bpm: DEFAULT_MEASURE_SIZE_BPM,
+        quantation_level: DEFAULT_QUANTATION_LEVEL,
+    };
+
+    macro_rules! test_sample_data {
+        (
+            $([$key: expr, $start: expr, $duration: expr]),*
+        ) => {
+            &[$(TypedMidiEvent {
+                timestamp: $start,
+                message: TypedMidiMessage::NoteOn {
+                    channel: 0,
+                    key: $key,
+                    velocity: 0,
+                }
+            },
+
+            TypedMidiEvent {
+                timestamp: $start + $duration - 1,
+                message: TypedMidiMessage::NoteOff {
+                    channel: 0,
+                    key: $key,
+                    velocity: 0,
+                }
+            }),*]
+        }
+    }
+
+    macro_rules! test_msg {
+        (on => $key:expr) => {
+            TypedMidiMessage::NoteOn {
+                channel: 0,
+                key: $key,
+                velocity: 0,
+            }
+        };
+
+        (off => $key:expr) => {
+            TypedMidiMessage::NoteOff {
+                channel: 0,
+                key: $key,
+                velocity: 0,
+            }
+        };
+    }
+
     #[test]
-    fn test_amount_of_measure_calculation() {
-        let dummy_message = TypedMidiMessage::NoteOn {
-            channel: 0,
-            key: 0,
-            velocity: 0,
-        };
-        let expected_amount_of_measures = 2;
-
-        let measure = Measure {
-            tempo_bpm: DEFAULT_TEMPO_BPM,
-            measure_size_bpm: DEFAULT_MEASURE_SIZE_BPM,
-            quantation_level: DEFAULT_QUANTATION_LEVEL,
-        };
-
-        let buffer = [
-            TypedMidiEvent {
-                timestamp: 0,
-                message: dummy_message,
-            },
-            TypedMidiEvent {
-                timestamp: measure.measure_size_millis() * expected_amount_of_measures - 1,
-                message: dummy_message,
-            },
+    fn test_get_next_messages() {
+        let buffer = test_sample_data! [
+            [1,
+             0,
+             DEFAULT_MEASURE.measure_size_millis()],
+            [2,
+             DEFAULT_MEASURE.measure_size_millis() + DEFAULT_MEASURE.quant_size_millis(),
+             DEFAULT_MEASURE.measure_size_millis() - DEFAULT_MEASURE.quant_size_millis()]
         ];
 
-        let sample = Sample::new(&buffer, &measure);
+        let test_data = &[
+            (DEFAULT_MEASURE.measure_size_millis(),
+             vec![
+                test_msg!(on => 1),
+                test_msg!(off => 1),
+             ]),
+
+            (DEFAULT_MEASURE.measure_size_millis() / 2,
+             vec![test_msg!(on => 2)]),
+
+            (DEFAULT_MEASURE.measure_size_millis(),
+             vec![
+                 test_msg!(off => 2),
+                 test_msg!(on => 1),
+             ]),
+        ];
+
+        let mut sample = Sample::new(buffer, &DEFAULT_MEASURE);
+        assert_eq!(2, sample.amount_of_measures);
+
+        for &(delta_time, ref expected_messages) in test_data {
+            let messages = sample.get_next_messages(delta_time);
+            assert_eq!(expected_messages, &messages);
+        }
+
+    }
+
+    #[test]
+    fn test_amount_of_measure_calculation() {
+        let expected_amount_of_measures = 2;
+
+        let buffer = test_sample_data! [
+            [0, 0, DEFAULT_MEASURE.measure_size_millis() * expected_amount_of_measures]
+        ];
+
+        let sample = Sample::new(buffer, &DEFAULT_MEASURE);
 
         println!("{}", sample.amount_of_measures);
 
