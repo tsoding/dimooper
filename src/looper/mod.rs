@@ -7,7 +7,7 @@ use midi_adapter::MidiAdapter;
 use updatable::Updatable;
 use renderable::Renderable;
 use graphicsprimitives::CircleRenderer;
-use measure::Measure;
+use measure::{Measure, Quant};
 
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;
@@ -78,7 +78,9 @@ impl Renderable for Looper {
                 for i in 0..repeat_count {
                     for event in sample.buffer.iter() {
                         result.push(TypedMidiEvent {
-                            timestamp: self.measure.quant_to_timestamp(event.quant) + i * measure_size_millis,
+                            timestamp: {
+                                self.measure.quant_to_timestamp(event.quant + Quant(i) * sample.quants_per_sample())
+                            },
                             message: event.message,
                         })
                     }

@@ -81,6 +81,10 @@ impl Sample {
             }
         }
     }
+
+    pub fn quants_per_sample(&self) -> Quant {
+        self.measure.quants_per_measure() * Quant(self.amount_of_measures)
+    }
 }
 
 #[cfg(test)]
@@ -137,6 +141,11 @@ mod tests {
                 velocity: 0,
             }
         };
+    }
+
+    #[test]
+    fn test_quants_per_measure() {
+        assert!(false);
     }
 
     #[test]
