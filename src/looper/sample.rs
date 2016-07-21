@@ -121,6 +121,24 @@ mod tests {
         }
     }
 
+    macro_rules! test_msg {
+        (on => $key:expr) => {
+            TypedMidiMessage::NoteOn {
+                channel: 0,
+                key: $key,
+                velocity: 0,
+            }
+        };
+
+        (off => $key:expr) => {
+            TypedMidiMessage::NoteOff {
+                channel: 0,
+                key: $key,
+                velocity: 0,
+            }
+        };
+    }
+
     #[test]
     fn test_get_next_messages() {
         let buffer = test_sample_data! [
@@ -132,53 +150,31 @@ mod tests {
              DEFAULT_MEASURE.measure_size_millis() - DEFAULT_MEASURE.quant_size_millis()]
         ];
 
+        let test_data = &[
+            (DEFAULT_MEASURE.measure_size_millis(),
+             vec![
+                test_msg!(on => 1),
+                test_msg!(off => 1),
+             ]),
+
+            (DEFAULT_MEASURE.measure_size_millis() / 2,
+             vec![test_msg!(on => 2)]),
+
+            (DEFAULT_MEASURE.measure_size_millis(),
+             vec![
+                 test_msg!(off => 2),
+                 test_msg!(on => 1),
+             ]),
+        ];
+
         let mut sample = Sample::new(buffer, &DEFAULT_MEASURE);
         assert_eq!(2, sample.amount_of_measures);
 
-        { // First Iteration
-            let message = sample.get_next_messages(DEFAULT_MEASURE.measure_size_millis());
-            assert_eq!(vec![
-                TypedMidiMessage::NoteOn {
-                    channel: 0,
-                    key: 1,
-                    velocity: 0,
-                },
-
-                TypedMidiMessage::NoteOff {
-                    channel: 0,
-                    key: 1,
-                    velocity: 0,
-                },
-            ], message);
+        for &(delta_time, ref expected_messages) in test_data {
+            let messages = sample.get_next_messages(delta_time);
+            assert_eq!(expected_messages, &messages);
         }
 
-        { // Second Iteration
-            let message = sample.get_next_messages(DEFAULT_MEASURE.measure_size_millis() / 2);
-            assert_eq!(vec![
-                TypedMidiMessage::NoteOn {
-                    channel: 0,
-                    key: 2,
-                    velocity: 0,
-                },
-            ], message);
-        }
-
-        { // Third Iteration
-            let message = sample.get_next_messages(DEFAULT_MEASURE.measure_size_millis());
-            assert_eq!(vec![
-                TypedMidiMessage::NoteOff {
-                    channel: 0,
-                    key: 2,
-                    velocity: 0,
-                },
-
-                TypedMidiMessage::NoteOn {
-                    channel: 0,
-                    key: 1,
-                    velocity: 0,
-                },
-            ], message);
-        }
     }
 
     #[test]
