@@ -92,7 +92,7 @@ mod tests {
     use super::Sample;
     use config::*;
 
-    use measure::Measure;
+    use measure::{Measure, Quant};
     use midi::{TypedMidiEvent, TypedMidiMessage};
 
     const DEFAULT_MEASURE: Measure = Measure {
@@ -145,7 +145,16 @@ mod tests {
 
     #[test]
     fn test_quants_per_sample() {
-        assert!(false);
+        let expected_amount_of_measures = 2;
+
+        let buffer = test_sample_data! [
+            [0, 0, DEFAULT_MEASURE.measure_size_millis() * expected_amount_of_measures]
+        ];
+
+        let sample = Sample::new(buffer, &DEFAULT_MEASURE);
+
+        assert_eq!(DEFAULT_MEASURE.quants_per_measure() * Quant(expected_amount_of_measures),
+                   sample.quants_per_sample());
     }
 
     #[test]
