@@ -1,5 +1,6 @@
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct Quant(u32);
+mod quant;
+
+pub use self::quant::Quant;
 
 #[derive(Debug, Clone)]
 pub struct Measure {
@@ -23,6 +24,10 @@ impl Measure {
 
     pub fn beat_size_millis(&self) -> u32 {
         (60000.0 / self.tempo_bpm as f32) as u32
+    }
+
+    pub fn quants_per_measure(&self) -> Quant {
+        Quant(self.measure_size_bpm.pow(self.quantation_level))
     }
 
     pub fn quant_size_millis(&self) -> u32 {
@@ -107,6 +112,17 @@ mod tests {
 
         // quant to timestamp
         assert_eq!(5 * measure.quant_size_millis(), measure.quant_to_timestamp(Quant(5)));
+    }
+
+    #[test]
+    fn test_quants_per_measure() {
+        let measure = Measure {
+            tempo_bpm: TEMPO_BPM,
+            measure_size_bpm: MEASURE_SIZE_BPM,
+            quantation_level: QUANTATION_LEVEL,
+        };
+
+        assert_eq!(Quant(16), measure.quants_per_measure());
     }
 
     #[test]

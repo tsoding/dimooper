@@ -7,15 +7,15 @@ use midi_adapter::MidiAdapter;
 use updatable::Updatable;
 use renderable::Renderable;
 use graphicsprimitives::CircleRenderer;
-use measure::Measure;
+use measure::{Measure, Quant};
 
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
 
-mod sample;
+pub mod sample;
 
-use self::sample::Sample;
+use self::sample::{Sample, QuantMidiEvent};
 
 #[derive(PartialEq)]
 pub enum State {
@@ -77,8 +77,8 @@ impl Renderable for Looper {
                 let repeat_count = self.amount_of_measures / sample.amount_of_measures;
                 for i in 0..repeat_count {
                     for event in sample.buffer.iter() {
-                        result.push(TypedMidiEvent {
-                            timestamp: self.measure.quant_to_timestamp(event.quant) + i * measure_size_millis,
+                        result.push(QuantMidiEvent {
+                            quant: event.quant + Quant(i) * sample.quants_per_sample(),
                             message: event.message,
                         })
                     }
@@ -88,7 +88,7 @@ impl Renderable for Looper {
             result
         };
 
-        let dt = (measure_size_millis * self.amount_of_measures) as f32;
+        let dt = self.measure.quants_per_measure() * Quant(self.amount_of_measures);
 
         let notes = midi::events_to_notes(&render_buffer);
 
