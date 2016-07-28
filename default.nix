@@ -11,6 +11,6 @@ in rec {
     name = "dimooper-env";
     version = "0.0.1";
     src = ./.;
-    buildInputs = [ pkgs.portmidi pkgs.SDL2 rustNightly ];
+    buildInputs = [ pkgs.portmidi pkgs.SDL2 pkgs.SDL2_ttf rustNightly ];
   };
 }
