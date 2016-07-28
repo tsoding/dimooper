@@ -19,3 +19,5 @@ pub const AMOUNT_OF_MIDI_CHANNELS: usize = 16;
 pub const AMOUNT_OF_MIDI_KEYS: usize = 128;
 
 pub const TEMPO_CHANGE_CONTROL_NUMBER: u8 = 21;
+
+pub const TTF_FONT_PATH: &'static str = "fonts/OpenSans-Regular.ttf";

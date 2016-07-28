@@ -1,10 +1,15 @@
 extern crate sdl2;
+extern crate sdl2_ttf;
 extern crate portmidi as pm;
 extern crate num;
+
+use std::path::Path;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
+use sdl2::rect::Rect;
+use sdl2::render::TextureQuery;
 
 mod looper;
 mod updatable;
@@ -58,6 +63,7 @@ fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let mut timer_subsystem = sdl_context.timer().unwrap();
+    let ttf_context = sdl2_ttf::init().unwrap();
 
     let window = video_subsystem.window("Dimooper", window_width, window_height)
         .position_centered()
@@ -66,6 +72,9 @@ fn main() {
         .unwrap();
 
     let mut renderer = window.renderer().build().unwrap();
+
+    let font = ttf_context.load_font(Path::new(TTF_FONT_PATH), 50).unwrap();
+
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut looper = looper::Looper::new(MidiAdapter::new(out_port));
@@ -138,6 +147,17 @@ fn main() {
         renderer.set_draw_color(Color::RGB(0, 0, 0));
         renderer.clear();
         looper.render(&mut renderer);
+
+        {
+            let tempo_bpm = looper.measure.tempo_bpm;
+            let tempo_bpm_sign = font.render(tempo_bpm.to_string().as_str()).blended(Color::RGBA(255, 0, 0, 255)).unwrap();
+            let mut texture = renderer.create_texture_from_surface(&tempo_bpm_sign).unwrap();
+
+            let TextureQuery { width, height, .. } = texture.query();
+
+            renderer.copy(&mut texture, None, Some(Rect::new(10, 0, width, height)));
+        }
+
         renderer.present();
 
         std::thread::sleep(std::time::Duration::from_millis(EVENT_LOOP_SLEEP_TIMEOUT));
