@@ -115,6 +115,17 @@ mod tests {
     }
 
     #[test]
+    fn test_quants_per_measure() {
+        let measure = Measure {
+            tempo_bpm: TEMPO_BPM,
+            measure_size_bpm: MEASURE_SIZE_BPM,
+            quantation_level: QUANTATION_LEVEL,
+        };
+
+        assert_eq!(Quant(16), measure.quants_per_measure());
+    }
+
+    #[test]
     fn test_scale_time_cursor() {
         let measure = Measure {
             tempo_bpm: TEMPO_BPM,

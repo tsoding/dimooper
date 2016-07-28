@@ -144,7 +144,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quants_per_measure() {
+    fn test_quants_per_sample() {
         assert!(false);
     }
 
