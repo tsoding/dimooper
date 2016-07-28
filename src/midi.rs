@@ -5,6 +5,9 @@ use sdl2::render::Renderer;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 
+use looper::sample::QuantMidiEvent;
+use measure::Quant;
+
 const NOTE_ON_STATUS: u8 = 0b10010000;
 const NOTE_OFF_STATUS: u8 = 0b10000000;
 const CONTROL_CHANGE_STATUS: u8 = 0b10110000;
@@ -58,8 +61,8 @@ pub struct TypedMidiEvent {
 
 #[derive(Clone, Copy)]
 pub struct Note {
-    pub start_timestamp: u32,
-    pub end_timestamp: u32,
+    pub start_quant: Quant,
+    pub end_quant: Quant,
     pub key: u8,
     pub channel: u8,
     pub velocity: u8,
@@ -89,7 +92,8 @@ fn multiply_color_vector(color: Color, factor: f32) -> Color {
 }
 
 impl Note {
-    pub fn render(&self, renderer: &mut Renderer, dt: f32) {
+    pub fn render(&self, renderer: &mut Renderer, qdt: Quant) {
+        let Quant(dt) = qdt;
         let window_width = renderer.viewport().width();
         let window_height = renderer.viewport().height();
         let row_height = window_height as f32 / 128.0;
@@ -98,10 +102,10 @@ impl Note {
         let base_color = CHANNEL_PALETTE[self.channel as usize % CHANNEL_PALETTE.len()];
         let color = multiply_color_vector(base_color, brightness_factor);
 
-        let t1 = self.start_timestamp as f32;
-        let t2 = self.end_timestamp as f32;
-        let x1 = (t1 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
-        let x2 = (t2 / dt * (window_width as f32 - 10.0) + 5.0) as i32;
+        let Quant(t1) = self.start_quant;
+        let Quant(t2) = self.end_quant;
+        let x1 = (t1 as f32 / dt as f32 * (window_width as f32 - 10.0) + 5.0) as i32;
+        let x2 = (t2 as f32 / dt as f32 * (window_width as f32 - 10.0) + 5.0) as i32;
         let y = (row_height * (127 - self.key) as f32) as i32;
 
         let note_rect = Rect::new(x1, y, (x2 - x1 + 1) as u32, row_height as u32);
@@ -143,7 +147,7 @@ pub fn parse_midi_message(raw_message: &MidiMessage) -> Option<TypedMidiMessage>
     }
 }
 
-pub fn events_to_notes(replay_buffer: &[TypedMidiEvent]) -> Vec<Note> {
+pub fn events_to_notes(replay_buffer: &[QuantMidiEvent]) -> Vec<Note> {
     let mut note_tracker: [[Option<Note>; 128]; 16] = [[None; 128]; 16];
     let mut result = Vec::new();
 
@@ -153,15 +157,15 @@ pub fn events_to_notes(replay_buffer: &[TypedMidiEvent]) -> Vec<Note> {
             TypedMidiMessage::NoteOn { channel, key, velocity } => {
                 match note_tracker[channel as usize][key as usize] {
                     Some(mut note) => {
-                        note.end_timestamp = event.timestamp;
+                        note.end_quant = event.quant;
                         result.push(note);
 
-                        note.start_timestamp = event.timestamp;
+                        note.start_quant = event.quant;
                         note_tracker[channel as usize][key as usize] = Some(note);
                     }
                     None => note_tracker[channel as usize][key as usize] = Some(Note {
-                        start_timestamp: event.timestamp,
-                        end_timestamp: 0,
+                        start_quant: event.quant,
+                        end_quant: Quant(0),
                         key: key,
                         channel: channel,
                         velocity: velocity,
@@ -171,7 +175,7 @@ pub fn events_to_notes(replay_buffer: &[TypedMidiEvent]) -> Vec<Note> {
 
             TypedMidiMessage::NoteOff { channel, key, .. } => {
                 if let Some(mut note) = note_tracker[channel as usize][key as usize] {
-                    note.end_timestamp = event.timestamp;
+                    note.end_quant = event.quant;
                     result.push(note);
                     note_tracker[channel as usize][key as usize] = None;
                 }
