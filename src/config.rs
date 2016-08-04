@@ -22,3 +22,4 @@ pub const TEMPO_CHANGE_CONTROL_NUMBER: u8 = 21;
 
 pub const TTF_FONT_PATH: &'static str = "fonts/minoru.ttf";
 pub const POPUP_FADEOUT_TIME: u32 = 500;
+pub const POPUP_STAY_TIME: u32 = 500;

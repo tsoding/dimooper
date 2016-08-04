@@ -9,7 +9,7 @@ use sdl2_ttf::Font;
 use renderable::Renderable;
 use updatable::Updatable;
 
-use config::POPUP_FADEOUT_TIME;
+use config::{POPUP_FADEOUT_TIME, POPUP_STAY_TIME};
 
 pub struct Popup {
     text: String,
@@ -32,7 +32,7 @@ impl Popup {
     /// fade out until it's bumped again.
     pub fn bump(&mut self, label_text: &str) {
         self.text = String::from(label_text);
-        self.countdown = POPUP_FADEOUT_TIME;
+        self.countdown = POPUP_FADEOUT_TIME + POPUP_STAY_TIME;
     }
 }
 
@@ -42,7 +42,7 @@ impl Renderable for Popup {
             let popup_surface = self.font.render(self.text.as_str()).blended(Color::RGBA(255, 0, 0, 255)).unwrap();
             let mut texture = renderer.create_texture_from_surface(popup_surface).unwrap();
 
-            texture.set_alpha_mod((255 as f32 / POPUP_FADEOUT_TIME as f32 * self.countdown as f32) as u8);
+            texture.set_alpha_mod(cmp::min(255, (255 as f32 / POPUP_FADEOUT_TIME as f32 * self.countdown as f32) as u32) as u8);
 
             let TextureQuery { width, height, .. } = texture.query();
 
