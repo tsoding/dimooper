@@ -19,11 +19,13 @@ mod midi_adapter;
 mod graphicsprimitives;
 mod config;
 mod measure;
+mod popup;
 
 use updatable::Updatable;
 use renderable::Renderable;
 use midi_adapter::MidiAdapter;
 use midi::{TypedMidiEvent, TypedMidiMessage};
+use popup::Popup;
 
 use config::*;
 
@@ -73,7 +75,10 @@ fn main() {
 
     let mut renderer = window.renderer().build().unwrap();
 
-    let font = ttf_context.load_font(Path::new(TTF_FONT_PATH), 50).unwrap();
+    let mut bpm_popup = {
+        let font = ttf_context.load_font(Path::new(TTF_FONT_PATH), 50).unwrap();
+        Popup::new("khooy", font)
+    };
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
@@ -134,7 +139,11 @@ fn main() {
                                     ..
                                 },
                                 ..
-                            } => looper.update_tempo_bpm(value as u32 + 90),
+                            } => {
+                                let bpm = value as u32 + 90;
+                                looper.update_tempo_bpm(bpm);
+                                bpm_popup.bump(bpm.to_string().as_str());
+                            },
 
                             _ => looper.on_midi_event(&event),
                         }
@@ -144,19 +153,13 @@ fn main() {
         }
 
         looper.update(delta_time);
+        bpm_popup.update(delta_time);
+
         renderer.set_draw_color(Color::RGB(0, 0, 0));
         renderer.clear();
+
         looper.render(&mut renderer);
-
-        {
-            let tempo_bpm = looper.measure.tempo_bpm;
-            let tempo_bpm_sign = font.render(tempo_bpm.to_string().as_str()).blended(Color::RGBA(255, 0, 0, 255)).unwrap();
-            let mut texture = renderer.create_texture_from_surface(&tempo_bpm_sign).unwrap();
-
-            let TextureQuery { width, height, .. } = texture.query();
-
-            renderer.copy(&mut texture, None, Some(Rect::new(10, 0, width, height)));
-        }
+        bpm_popup.render(&mut renderer);
 
         renderer.present();
 
