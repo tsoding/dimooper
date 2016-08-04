@@ -39,9 +39,6 @@ impl Popup {
 impl Renderable for Popup {
     fn render(&self, renderer: &mut Renderer) {
         if self.countdown > 0 {
-            let window_width = renderer.viewport().width();
-            let window_height = renderer.viewport().height();
-
             let popup_surface = self.font.render(self.text.as_str()).blended(Color::RGBA(255, 0, 0, 255)).unwrap();
             let mut texture = renderer.create_texture_from_surface(popup_surface).unwrap();
 
@@ -49,7 +46,12 @@ impl Renderable for Popup {
 
             let TextureQuery { width, height, .. } = texture.query();
 
-            renderer.copy(&mut texture, None, Some(Rect::new(10, 10, width, height)));
+            let window_width = renderer.viewport().width() as f32;
+            let label_width = (window_width / 3.0) as u32;
+            let label_height = (label_width as f32 / width as f32 * height as f32) as u32;
+
+            renderer.copy(&mut texture, None, Some(Rect::new(label_width as i32, label_height as i32,
+                                                             label_width, label_height)));
         }
     }
 }
