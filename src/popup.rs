@@ -24,7 +24,19 @@ impl Popup {
 
     fn make_text_texture(&self, renderer: &mut Renderer) -> Texture {
         let surface = self.font.render(self.text.as_str()).blended(Color::RGBA(255, 0, 0, 255)).unwrap();
-        renderer.create_texture_from_surface(surface).unwrap()
+        let mut texture = renderer.create_texture_from_surface(surface).unwrap();
+        texture.set_alpha_mod(self.calculate_alpha());
+        texture
+    }
+
+    fn make_texture_rect(&self, window_width: u32, texture: &Texture) -> Rect {
+        let TextureQuery { width, height, .. } = texture.query();
+
+        let label_width = (window_width as f32 / 3.0) as u32;
+        let label_height = (label_width as f32 / width as f32 * height as f32) as u32;
+
+        Rect::new(label_width as i32, label_height as i32,
+                  label_width, label_height)
     }
 
     pub fn new(label_text: &str, font: Font) -> Popup {
@@ -48,18 +60,10 @@ impl Popup {
 impl Renderable for Popup {
     fn render(&self, renderer: &mut Renderer) {
         if self.countdown > 0 {
-            let mut texture = self.make_text_texture(renderer);
-
-            texture.set_alpha_mod(self.calculate_alpha());
-
-            let TextureQuery { width, height, .. } = texture.query();
-
-            let window_width = renderer.viewport().width() as f32;
-            let label_width = (window_width / 3.0) as u32;
-            let label_height = (label_width as f32 / width as f32 * height as f32) as u32;
-
-            renderer.copy(&mut texture, None, Some(Rect::new(label_width as i32, label_height as i32,
-                                                             label_width, label_height)));
+            let texture = self.make_text_texture(renderer);
+            let texture_rect = self.make_texture_rect(renderer.viewport().width(),
+                                                      &texture);
+            renderer.copy(&texture, None, Some(texture_rect));
         }
     }
 }
