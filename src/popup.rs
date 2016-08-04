@@ -1,7 +1,6 @@
 use std::cmp;
 
-use sdl2::render::Renderer;
-use sdl2::render::TextureQuery;
+use sdl2::render::{Renderer, TextureQuery, Texture};
 use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 use sdl2_ttf::Font;
@@ -21,6 +20,11 @@ impl Popup {
     fn calculate_alpha(&self) -> u8 {
         let raw_alpha = 255 as f32 / POPUP_FADEOUT_TIME as f32 * self.countdown as f32;
         cmp::min(255, raw_alpha as u32) as u8
+    }
+
+    fn make_text_texture(&self, renderer: &mut Renderer) -> Texture {
+        let surface = self.font.render(self.text.as_str()).blended(Color::RGBA(255, 0, 0, 255)).unwrap();
+        renderer.create_texture_from_surface(surface).unwrap()
     }
 
     pub fn new(label_text: &str, font: Font) -> Popup {
@@ -44,8 +48,7 @@ impl Popup {
 impl Renderable for Popup {
     fn render(&self, renderer: &mut Renderer) {
         if self.countdown > 0 {
-            let popup_surface = self.font.render(self.text.as_str()).blended(Color::RGBA(255, 0, 0, 255)).unwrap();
-            let mut texture = renderer.create_texture_from_surface(popup_surface).unwrap();
+            let mut texture = self.make_text_texture(renderer);
 
             texture.set_alpha_mod(self.calculate_alpha());
 
