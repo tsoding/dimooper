@@ -18,6 +18,11 @@ pub struct Popup {
 }
 
 impl Popup {
+    fn calculate_alpha(&self) -> u8 {
+        let raw_alpha = 255 as f32 / POPUP_FADEOUT_TIME as f32 * self.countdown as f32;
+        cmp::min(255, raw_alpha as u32) as u8
+    }
+
     pub fn new(label_text: &str, font: Font) -> Popup {
         Popup {
             text: String::from(label_text),
@@ -42,7 +47,7 @@ impl Renderable for Popup {
             let popup_surface = self.font.render(self.text.as_str()).blended(Color::RGBA(255, 0, 0, 255)).unwrap();
             let mut texture = renderer.create_texture_from_surface(popup_surface).unwrap();
 
-            texture.set_alpha_mod(cmp::min(255, (255 as f32 / POPUP_FADEOUT_TIME as f32 * self.countdown as f32) as u32) as u8);
+            texture.set_alpha_mod(self.calculate_alpha());
 
             let TextureQuery { width, height, .. } = texture.query();
 
