@@ -29,8 +29,8 @@ impl Popup {
         texture
     }
 
-    fn make_texture_rect(&self, window_width: u32, texture: &Texture) -> Rect {
-        let TextureQuery { width, height, .. } = texture.query();
+    fn make_texture_rect(&self, window_width: u32, texture_query: TextureQuery) -> Rect {
+        let TextureQuery { width, height, .. } = texture_query;
 
         let label_width = (window_width as f32 / 3.0) as u32;
         let label_height = (label_width as f32 / width as f32 * height as f32) as u32;
@@ -62,7 +62,7 @@ impl Renderable for Popup {
         if self.countdown > 0 {
             let texture = self.make_text_texture(renderer);
             let texture_rect = self.make_texture_rect(renderer.viewport().width(),
-                                                      &texture);
+                                                      texture.query());
             renderer.copy(&texture, None, Some(texture_rect));
         }
     }
