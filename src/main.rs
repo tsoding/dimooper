@@ -142,7 +142,7 @@ fn main() {
                             } => {
                                 let bpm = value as u32 + 90;
                                 looper.update_tempo_bpm(bpm);
-                                bpm_popup.bump(bpm.to_string().as_str());
+                                bpm_popup.bump(format!("{:03}", bpm).as_str());
                             },
 
                             _ => looper.on_midi_event(&event),
