@@ -77,10 +77,13 @@ impl Updatable for Popup {
 #[cfg(test)]
 mod tests {
     use super::Popup;
-
     use updatable::Updatable;
-
     use std::path::Path;
+
+    use sdl2::rect::Rect;
+    use sdl2::pixels::PixelFormatEnum;
+    use sdl2::render::{TextureQuery, TextureAccess};
+
     use sdl2_ttf;
     use sdl2_ttf::Font;
     use config::{
@@ -110,5 +113,19 @@ mod tests {
         popup.update(POPUP_STAY_TIME / 2 + POPUP_FADEOUT_TIME / 2);
         let fadeout_alpha = popup.calculate_alpha();
         assert!(initial_alpha > fadeout_alpha);
+    }
+
+    #[test]
+    fn test_make_texture_rect() {
+        let popup = Popup::new(load_default_font());
+
+        let rect = popup.make_texture_rect(1002, TextureQuery {
+            format: PixelFormatEnum::Unknown,
+            access: TextureAccess::Static,
+            width: 334,
+            height: 200,
+        });
+
+        assert_eq!(Rect::new(334, 200, 334, 200), rect);
     }
 }
