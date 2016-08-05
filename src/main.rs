@@ -75,7 +75,7 @@ fn main() {
 
     let mut bpm_popup = {
         let font = ttf_context.load_font(Path::new(TTF_FONT_PATH), 50).unwrap();
-        Popup::new("khooy", font)
+        Popup::new(font)
     };
 
     let mut event_pump = sdl_context.event_pump().unwrap();

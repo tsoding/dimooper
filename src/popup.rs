@@ -39,9 +39,9 @@ impl Popup {
                   label_width, label_height)
     }
 
-    pub fn new(label_text: &str, font: Font) -> Popup {
+    pub fn new(font: Font) -> Popup {
         Popup {
-            text: String::from(label_text),
+            text: String::from(""),
             font: font,
             countdown: 0,
         }
