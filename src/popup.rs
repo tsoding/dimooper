@@ -73,3 +73,42 @@ impl Updatable for Popup {
         self.countdown -= cmp::min(self.countdown, delta_time);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Popup;
+
+    use updatable::Updatable;
+
+    use std::path::Path;
+    use sdl2_ttf;
+    use sdl2_ttf::Font;
+    use config::{
+        TTF_FONT_PATH,
+        POPUP_STAY_TIME,
+        POPUP_FADEOUT_TIME,
+    };
+
+    fn load_default_font() -> Font {
+        let ttf_context = sdl2_ttf::init().unwrap();
+        ttf_context.load_font(Path::new(TTF_FONT_PATH), 50).unwrap()
+    }
+
+    #[test]
+    fn test_bump_alpha() {
+        let mut popup = Popup::new(load_default_font());
+        popup.bump("khooy");
+
+        let initial_alpha = popup.calculate_alpha();
+        assert_eq!(255, initial_alpha);
+        assert_eq!("khooy", popup.text);
+
+        popup.update(POPUP_STAY_TIME / 2);
+        let stable_alpha = popup.calculate_alpha();
+        assert_eq!(initial_alpha, stable_alpha);
+
+        popup.update(POPUP_STAY_TIME / 2 + POPUP_FADEOUT_TIME / 2);
+        let fadeout_alpha = popup.calculate_alpha();
+        assert!(initial_alpha > fadeout_alpha);
+    }
+}
