@@ -1,6 +1,6 @@
 use sdl2::render::Renderer;
 
-use midi::{TypedMidiEvent, TypedMidiMessage};
+use midi::{AbsMidiEvent, TypedMidiMessage};
 use measure::{Measure, Quant};
 use traits::Renderable;
 
@@ -18,7 +18,7 @@ pub struct Sample {
 }
 
 impl Sample {
-    fn amount_of_measures_in_buffer(buffer: &[TypedMidiEvent], measure: &Measure) -> u32 {
+    fn amount_of_measures_in_buffer(buffer: &[AbsMidiEvent], measure: &Measure) -> u32 {
         let n = buffer.len();
 
         if n > 0 {
@@ -28,7 +28,7 @@ impl Sample {
         }
     }
 
-    pub fn new(buffer: &[TypedMidiEvent], measure: &Measure) -> Sample {
+    pub fn new(buffer: &[AbsMidiEvent], measure: &Measure) -> Sample {
         let amount_of_measures = Self::amount_of_measures_in_buffer(&buffer, &measure);
 
         let quant_buffer = {
@@ -115,7 +115,7 @@ mod tests {
     use config::*;
 
     use measure::{Measure, Quant};
-    use midi::{TypedMidiEvent, TypedMidiMessage};
+    use midi::{AbsMidiEvent, TypedMidiMessage};
 
     const DEFAULT_MEASURE: Measure = Measure {
         tempo_bpm: DEFAULT_TEMPO_BPM,
@@ -127,7 +127,7 @@ mod tests {
         (
             $([$key: expr, $start: expr, $duration: expr]),*
         ) => {
-            &[$(TypedMidiEvent {
+            &[$(AbsMidiEvent {
                 timestamp: $start,
                 message: TypedMidiMessage::NoteOn {
                     channel: 0,
@@ -136,7 +136,7 @@ mod tests {
                 }
             },
 
-            TypedMidiEvent {
+            AbsMidiEvent {
                 timestamp: $start + $duration - 1,
                 message: TypedMidiMessage::NoteOff {
                     channel: 0,

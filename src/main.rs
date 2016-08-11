@@ -20,7 +20,7 @@ mod popup;
 
 use traits::{Updatable, Renderable};
 use midi_adapter::MidiAdapter;
-use midi::{TypedMidiEvent, TypedMidiMessage};
+use midi::{AbsMidiEvent, TypedMidiMessage};
 use popup::Popup;
 
 use config::*;
@@ -128,7 +128,7 @@ fn main() {
                 } else {
                     if let Some(event) = midi::parse_midi_event(&event) {
                         match event {
-                            TypedMidiEvent {
+                            AbsMidiEvent {
                                 message: TypedMidiMessage::ControlChange {
                                     number: TEMPO_CHANGE_CONTROL_NUMBER,
                                     value,

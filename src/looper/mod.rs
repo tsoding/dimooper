@@ -1,5 +1,5 @@
 use midi;
-use midi::{TypedMidiEvent, TypedMidiMessage};
+use midi::{AbsMidiEvent, TypedMidiMessage};
 use config::*;
 use num::integer::lcm;
 use midi_adapter::MidiAdapter;
@@ -28,7 +28,7 @@ pub struct Looper {
     pub next_state: Option<State>,
 
     pub composition: Vec<Sample>,
-    pub record_buffer: Vec<TypedMidiEvent>,
+    pub record_buffer: Vec<AbsMidiEvent>,
 
 
     pub midi_adapter: MidiAdapter,
@@ -226,7 +226,7 @@ impl Looper {
         }
     }
 
-    pub fn on_midi_event(&mut self, event: &TypedMidiEvent) {
+    pub fn on_midi_event(&mut self, event: &AbsMidiEvent) {
         if let State::Recording = self.state {
             self.record_buffer.push(event.clone());
         }
@@ -255,7 +255,7 @@ impl Looper {
         let mut buffer = Vec::new();
 
         for i in 0..self.measure.measure_size_bpm {
-            buffer.push(TypedMidiEvent {
+            buffer.push(AbsMidiEvent {
                 message: TypedMidiMessage::NoteOn {
                     channel: CONTROL_CHANNEL_NUMBER,
                     key: BEAT_KEY_NUMBER,
@@ -264,7 +264,7 @@ impl Looper {
                 timestamp: i * beat_size_millis,
             });
 
-            buffer.push(TypedMidiEvent {
+            buffer.push(AbsMidiEvent {
                 message: TypedMidiMessage::NoteOff {
                     channel: CONTROL_CHANNEL_NUMBER,
                     key: BEAT_KEY_NUMBER,
