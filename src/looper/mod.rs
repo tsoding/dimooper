@@ -4,8 +4,7 @@ use config::*;
 use num::integer::lcm;
 use midi_adapter::MidiAdapter;
 
-use updatable::Updatable;
-use renderable::Renderable;
+use traits::{Updatable, Renderable};
 use graphicsprimitives::CircleRenderer;
 use measure::{Measure, Quant};
 

@@ -5,8 +5,7 @@ use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 use sdl2_ttf::Font;
 
-use renderable::Renderable;
-use updatable::Updatable;
+use traits::{Updatable, Renderable};
 
 use config::{POPUP_FADEOUT_TIME, POPUP_STAY_TIME};
 
@@ -77,7 +76,7 @@ impl Updatable for Popup {
 #[cfg(test)]
 mod tests {
     use super::Popup;
-    use updatable::Updatable;
+    use traits::Updatable;
     use std::path::Path;
 
     use sdl2::rect::Rect;

@@ -10,8 +10,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 
 mod looper;
-mod updatable;
-mod renderable;
+mod traits;
 mod midi;
 mod midi_adapter;
 mod graphicsprimitives;
@@ -19,8 +18,7 @@ mod config;
 mod measure;
 mod popup;
 
-use updatable::Updatable;
-use renderable::Renderable;
+use traits::{Updatable, Renderable};
 use midi_adapter::MidiAdapter;
 use midi::{TypedMidiEvent, TypedMidiMessage};
 use popup::Popup;
