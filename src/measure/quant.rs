@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul};
+use std::ops::{Add, Mul, Sub};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Quant(pub u32);
@@ -11,6 +11,16 @@ impl Add for Quant {
         Quant(this + other)
     }
 }
+
+impl Sub for Quant {
+    type Output = Quant;
+
+    fn sub(self, Quant(other): Quant) -> Quant {
+        let Quant(this) = self;
+        Quant(this -other)
+    }
+}
+
 
 impl Mul for Quant {
     type Output = Quant;
