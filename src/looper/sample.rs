@@ -1,5 +1,8 @@
+use sdl2::render::Renderer;
+
 use midi::{TypedMidiEvent, TypedMidiMessage};
 use measure::{Measure, Quant};
+use traits::Renderable;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct QuantMidiEvent {
@@ -82,8 +85,27 @@ impl Sample {
         }
     }
 
+    fn current_measure_events(&self) -> Vec<TypedMidiMessage> {
+        let measure_size_millis = self.measure.measure_size_millis();
+        let current_measure = self.time_cursor / measure_size_millis;
+        let mut result = Vec::new();
+
+        self.gather_messages_in_timerange(&mut result,
+                                          current_measure * measure_size_millis,
+                                          (current_measure + 1) * measure_size_millis);
+
+        result
+    }
+
     pub fn quants_per_sample(&self) -> Quant {
         self.measure.quants_per_measure() * Quant(self.amount_of_measures)
+    }
+}
+
+impl Renderable for Sample {
+    fn render(&self, renderer: &mut Renderer) {
+        // let events =
+        //     self.current_measure_events().iter().map(|e| self.measure.timestamp_to_quant(e))
     }
 }
 
