@@ -1,3 +1,5 @@
+use std;
+
 use sdl2::render::Renderer;
 
 use midi;
@@ -99,7 +101,7 @@ impl Sample {
         for note in &self.notes {
             let note_start_abs = self.measure.quant_to_timestamp(note.start_quant);
             let note_end_abs = self.measure.quant_to_timestamp(note.end_quant);
-            if start <= note_start_abs && note_start_abs <= end && start <= note_end_abs && note_end_abs <= end {
+            if (start <= note_start_abs && note_start_abs <= end) || (start <= note_end_abs && note_end_abs <= end) {
                 result.push(note.clone());
             }
         }
@@ -121,7 +123,7 @@ impl Renderable for Sample {
 
         for note in &current_measure_notes {
             Note {
-                start_quant: note.start_quant - note_shift,
+                start_quant: note.start_quant - std::cmp::min(note_shift, note.start_quant),
                 end_quant: note.end_quant - note_shift,
                 .. *note
             }.render(renderer, self.measure.quants_per_measure());
