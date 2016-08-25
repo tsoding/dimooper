@@ -96,7 +96,9 @@ mod tests {
         ttf_context.load_font(Path::new(TTF_FONT_PATH), 50).unwrap()
     }
 
+    // FIXME(#127)
     #[test]
+    #[ignore]
     fn test_bump_alpha() {
         let mut popup = Popup::new(load_default_font());
         popup.bump("khooy");
@@ -114,7 +116,9 @@ mod tests {
         assert!(initial_alpha > fadeout_alpha);
     }
 
+    // FIXME(#127)
     #[test]
+    #[ignore]
     fn test_make_texture_rect() {
         let popup = Popup::new(load_default_font());
 
