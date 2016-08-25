@@ -1,4 +1,3 @@
-use midi;
 use midi::{AbsMidiEvent, TypedMidiMessage};
 use config::*;
 use num::integer::lcm;
@@ -6,7 +5,7 @@ use midi_adapter::MidiAdapter;
 
 use traits::{Updatable, Renderable};
 use graphicsprimitives::CircleRenderer;
-use measure::{Measure, Quant};
+use measure::Measure;
 
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;
@@ -14,7 +13,7 @@ use sdl2::rect::Point;
 
 pub mod sample;
 
-use self::sample::{Sample, QuantMidiEvent};
+use self::sample::Sample;
 
 #[derive(PartialEq)]
 pub enum State {
