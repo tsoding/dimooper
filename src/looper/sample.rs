@@ -1,5 +1,3 @@
-use std;
-
 use sdl2::render::Renderer;
 
 use midi;
@@ -118,12 +116,7 @@ impl Renderable for Sample {
         let note_shift = Quant(current_measure_number) * self.measure.quants_per_measure();
 
         for note in &current_measure_notes {
-            Note {
-                // FIXME(#120)
-                start_quant: note.start_quant - std::cmp::min(note_shift, note.start_quant),
-                end_quant: note.end_quant - note_shift,
-                .. *note
-            }.render(renderer, self.measure.quants_per_measure());
+            note.render(renderer, self.measure.quants_per_measure(), note_shift);
         }
     }
 }
