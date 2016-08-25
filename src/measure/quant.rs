@@ -17,7 +17,7 @@ impl Sub for Quant {
 
     fn sub(self, Quant(other): Quant) -> Quant {
         let Quant(this) = self;
-        Quant(this -other)
+        Quant(this - other)
     }
 }
 
