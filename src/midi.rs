@@ -6,7 +6,7 @@ use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 
 use looper::sample::QuantMidiEvent;
-use measure::{Measure, Quant};
+use measure::Quant;
 
 const NOTE_ON_STATUS: u8 = 0b10010000;
 const NOTE_OFF_STATUS: u8 = 0b10000000;
