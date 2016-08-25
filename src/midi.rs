@@ -92,8 +92,8 @@ fn multiply_color_vector(color: Color, factor: f32) -> Color {
 }
 
 impl Note {
-    pub fn render(&self, renderer: &mut Renderer, qdt: Quant) {
-        let Quant(dt) = qdt;
+    pub fn render(&self, renderer: &mut Renderer, quant_field_length: Quant) {
+        let Quant(field_length) = quant_field_length;
         let window_width = renderer.viewport().width();
         let window_height = renderer.viewport().height();
         let row_height = window_height as f32 / 128.0;
@@ -104,8 +104,8 @@ impl Note {
 
         let Quant(t1) = self.start_quant;
         let Quant(t2) = self.end_quant;
-        let x1 = (t1 as f32 / dt as f32 * (window_width as f32 - 10.0) + 5.0) as i32;
-        let x2 = (t2 as f32 / dt as f32 * (window_width as f32 - 10.0) + 5.0) as i32;
+        let x1 = (t1 as f32 / field_length as f32 * (window_width as f32 - 10.0) + 5.0) as i32;
+        let x2 = (t2 as f32 / field_length as f32 * (window_width as f32 - 10.0) + 5.0) as i32;
         let y = (row_height * (127 - self.key) as f32) as i32;
 
         let note_rect = Rect::new(x1, y, (x2 - x1 + 1) as u32, row_height as u32);
