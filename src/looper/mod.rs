@@ -1,11 +1,10 @@
 use midi;
-use midi::{TypedMidiEvent, TypedMidiMessage};
+use midi::{AbsMidiEvent, TypedMidiMessage};
 use config::*;
 use num::integer::lcm;
 use midi_adapter::MidiAdapter;
 
-use updatable::Updatable;
-use renderable::Renderable;
+use traits::{Updatable, Renderable};
 use graphicsprimitives::CircleRenderer;
 use measure::{Measure, Quant};
 
@@ -29,7 +28,7 @@ pub struct Looper {
     pub next_state: Option<State>,
 
     pub composition: Vec<Sample>,
-    pub record_buffer: Vec<TypedMidiEvent>,
+    pub record_buffer: Vec<AbsMidiEvent>,
 
 
     pub midi_adapter: MidiAdapter,
@@ -70,35 +69,13 @@ impl Renderable for Looper {
         let measure_size_millis = self.measure.measure_size_millis();
         let beat_size_millis = self.measure.beat_size_millis();
 
-        let render_buffer = {
-            let mut result = Vec::new();
-
-            for sample in self.composition.iter() {
-                let repeat_count = self.amount_of_measures / sample.amount_of_measures;
-                for i in 0..repeat_count {
-                    for event in sample.buffer.iter() {
-                        result.push(QuantMidiEvent {
-                            quant: event.quant + Quant(i) * sample.quants_per_sample(),
-                            message: event.message,
-                        })
-                    }
-                }
-            }
-
-            result
-        };
-
-        let dt = self.measure.quants_per_measure() * Quant(self.amount_of_measures);
-
-        let notes = midi::events_to_notes(&render_buffer);
-
-        for note in notes {
-            note.render(renderer, dt);
+        for sample in &self.composition {
+            sample.render(renderer);
         }
 
         let draw_time_cursor = |time_cursor: u32, renderer: &mut Renderer| {
             let x = ((time_cursor as f32) /
-                     (measure_size_millis * self.amount_of_measures) as f32 *
+                     measure_size_millis as f32 *
                      (window_width as f32 - 10.0) + 5.0) as i32;
             renderer.draw_line(Point::from((x, 0)),
                                Point::from((x, window_height as i32))).unwrap();
@@ -106,11 +83,10 @@ impl Renderable for Looper {
 
         // Time Cursor
         renderer.set_draw_color(Color::RGB(255, 255, 255));
-        draw_time_cursor(measure_size_millis * self.measure_cursor + self.measure_time_cursor,
-                         renderer);
+        draw_time_cursor(self.measure_time_cursor, renderer);
 
         // Measure Beats
-        for i in 0 .. self.measure.measure_size_bpm * self.amount_of_measures {
+        for i in 0 .. self.measure.measure_size_bpm {
             renderer.set_draw_color(Color::RGB(50, 50, 50));
             draw_time_cursor(i * beat_size_millis, renderer);
         }
@@ -227,7 +203,7 @@ impl Looper {
         }
     }
 
-    pub fn on_midi_event(&mut self, event: &TypedMidiEvent) {
+    pub fn on_midi_event(&mut self, event: &AbsMidiEvent) {
         if let State::Recording = self.state {
             self.record_buffer.push(event.clone());
         }
@@ -256,7 +232,7 @@ impl Looper {
         let mut buffer = Vec::new();
 
         for i in 0..self.measure.measure_size_bpm {
-            buffer.push(TypedMidiEvent {
+            buffer.push(AbsMidiEvent {
                 message: TypedMidiMessage::NoteOn {
                     channel: CONTROL_CHANNEL_NUMBER,
                     key: BEAT_KEY_NUMBER,
@@ -265,7 +241,7 @@ impl Looper {
                 timestamp: i * beat_size_millis,
             });
 
-            buffer.push(TypedMidiEvent {
+            buffer.push(AbsMidiEvent {
                 message: TypedMidiMessage::NoteOff {
                     channel: CONTROL_CHANNEL_NUMBER,
                     key: BEAT_KEY_NUMBER,

@@ -6,7 +6,7 @@ use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 
 use looper::sample::QuantMidiEvent;
-use measure::Quant;
+use measure::{Measure, Quant};
 
 const NOTE_ON_STATUS: u8 = 0b10010000;
 const NOTE_OFF_STATUS: u8 = 0b10000000;
@@ -54,7 +54,7 @@ impl Into<MidiMessage> for TypedMidiMessage {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct TypedMidiEvent {
+pub struct AbsMidiEvent {
     pub message: TypedMidiMessage,
     pub timestamp: u32,
 }
@@ -115,9 +115,9 @@ impl Note {
     }
 }
 
-pub fn parse_midi_event(raw_event: &MidiEvent) -> Option<TypedMidiEvent> {
+pub fn parse_midi_event(raw_event: &MidiEvent) -> Option<AbsMidiEvent> {
     parse_midi_message(&raw_event.message)
-        .map(|message| TypedMidiEvent {
+        .map(|message| AbsMidiEvent {
             message: message,
             timestamp: raw_event.timestamp,
         })
