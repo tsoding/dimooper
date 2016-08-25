@@ -52,10 +52,8 @@ impl Updatable for Looper {
                 self.on_measure_bar();
             }
 
-            for sample in self.composition.iter_mut() {
-                for message in sample.get_next_messages(delta_time) {
-                    self.midi_adapter.write_message(message).unwrap();
-                }
+            for sample in &mut self.composition {
+                sample.replay(delta_time, &mut self.midi_adapter)
             }
         }
     }

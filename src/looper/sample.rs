@@ -2,6 +2,7 @@ use sdl2::render::Renderer;
 
 use midi;
 use midi::{AbsMidiEvent, TypedMidiMessage, Note};
+use midi_adapter::MidiAdapter;
 use measure::{Measure, Quant};
 use traits::Renderable;
 
@@ -66,7 +67,13 @@ impl Sample {
         self.measure = new_measure.clone();
     }
 
-    pub fn get_next_messages(&mut self, delta_time: u32) -> Vec<TypedMidiMessage> {
+    pub fn replay(&mut self, delta_time: u32, midi_adapter: &mut MidiAdapter) {
+        for message in self.get_next_messages(delta_time) {
+            midi_adapter.write_message(message).unwrap();
+        }
+    }
+
+    fn get_next_messages(&mut self, delta_time: u32) -> Vec<TypedMidiMessage> {
         let next_time_cursor = self.time_cursor + delta_time;
         let sample_size_millis = self.measure.measure_size_millis() * self.amount_of_measures;
         let mut result = Vec::new();
