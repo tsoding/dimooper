@@ -123,6 +123,7 @@ impl Renderable for Sample {
 
         for note in &current_measure_notes {
             Note {
+                // FIXME(#120)
                 start_quant: note.start_quant - std::cmp::min(note_shift, note.start_quant),
                 end_quant: note.end_quant - note_shift,
                 .. *note
