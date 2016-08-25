@@ -1,3 +1,5 @@
+#![deny(warnings)]
+
 extern crate sdl2;
 extern crate sdl2_ttf;
 extern crate portmidi as pm;
