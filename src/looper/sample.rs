@@ -16,6 +16,7 @@ pub struct Sample {
     pub buffer: Vec<QuantMidiEvent>,
     pub amount_of_measures: u32,
     notes: Vec<Note>,
+    // FIXME(#131)
     time_cursor: u32,
     measure: Measure,
 }
@@ -68,6 +69,7 @@ impl Sample {
     }
 
     // FIXME(#129)
+    // FIXME(#131)
     pub fn replay(&mut self, delta_time: u32, midi_adapter: &mut MidiAdapter) {
         for message in self.get_next_messages(delta_time) {
             midi_adapter.write_message(message).unwrap();
