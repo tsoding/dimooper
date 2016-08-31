@@ -67,6 +67,7 @@ impl Sample {
         self.measure = new_measure.clone();
     }
 
+    // FIXME(#129)
     pub fn replay(&mut self, delta_time: u32, midi_adapter: &mut MidiAdapter) {
         for message in self.get_next_messages(delta_time) {
             midi_adapter.write_message(message).unwrap();
