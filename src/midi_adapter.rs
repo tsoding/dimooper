@@ -9,6 +9,7 @@ pub struct MidiAdapter {
 }
 
 // FIXME(#129)
+// FIXME(#130)
 impl MidiAdapter {
     pub fn new(out_port: OutputPort) -> MidiAdapter {
         MidiAdapter {
