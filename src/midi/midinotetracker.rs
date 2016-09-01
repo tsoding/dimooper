@@ -3,21 +3,20 @@ use pm::types::Result;
 use midi::{TypedMidiMessage, MidiSink};
 use config::*;
 
-pub struct MidiAdapter {
+pub struct MidiNoteTracker {
     out_port: OutputPort,
     notes: [[bool; 128]; 16],
 }
 
-// FIXME(#130)
-impl MidiAdapter {
-    pub fn new(out_port: OutputPort) -> MidiAdapter {
-        MidiAdapter {
+impl MidiNoteTracker {
+    pub fn new(out_port: OutputPort) -> MidiNoteTracker {
+        MidiNoteTracker {
             out_port: out_port,
             notes: [[false; 128]; 16],
         }
     }
 
-    pub fn close_notes(&mut self) {
+    pub fn close_opened_notes(&mut self) {
         for channel in 0..AMOUNT_OF_MIDI_CHANNELS {
             for key in 0..AMOUNT_OF_MIDI_KEYS {
                 if self.notes[channel][key] {
@@ -32,7 +31,7 @@ impl MidiAdapter {
     }
 }
 
-impl MidiSink for MidiAdapter {
+impl MidiSink for MidiNoteTracker {
     fn feed(&mut self, midi_message: TypedMidiMessage) -> Result<()> {
         match midi_message {
             TypedMidiMessage::NoteOn { channel, key, .. } =>

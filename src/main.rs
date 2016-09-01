@@ -20,7 +20,7 @@ mod measure;
 mod popup;
 
 use traits::{Updatable, Renderable};
-use midi::{AbsMidiEvent, TypedMidiMessage, MidiAdapter};
+use midi::{AbsMidiEvent, TypedMidiMessage, MidiNoteTracker};
 use popup::Popup;
 
 use config::*;
@@ -78,7 +78,7 @@ fn main() {
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let mut looper = looper::Looper::new(MidiAdapter::new(out_port));
+    let mut looper = looper::Looper::new(MidiNoteTracker::new(out_port));
     let mut running = true;
 
     let mut previuos_ticks = timer_subsystem.ticks();
