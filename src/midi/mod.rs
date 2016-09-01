@@ -10,10 +10,10 @@ use sdl2::rect::Rect;
 use looper::sample::QuantMidiEvent;
 use measure::Quant;
 
-mod midiadapter;
+mod midinotetracker;
 mod midisink;
 
-pub use self::midiadapter::MidiAdapter;
+pub use self::midinotetracker::MidiNoteTracker;
 pub use self::midisink::MidiSink;
 
 const NOTE_ON_STATUS: u8 = 0b10010000;

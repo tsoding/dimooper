@@ -1,4 +1,4 @@
-use midi::{AbsMidiEvent, TypedMidiMessage, MidiAdapter, MidiSink};
+use midi::{AbsMidiEvent, TypedMidiMessage, MidiNoteTracker, MidiSink};
 use config::*;
 use num::integer::lcm;
 
@@ -29,7 +29,7 @@ pub struct Looper {
     pub record_buffer: Vec<AbsMidiEvent>,
 
 
-    pub midi_adapter: MidiAdapter,
+    pub note_tracker: MidiNoteTracker,
 
     measure_time_cursor: u32,
     measure_cursor: u32,
@@ -52,7 +52,7 @@ impl Updatable for Looper {
             }
 
             for sample in &mut self.composition {
-                sample.replay(delta_time, &mut self.midi_adapter)
+                sample.replay(delta_time, &mut self.note_tracker)
             }
         }
     }
@@ -104,13 +104,13 @@ impl Renderable for Looper {
 }
 
 impl Looper {
-    pub fn new(midi_adapter: MidiAdapter) -> Looper {
+    pub fn new(note_tracker: MidiNoteTracker) -> Looper {
         let mut looper = Looper {
             state: State::Looping,
             next_state: None,
             composition: Vec::new(),
             record_buffer: Vec::new(),
-            midi_adapter: midi_adapter,
+            note_tracker: note_tracker,
             measure_time_cursor: 0,
             measure_cursor: 0,
             amount_of_measures: 1,
@@ -136,7 +136,7 @@ impl Looper {
         self.measure_cursor = 0;
         self.amount_of_measures = 1;
 
-        self.midi_adapter.close_notes();
+        self.note_tracker.close_opened_notes();
     }
 
     pub fn toggle_recording(&mut self) {
@@ -159,7 +159,7 @@ impl Looper {
         match self.state {
             State::Looping => {
                 self.state = State::Pause;
-                self.midi_adapter.close_notes();
+                self.note_tracker.close_opened_notes();
             },
             State::Pause => self.state = State::Looping,
             _ => (),
@@ -177,7 +177,7 @@ impl Looper {
                     self.amount_of_measures = lcm(self.amount_of_measures,
                                                   sample.amount_of_measures);
                 }
-                self.midi_adapter.close_notes();
+                self.note_tracker.close_opened_notes();
             }
         }
     }
@@ -204,7 +204,7 @@ impl Looper {
             self.record_buffer.push(event.clone());
         }
 
-        self.midi_adapter.feed(event.message).unwrap();
+        self.note_tracker.feed(event.message).unwrap();
     }
 
     pub fn update_tempo_bpm(&mut self, tempo_bpm: u32) {
