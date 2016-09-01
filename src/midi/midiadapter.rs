@@ -1,6 +1,6 @@
 use pm::OutputPort;
 use pm::types::Result;
-use midi::TypedMidiMessage;
+use midi::{TypedMidiMessage, MidiSink};
 use config::*;
 
 pub struct MidiAdapter {
@@ -8,7 +8,6 @@ pub struct MidiAdapter {
     notes: [[bool; 128]; 16],
 }
 
-// FIXME(#129)
 // FIXME(#130)
 impl MidiAdapter {
     pub fn new(out_port: OutputPort) -> MidiAdapter {
@@ -16,18 +15,6 @@ impl MidiAdapter {
             out_port: out_port,
             notes: [[false; 128]; 16],
         }
-    }
-
-    pub fn write_message(&mut self, midi_message: TypedMidiMessage) -> Result<()> {
-        match midi_message {
-            TypedMidiMessage::NoteOn { channel, key, .. } =>
-                self.notes[channel as usize][key as usize] = true,
-            TypedMidiMessage::NoteOff { channel, key, .. } =>
-                self.notes[channel as usize][key as usize] = false,
-            _ => (),
-        }
-
-        self.out_port.write_message(midi_message)
     }
 
     pub fn close_notes(&mut self) {
@@ -42,5 +29,19 @@ impl MidiAdapter {
                 }
             }
         }
+    }
+}
+
+impl MidiSink for MidiAdapter {
+    fn feed(&mut self, midi_message: TypedMidiMessage) -> Result<()> {
+        match midi_message {
+            TypedMidiMessage::NoteOn { channel, key, .. } =>
+                self.notes[channel as usize][key as usize] = true,
+            TypedMidiMessage::NoteOff { channel, key, .. } =>
+                self.notes[channel as usize][key as usize] = false,
+            _ => (),
+        }
+
+        self.out_port.write_message(midi_message)
     }
 }

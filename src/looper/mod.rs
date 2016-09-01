@@ -1,7 +1,6 @@
-use midi::{AbsMidiEvent, TypedMidiMessage};
+use midi::{AbsMidiEvent, TypedMidiMessage, MidiAdapter, MidiSink};
 use config::*;
 use num::integer::lcm;
-use midi_adapter::MidiAdapter;
 
 use traits::{Updatable, Renderable};
 use graphicsprimitives::CircleRenderer;
@@ -205,7 +204,7 @@ impl Looper {
             self.record_buffer.push(event.clone());
         }
 
-        self.midi_adapter.write_message(event.message).unwrap();
+        self.midi_adapter.feed(event.message).unwrap();
     }
 
     pub fn update_tempo_bpm(&mut self, tempo_bpm: u32) {

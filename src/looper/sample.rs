@@ -1,8 +1,7 @@
 use sdl2::render::Renderer;
 
 use midi;
-use midi::{AbsMidiEvent, TypedMidiMessage, Note};
-use midi_adapter::MidiAdapter;
+use midi::{AbsMidiEvent, TypedMidiMessage, Note, MidiSink};
 use measure::{Measure, Quant};
 use traits::Renderable;
 
@@ -68,11 +67,10 @@ impl Sample {
         self.measure = new_measure.clone();
     }
 
-    // FIXME(#129)
     // FIXME(#131)
-    pub fn replay(&mut self, delta_time: u32, midi_adapter: &mut MidiAdapter) {
+    pub fn replay<Sink: MidiSink>(&mut self, delta_time: u32, sink: &mut Sink) {
         for message in self.get_next_messages(delta_time) {
-            midi_adapter.write_message(message).unwrap();
+            sink.feed(message).unwrap();
         }
     }
 
