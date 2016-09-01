@@ -1,8 +1,7 @@
 use sdl2::render::Renderer;
 
 use midi;
-use midi::{AbsMidiEvent, TypedMidiMessage, Note};
-use midi_adapter::MidiAdapter;
+use midi::{AbsMidiEvent, TypedMidiMessage, Note, MidiAdapter};
 use measure::{Measure, Quant};
 use traits::Renderable;
 

@@ -14,15 +14,13 @@ use sdl2::pixels::Color;
 mod looper;
 mod traits;
 mod midi;
-mod midi_adapter;
 mod graphicsprimitives;
 mod config;
 mod measure;
 mod popup;
 
 use traits::{Updatable, Renderable};
-use midi_adapter::MidiAdapter;
-use midi::{AbsMidiEvent, TypedMidiMessage};
+use midi::{AbsMidiEvent, TypedMidiMessage, MidiAdapter};
 use popup::Popup;
 
 use config::*;

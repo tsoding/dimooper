@@ -1,7 +1,6 @@
-use midi::{AbsMidiEvent, TypedMidiMessage};
+use midi::{AbsMidiEvent, TypedMidiMessage, MidiAdapter};
 use config::*;
 use num::integer::lcm;
-use midi_adapter::MidiAdapter;
 
 use traits::{Updatable, Renderable};
 use graphicsprimitives::CircleRenderer;
