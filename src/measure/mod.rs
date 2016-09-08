@@ -100,7 +100,6 @@ mod tests {
 
     #[test]
     fn test_snap_timestamp_to_quant() {
-        // timestamp to quant
         assert_eq!(Quant(0), MEASURE.snap_timestamp_to_quant(0));
         assert_eq!(Quant(1), MEASURE.snap_timestamp_to_quant(MEASURE.quant_size_millis()));
         assert_eq!(Quant(0), MEASURE.snap_timestamp_to_quant(MEASURE.quant_size_millis() / 2 - 1));
@@ -109,20 +108,22 @@ mod tests {
 
     #[test]
     fn test_quant_to_timestamp() {
-        // quant to timestamp
         assert_eq!(5 * MEASURE.quant_size_millis(), MEASURE.quant_to_timestamp(Quant(5)));
     }
 
     #[test]
-    #[ignore]
     fn test_timestamp_to_quant() {
-        assert!(false)
+        assert_eq!(Quant(0), MEASURE.timestamp_to_quant(0));
+        assert_eq!(Quant(1), MEASURE.timestamp_to_quant(MEASURE.quant_size_millis()));
+        assert_eq!(Quant(0), MEASURE.timestamp_to_quant(MEASURE.quant_size_millis() / 2 - 1));
+        assert_eq!(Quant(0), MEASURE.timestamp_to_quant(MEASURE.quant_size_millis() / 2 + 1));
     }
 
     #[test]
-    #[ignore]
     fn test_timestamp_to_measure() {
-        assert!(false)
+        assert_eq!(0, MEASURE.timestamp_to_measure(0));
+        assert_eq!(1, MEASURE.timestamp_to_measure(MEASURE.measure_size_millis()));
+        assert_eq!(0, MEASURE.timestamp_to_measure(MEASURE.measure_size_millis() - 1));
     }
 
     #[test]
