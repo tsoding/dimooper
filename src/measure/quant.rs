@@ -1,5 +1,6 @@
 use std::ops::{Add, Mul, Sub};
 
+// FIXME(#125): Autoderive arithmetic operations for Quant
 #[derive(Clone, Copy, PartialEq, Eq, Debug, PartialOrd, Ord)]
 pub struct Quant(pub u32);
 
