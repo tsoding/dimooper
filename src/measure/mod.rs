@@ -98,7 +98,7 @@ mod tests {
     }
 
     #[test]
-    fn test_timestamp_quant_conversion() {
+    fn test_snap_timestamp_to_quant() {
         let measure = Measure {
             tempo_bpm: TEMPO_BPM,
             measure_size_bpm: MEASURE_SIZE_BPM,
