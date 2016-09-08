@@ -40,7 +40,7 @@ impl Sample {
             for event in buffer {
                 result.push(QuantMidiEvent {
                     message: event.message,
-                    quant: measure.timestamp_to_quant(event.timestamp),
+                    quant: measure.snap_timestamp_to_quant(event.timestamp),
                 })
             }
 

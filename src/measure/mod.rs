@@ -10,7 +10,8 @@ pub struct Measure {
 }
 
 impl Measure {
-    pub fn timestamp_to_quant(&self, timestamp: u32) -> Quant {
+    /// Snaps the timestamp to the closest quant
+    pub fn snap_timestamp_to_quant(&self, timestamp: u32) -> Quant {
         Quant((timestamp + self.quant_size_millis() / 2) / self.quant_size_millis())
     }
 
@@ -105,10 +106,10 @@ mod tests {
         };
 
         // timestamp to quant
-        assert_eq!(Quant(0), measure.timestamp_to_quant(0));
-        assert_eq!(Quant(1), measure.timestamp_to_quant(measure.quant_size_millis()));
-        assert_eq!(Quant(0), measure.timestamp_to_quant(measure.quant_size_millis() / 2 - 1));
-        assert_eq!(Quant(1), measure.timestamp_to_quant(measure.quant_size_millis() / 2 + 1));
+        assert_eq!(Quant(0), measure.snap_timestamp_to_quant(0));
+        assert_eq!(Quant(1), measure.snap_timestamp_to_quant(measure.quant_size_millis()));
+        assert_eq!(Quant(0), measure.snap_timestamp_to_quant(measure.quant_size_millis() / 2 - 1));
+        assert_eq!(Quant(1), measure.snap_timestamp_to_quant(measure.quant_size_millis() / 2 + 1));
 
         // quant to timestamp
         assert_eq!(5 * measure.quant_size_millis(), measure.quant_to_timestamp(Quant(5)));
