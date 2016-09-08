@@ -68,87 +68,77 @@ mod tests {
     const BEAT_SIZE_MILLIS: u32 =  500;
     const QUANT_SIZE_MILLIS: u32 =  125;
 
+    const MEASURE: Measure = Measure {
+        tempo_bpm: TEMPO_BPM,
+        measure_size_bpm: MEASURE_SIZE_BPM,
+        quantation_level: QUANTATION_LEVEL,
+    };
 
     #[test]
     fn test_measure_new() {
-        let measure = Measure {
-            tempo_bpm: TEMPO_BPM,
-            measure_size_bpm: MEASURE_SIZE_BPM,
-            quantation_level: QUANTATION_LEVEL,
-        };
+        assert_eq!(TEMPO_BPM, MEASURE.tempo_bpm);
+        assert_eq!(MEASURE_SIZE_BPM, MEASURE.measure_size_bpm);
+        assert_eq!(QUANTATION_LEVEL, MEASURE.quantation_level);
 
-        assert_eq!(TEMPO_BPM, measure.tempo_bpm);
-        assert_eq!(MEASURE_SIZE_BPM, measure.measure_size_bpm);
-        assert_eq!(QUANTATION_LEVEL, measure.quantation_level);
-
-        assert_eq!(MEASURE_SIZE_MILLIS, measure.measure_size_millis());
-        assert_eq!(BEAT_SIZE_MILLIS, measure.beat_size_millis());
-        assert_eq!(QUANT_SIZE_MILLIS, measure.quant_size_millis());
+        assert_eq!(MEASURE_SIZE_MILLIS, MEASURE.measure_size_millis());
+        assert_eq!(BEAT_SIZE_MILLIS, MEASURE.beat_size_millis());
+        assert_eq!(QUANT_SIZE_MILLIS, MEASURE.quant_size_millis());
     }
 
     #[test]
     fn test_measure_update() {
-        let mut measure = Measure {
-            tempo_bpm: TEMPO_BPM,
-            measure_size_bpm: MEASURE_SIZE_BPM,
-            quantation_level: QUANTATION_LEVEL
-        };
+        assert_eq!(MEASURE_SIZE_MILLIS, MEASURE.measure_size_millis());
+        assert_eq!(BEAT_SIZE_MILLIS, MEASURE.beat_size_millis());
+        assert_eq!(QUANT_SIZE_MILLIS, MEASURE.quant_size_millis());
 
-        assert_eq!(MEASURE_SIZE_MILLIS, measure.measure_size_millis());
-        assert_eq!(BEAT_SIZE_MILLIS, measure.beat_size_millis());
-        assert_eq!(QUANT_SIZE_MILLIS, measure.quant_size_millis());
+        let updated_measure = Measure { tempo_bpm: TEMPO_BPM + 40, .. MEASURE };
 
-        measure = Measure { tempo_bpm: TEMPO_BPM + 40, .. measure };
-
-        assert_eq!(1500, measure.measure_size_millis());
-        assert_eq!(375, measure.beat_size_millis());
-        assert_eq!(93, measure.quant_size_millis());
+        assert_eq!(1500, updated_measure.measure_size_millis());
+        assert_eq!(375, updated_measure.beat_size_millis());
+        assert_eq!(93, updated_measure.quant_size_millis());
     }
 
     #[test]
     fn test_snap_timestamp_to_quant() {
-        let measure = Measure {
-            tempo_bpm: TEMPO_BPM,
-            measure_size_bpm: MEASURE_SIZE_BPM,
-            quantation_level: QUANTATION_LEVEL,
-        };
-
         // timestamp to quant
-        assert_eq!(Quant(0), measure.snap_timestamp_to_quant(0));
-        assert_eq!(Quant(1), measure.snap_timestamp_to_quant(measure.quant_size_millis()));
-        assert_eq!(Quant(0), measure.snap_timestamp_to_quant(measure.quant_size_millis() / 2 - 1));
-        assert_eq!(Quant(1), measure.snap_timestamp_to_quant(measure.quant_size_millis() / 2 + 1));
+        assert_eq!(Quant(0), MEASURE.snap_timestamp_to_quant(0));
+        assert_eq!(Quant(1), MEASURE.snap_timestamp_to_quant(MEASURE.quant_size_millis()));
+        assert_eq!(Quant(0), MEASURE.snap_timestamp_to_quant(MEASURE.quant_size_millis() / 2 - 1));
+        assert_eq!(Quant(1), MEASURE.snap_timestamp_to_quant(MEASURE.quant_size_millis() / 2 + 1));
+    }
 
+    #[test]
+    fn test_quant_to_timestamp() {
         // quant to timestamp
-        assert_eq!(5 * measure.quant_size_millis(), measure.quant_to_timestamp(Quant(5)));
+        assert_eq!(5 * MEASURE.quant_size_millis(), MEASURE.quant_to_timestamp(Quant(5)));
+    }
+
+    #[test]
+    #[ignore]
+    fn test_timestamp_to_quant() {
+        assert!(false)
+    }
+
+    #[test]
+    #[ignore]
+    fn test_timestamp_to_measure() {
+        assert!(false)
     }
 
     #[test]
     fn test_quants_per_measure() {
-        let measure = Measure {
-            tempo_bpm: TEMPO_BPM,
-            measure_size_bpm: MEASURE_SIZE_BPM,
-            quantation_level: QUANTATION_LEVEL,
-        };
-
-        assert_eq!(Quant(16), measure.quants_per_measure());
+        assert_eq!(Quant(16), MEASURE.quants_per_measure());
     }
 
     #[test]
     fn test_scale_time_cursor() {
-        let measure = Measure {
-            tempo_bpm: TEMPO_BPM,
-            measure_size_bpm: MEASURE_SIZE_BPM,
-            quantation_level: QUANTATION_LEVEL,
-        };
-
         let amount_of_measures = 2;
-        let time_cursor = measure.measure_size_millis();
+        let time_cursor = MEASURE.measure_size_millis();
 
-        let new_measure = Measure { tempo_bpm: TEMPO_BPM + 45, .. measure };
+        let new_measure = Measure { tempo_bpm: TEMPO_BPM + 45, .. MEASURE };
 
         assert_eq!(new_measure.measure_size_millis(),
-                   measure.scale_time_cursor(&new_measure,
+                   MEASURE.scale_time_cursor(&new_measure,
                                              amount_of_measures,
                                              time_cursor))
     }
