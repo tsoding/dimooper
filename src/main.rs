@@ -1,4 +1,5 @@
-#![deny(warnings)]
+// FIXME(#139): Deny warnings only on CI
+// #![deny(warnings)]
 
 extern crate sdl2;
 extern crate sdl2_ttf;
