@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Mul, Sub, Rem};
 
 // FIXME(#125): Autoderive arithmetic operations for Quant
 #[derive(Clone, Copy, PartialEq, Eq, Debug, PartialOrd, Ord)]
@@ -22,12 +22,20 @@ impl Sub for Quant {
     }
 }
 
-
 impl Mul for Quant {
     type Output = Quant;
 
     fn mul(self, Quant(other): Quant) -> Quant {
         let Quant(this) = self;
         Quant(this * other)
+    }
+}
+
+impl Rem for Quant {
+    type Output = Quant;
+
+    fn rem(self, Quant(other): Quant) -> Quant {
+        let Quant(this) = self;
+        Quant(this % other)
     }
 }

@@ -2,8 +2,7 @@ use sdl2::render::Renderer;
 
 use midi;
 use midi::{AbsMidiEvent, TypedMidiMessage, Note, MidiSink};
-use measure::{Measure, Quant};
-use traits::Renderable;
+use measure::*;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct QuantMidiEvent {
@@ -15,8 +14,6 @@ pub struct Sample {
     pub buffer: Vec<QuantMidiEvent>,
     pub amount_of_measures: u32,
     notes: Vec<Note>,
-    // FIXME(#131)
-    time_cursor: u32,
     measure: Measure,
 }
 
@@ -52,48 +49,21 @@ impl Sample {
         Sample {
             buffer: quant_buffer,
             amount_of_measures: amount_of_measures,
-            time_cursor: amount_of_measures * measure.measure_size_millis(),
             measure: measure.clone(),
             notes: notes,
         }
     }
 
     pub fn update_measure(&mut self, new_measure: &Measure) {
-        self.time_cursor =
-            self.measure.scale_time_cursor(new_measure,
-                                           self.amount_of_measures,
-                                           self.time_cursor);
-
         self.measure = new_measure.clone();
     }
 
-    // FIXME(#131)
-    pub fn replay<Sink: MidiSink>(&mut self, delta_time: u32, sink: &mut Sink) {
-        for message in self.get_next_messages(delta_time) {
-            sink.feed(message).unwrap();
-        }
-    }
-
-    fn get_next_messages(&mut self, delta_time: u32) -> Vec<TypedMidiMessage> {
-        let next_time_cursor = self.time_cursor + delta_time;
-        let sample_size_millis = self.measure.measure_size_millis() * self.amount_of_measures;
-        let mut result = Vec::new();
-
-        self.gather_events_in_timerange(&mut result, self.time_cursor + 1, next_time_cursor);
-        self.time_cursor = next_time_cursor % sample_size_millis;
-
-        if next_time_cursor >= sample_size_millis {
-            self.gather_events_in_timerange(&mut result, 0, self.time_cursor);
-        }
-
-        result.iter().map(|e| e.message).collect()
-    }
-
-    fn gather_events_in_timerange(&self, result: &mut Vec<QuantMidiEvent>, start: u32, end: u32) {
-        for event in self.buffer.iter() {
-            let timestamp = self.measure.quant_to_timestamp(event.quant);
-            if start <= timestamp && timestamp <= end {
-                result.push(event.clone());
+    pub fn replay_quant<Sink: MidiSink>(&self, raw_quant: Quant, sink: &mut Sink) {
+        let quant = raw_quant % (Quant(self.amount_of_measures) * self.measure.quants_per_measure());
+        for event in &self.buffer {
+            if event.quant == quant {
+                // FIXME(): handle result
+                sink.feed(event.message).unwrap();
             }
         }
     }
@@ -114,12 +84,9 @@ impl Sample {
 
         result
     }
-}
 
-impl Renderable for Sample {
-    fn render(&self, renderer: &mut Renderer) {
-        let measure_size_millis = self.measure.measure_size_millis();
-        let current_measure_number = self.time_cursor / measure_size_millis;
+    pub fn render(&self, raw_measure_number: u32, renderer: &mut Renderer) {
+        let current_measure_number = raw_measure_number % self.amount_of_measures;
         let current_measure_notes = self.measure_notes(current_measure_number);
         let note_shift = Quant(current_measure_number) * self.measure.quants_per_measure();
 
@@ -183,44 +150,6 @@ mod tests {
                 velocity: 0,
             }
         };
-    }
-
-    #[test]
-    fn test_get_next_messages() {
-        let buffer = test_sample_data! [
-            [1,
-             0,
-             DEFAULT_MEASURE.measure_size_millis()],
-            [2,
-             DEFAULT_MEASURE.measure_size_millis() + DEFAULT_MEASURE.quant_size_millis(),
-             DEFAULT_MEASURE.measure_size_millis() - DEFAULT_MEASURE.quant_size_millis()]
-        ];
-
-        let test_data = &[
-            (DEFAULT_MEASURE.measure_size_millis(),
-             vec![
-                test_msg!(on => 1),
-                test_msg!(off => 1),
-             ]),
-
-            (DEFAULT_MEASURE.measure_size_millis() / 2,
-             vec![test_msg!(on => 2)]),
-
-            (DEFAULT_MEASURE.measure_size_millis(),
-             vec![
-                 test_msg!(off => 2),
-                 test_msg!(on => 1),
-             ]),
-        ];
-
-        let mut sample = Sample::new(buffer, &DEFAULT_MEASURE);
-        assert_eq!(2, sample.amount_of_measures);
-
-        for &(delta_time, ref expected_messages) in test_data {
-            let messages = sample.get_next_messages(delta_time);
-            assert_eq!(expected_messages, &messages);
-        }
-
     }
 
     #[test]
