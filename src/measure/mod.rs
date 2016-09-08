@@ -15,6 +15,14 @@ impl Measure {
         Quant((timestamp + self.quant_size_millis() / 2) / self.quant_size_millis())
     }
 
+    pub fn timestamp_to_quant(&self, timestamp: u32) -> Quant {
+        Quant(timestamp / self.quant_size_millis())
+    }
+
+    pub fn timestamp_to_measure(&self, timestamp: u32) -> u32 {
+        timestamp / self.measure_size_millis()
+    }
+
     pub fn quant_to_timestamp(&self, Quant(quant_value): Quant) -> u32 {
         quant_value * self.quant_size_millis()
     }
