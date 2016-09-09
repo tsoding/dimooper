@@ -175,16 +175,14 @@ impl Looper {
     pub fn undo_last_recording(&mut self) {
         if let State::Recording = self.state {
             self.record_buffer.clear();
-        } else {
-            if self.composition.len() > 1 {
-                self.composition.pop();
-                self.amount_of_measures = 1;
-                for sample in &self.composition {
-                    self.amount_of_measures = lcm(self.amount_of_measures,
-                                                  sample.amount_of_measures);
-                }
-                self.note_tracker.close_opened_notes();
+        } else if self.composition.len() > 1  {
+            self.composition.pop();
+            self.amount_of_measures = 1;
+            for sample in &self.composition {
+                self.amount_of_measures = lcm(self.amount_of_measures,
+                                              sample.amount_of_measures);
             }
+            self.note_tracker.close_opened_notes();
         }
     }
 
@@ -192,22 +190,18 @@ impl Looper {
         if let Some(state) = self.next_state.take() {
             self.state = state;
 
-            match self.state {
-                State::Looping => {
-                    self.normalize_record_buffer();
-                    let sample = Sample::new(&self.record_buffer, &self.measure);
-                    self.amount_of_measures = lcm(self.amount_of_measures, sample.amount_of_measures);
-                    self.composition.push(sample);
-                },
-
-                _ => ()
+            if let State::Looping = self.state {
+                self.normalize_record_buffer();
+                let sample = Sample::new(&self.record_buffer, &self.measure);
+                self.amount_of_measures = lcm(self.amount_of_measures, sample.amount_of_measures);
+                self.composition.push(sample);
             }
         }
     }
 
     pub fn on_midi_event(&mut self, event: &AbsMidiEvent) {
         if let State::Recording = self.state {
-            self.record_buffer.push(event.clone());
+            self.record_buffer.push(*event);
         }
 
         self.note_tracker.feed(event.message).unwrap();
@@ -221,7 +215,7 @@ impl Looper {
                                            self.amount_of_measures,
                                            self.time_cursor % (self.amount_of_measures * self.measure.measure_size_millis()));
 
-        for sample in self.composition.iter_mut() {
+        for sample in &mut self.composition {
             sample.update_measure(&new_measure)
         }
 
@@ -260,7 +254,7 @@ impl Looper {
         if !self.record_buffer.is_empty() {
             let t0 = self.record_buffer[0].timestamp;
 
-            for event in self.record_buffer.iter_mut() {
+            for event in &mut self.record_buffer {
                 event.timestamp -= t0;
             }
         }

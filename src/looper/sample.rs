@@ -29,7 +29,7 @@ impl Sample {
     }
 
     pub fn new(buffer: &[AbsMidiEvent], measure: &Measure) -> Sample {
-        let amount_of_measures = Self::amount_of_measures_in_buffer(&buffer, &measure);
+        let amount_of_measures = Self::amount_of_measures_in_buffer(buffer, measure);
 
         let quant_buffer = {
             let mut result = Vec::new();
@@ -78,7 +78,7 @@ impl Sample {
             let note_start_abs = self.measure.quant_to_timestamp(note.start_quant);
             let note_end_abs = self.measure.quant_to_timestamp(note.end_quant);
             if (start <= note_start_abs && note_start_abs <= end) || (start <= note_end_abs && note_end_abs <= end) {
-                result.push(note.clone());
+                result.push(*note);
             }
         }
 
