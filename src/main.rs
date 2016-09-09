@@ -120,6 +120,7 @@ fn main() {
 
         if let Ok(Some(events)) = in_port.read_n(1024) {
             for event in events {
+                // FIXME(#149): Extract MIDI logging into a separate entity
                 println!("{:?}", event.message);
 
                 if midi::is_note_message(&event.message) &&
