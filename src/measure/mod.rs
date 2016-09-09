@@ -2,6 +2,8 @@ mod quant;
 
 pub use self::quant::Quant;
 
+// FIXME(#142): measure should have only converters
+// make all of the fields private
 #[derive(Debug, Clone)]
 pub struct Measure {
     pub tempo_bpm: u32,
@@ -27,14 +29,20 @@ impl Measure {
         quant_value * self.quant_size_millis()
     }
 
+    // FIXME(#142): measure should have only converters
+    // Get rid of this or make private
     pub fn measure_size_millis(&self) -> u32 {
         self.beat_size_millis() * self.measure_size_bpm
     }
 
+    // FIXME(#142): measure should have only converters
+    // Get rid of this or make private
     pub fn beat_size_millis(&self) -> u32 {
         (60000.0 / self.tempo_bpm as f32) as u32
     }
 
+    // FIXME(#142): measure should have only converters
+    // Get rid of this or make private
     pub fn quants_per_measure(&self) -> Quant {
         Quant(self.measure_size_bpm.pow(self.quantation_level))
     }
