@@ -216,12 +216,6 @@ impl Looper {
     pub fn update_tempo_bpm(&mut self, tempo_bpm: u32) {
         let new_measure = Measure { tempo_bpm: tempo_bpm, .. self.measure };
 
-        // FIXME(): scale absolute cursor properly
-        // self.measure_time_cursor =
-        //     self.measure.scale_time_cursor(&new_measure,
-        //                                    self.amount_of_measures,
-        //                                    self.measure_time_cursor);
-
         self.time_cursor =
             self.measure.scale_time_cursor(&new_measure,
                                            self.amount_of_measures,
