@@ -127,24 +127,22 @@ fn main() {
                        midi::get_note_key(&event.message) == CONTROL_KEY_NUMBER {
                            looper.toggle_recording();
                     }
-                } else {
-                    if let Some(event) = midi::parse_midi_event(&event) {
-                        match event {
-                            AbsMidiEvent {
-                                message: TypedMidiMessage::ControlChange {
-                                    number: TEMPO_CHANGE_CONTROL_NUMBER,
-                                    value,
-                                    ..
-                                },
+                } else if let Some(event) = midi::parse_midi_event(&event) {
+                    match event {
+                        AbsMidiEvent {
+                            message: TypedMidiMessage::ControlChange {
+                                number: TEMPO_CHANGE_CONTROL_NUMBER,
+                                value,
                                 ..
-                            } => {
-                                let bpm = value as u32 + 90;
-                                looper.update_tempo_bpm(bpm);
-                                bpm_popup.bump(format!("{:03}", bpm).as_str());
                             },
+                            ..
+                        } => {
+                            let bpm = value as u32 + 90;
+                            looper.update_tempo_bpm(bpm);
+                            bpm_popup.bump(format!("{:03}", bpm).as_str());
+                        },
 
-                            _ => looper.on_midi_event(&event),
-                        }
+                        _ => looper.on_midi_event(&event),
                     }
                 }
             }
