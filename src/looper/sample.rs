@@ -13,6 +13,7 @@ pub struct QuantMidiEvent {
 pub struct Sample {
     pub buffer: Vec<QuantMidiEvent>,
     pub amount_of_measures: u32,
+    quant_shift: Quant,
     notes: Vec<Note>,
     measure: Measure,
 }
@@ -28,7 +29,7 @@ impl Sample {
         }
     }
 
-    pub fn new(buffer: &[AbsMidiEvent], measure: &Measure) -> Sample {
+    pub fn new(buffer: &[AbsMidiEvent], measure: &Measure, measure_shift: u32) -> Sample {
         let amount_of_measures = Self::amount_of_measures_in_buffer(buffer, measure);
 
         let quant_buffer = {
@@ -51,6 +52,7 @@ impl Sample {
             amount_of_measures: amount_of_measures,
             measure: measure.clone(),
             notes: notes,
+            quant_shift: measure.measures_to_quants(measure_shift),
         }
     }
 
@@ -58,10 +60,20 @@ impl Sample {
         self.measure = new_measure.clone();
     }
 
-    pub fn replay_quant<Sink: MidiSink>(&self, raw_quant: Quant, sink: &mut Sink) {
-        let quant = raw_quant % (Quant(self.amount_of_measures) * self.measure.quants_per_measure());
+    pub fn replay_quant<Sink: MidiSink>(&self, current_quant: Quant, sink: &mut Sink) {
+        let sample_quant = {
+            let sample_quant_length = Quant(self.amount_of_measures) * self.measure.quants_per_measure();
+            let normalized_quant = current_quant % sample_quant_length;
+
+            if self.quant_shift > normalized_quant {
+                sample_quant_length - (self.quant_shift - normalized_quant)
+            } else {
+                normalized_quant - self.quant_shift
+            }
+        };
+
         for event in &self.buffer {
-            if event.quant == quant {
+            if event.quant == sample_quant {
                 // FIXME(#141): Handle result of the sink message feeding
                 sink.feed(event.message).unwrap();
             }

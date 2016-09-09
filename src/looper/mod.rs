@@ -62,7 +62,7 @@ impl Updatable for Looper {
                 }
             }
 
-            self.time_cursor = next_time_cursor;
+            self.time_cursor = next_time_cursor % (self.measure.measure_size_millis() * self.amount_of_measures);
         }
     }
 }
@@ -195,8 +195,9 @@ impl Looper {
             self.state = state;
 
             if let State::Looping = self.state {
+                let current_measure = self.measure.timestamp_to_measure(self.time_cursor);
                 self.normalize_record_buffer();
-                let sample = Sample::new(&self.record_buffer, &self.measure);
+                let sample = Sample::new(&self.record_buffer, &self.measure, current_measure + 1);
                 self.amount_of_measures = lcm(self.amount_of_measures, sample.amount_of_measures);
                 self.composition.push(sample);
             }
@@ -252,7 +253,7 @@ impl Looper {
             })
         }
 
-        Sample::new(&buffer, &self.measure)
+        Sample::new(&buffer, &self.measure, 0)
     }
 
     fn normalize_record_buffer(&mut self) {
