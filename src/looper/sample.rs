@@ -11,6 +11,7 @@ pub struct QuantMidiEvent {
 }
 
 pub struct Sample {
+    // FIXME(#153): Improve performance of the event look up in sample
     pub buffer: Vec<QuantMidiEvent>,
     pub amount_of_measures: u32,
     quant_shift: Quant,
@@ -73,6 +74,7 @@ impl Sample {
             }
         };
 
+        // FIXME(#153): Improve performance of the event look up in sample
         for event in &self.buffer {
             if event.quant == sample_quant {
                 // FIXME(#141): Handle result of the sink message feeding
