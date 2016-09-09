@@ -96,7 +96,7 @@ mod tests {
         ttf_context.load_font(Path::new(TTF_FONT_PATH), 50).unwrap()
     }
 
-    // FIXME(#127)
+    // FIXME(#127): Fix popup tests
     #[test]
     #[ignore]
     fn test_bump_alpha() {
@@ -116,7 +116,7 @@ mod tests {
         assert!(initial_alpha > fadeout_alpha);
     }
 
-    // FIXME(#127)
+    // FIXME(#127): Fix popup tests
     #[test]
     #[ignore]
     fn test_make_texture_rect() {

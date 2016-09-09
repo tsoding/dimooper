@@ -4,7 +4,7 @@ use num::integer::lcm;
 
 use traits::{Updatable, Renderable};
 use graphicsprimitives::CircleRenderer;
-use measure::Measure;
+use measure::*;
 
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;
@@ -31,8 +31,7 @@ pub struct Looper {
 
     pub note_tracker: MidiNoteTracker,
 
-    measure_time_cursor: u32,
-    measure_cursor: u32,
+    time_cursor: u32,
     amount_of_measures: u32,
 
     pub measure: Measure,
@@ -41,19 +40,29 @@ pub struct Looper {
 impl Updatable for Looper {
     fn update(&mut self, delta_time: u32) {
         if self.state != State::Pause {
-            let measure_size_millis = self.measure.measure_size_millis();
+            let current_measure_bar = self.measure.timestamp_to_measure(self.time_cursor);
+            let current_quant = self.measure.timestamp_to_quant(self.time_cursor);
 
-            self.measure_time_cursor += delta_time;
+            let next_time_cursor = self.time_cursor + delta_time;
+            let next_measure_bar = self.measure.timestamp_to_measure(next_time_cursor);
+            let next_quant = self.measure.timestamp_to_quant(next_time_cursor);
 
-            if self.measure_time_cursor >= measure_size_millis {
-                self.measure_time_cursor %= measure_size_millis;
-                self.measure_cursor = (self.measure_cursor + 1) % self.amount_of_measures;
+            if current_measure_bar < next_measure_bar {
                 self.on_measure_bar();
             }
 
-            for sample in &mut self.composition {
-                sample.replay(delta_time, &mut self.note_tracker)
+            if current_quant < next_quant {
+                for sample in &mut self.composition {
+                    // FIXME(#140): make Quants range iterable
+                    let Quant(start) = current_quant;
+                    let Quant(end) = next_quant;
+                    for q in start + 1..end + 1 {
+                        sample.replay_quant(Quant(q), &mut self.note_tracker);
+                    }
+                }
             }
+
+            self.time_cursor = next_time_cursor % (self.measure.measure_size_millis() * self.amount_of_measures);
         }
     }
 }
@@ -66,7 +75,7 @@ impl Renderable for Looper {
         let beat_size_millis = self.measure.beat_size_millis();
 
         for sample in &self.composition {
-            sample.render(renderer);
+            sample.render(self.measure.timestamp_to_measure(self.time_cursor), renderer);
         }
 
         let draw_time_cursor = |time_cursor: u32, renderer: &mut Renderer| {
@@ -77,9 +86,13 @@ impl Renderable for Looper {
                                Point::from((x, window_height as i32))).unwrap();
         };
 
+        // FIXME(#148): Separate Looper::render into several functions.
+        // If you need separate comments like this, you need separate
+        // functions
+
         // Time Cursor
         renderer.set_draw_color(Color::RGB(255, 255, 255));
-        draw_time_cursor(self.measure_time_cursor, renderer);
+        draw_time_cursor(self.time_cursor % measure_size_millis, renderer);
 
         // Measure Beats
         for i in 0 .. self.measure.measure_size_bpm {
@@ -111,9 +124,8 @@ impl Looper {
             composition: Vec::new(),
             record_buffer: Vec::new(),
             note_tracker: note_tracker,
-            measure_time_cursor: 0,
-            measure_cursor: 0,
             amount_of_measures: 1,
+            time_cursor: 0,
             measure: Measure {
                 tempo_bpm: DEFAULT_TEMPO_BPM,
                 measure_size_bpm: DEFAULT_MEASURE_SIZE_BPM,
@@ -132,8 +144,6 @@ impl Looper {
         self.composition.push(beats);
         self.record_buffer.clear();
 
-        self.measure_time_cursor = 0;
-        self.measure_cursor = 0;
         self.amount_of_measures = 1;
 
         self.note_tracker.close_opened_notes();
@@ -185,8 +195,9 @@ impl Looper {
             self.state = state;
 
             if let State::Looping = self.state {
+                let current_measure = self.measure.timestamp_to_measure(self.time_cursor);
                 self.normalize_record_buffer();
-                let sample = Sample::new(&self.record_buffer, &self.measure);
+                let sample = Sample::new(&self.record_buffer, &self.measure, current_measure + 1);
                 self.amount_of_measures = lcm(self.amount_of_measures, sample.amount_of_measures);
                 self.composition.push(sample);
             }
@@ -204,10 +215,11 @@ impl Looper {
     pub fn update_tempo_bpm(&mut self, tempo_bpm: u32) {
         let new_measure = Measure { tempo_bpm: tempo_bpm, .. self.measure };
 
-        self.measure_time_cursor =
+        // FIXME(#150): Improve time cursor scaling
+        self.time_cursor =
             self.measure.scale_time_cursor(&new_measure,
                                            self.amount_of_measures,
-                                           self.measure_time_cursor);
+                                           self.time_cursor % (self.amount_of_measures * self.measure.measure_size_millis()));
 
         for sample in &mut self.composition {
             sample.update_measure(&new_measure)
@@ -241,7 +253,7 @@ impl Looper {
             })
         }
 
-        Sample::new(&buffer, &self.measure)
+        Sample::new(&buffer, &self.measure, 0)
     }
 
     fn normalize_record_buffer(&mut self) {
