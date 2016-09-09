@@ -86,6 +86,10 @@ impl Renderable for Looper {
                                Point::from((x, window_height as i32))).unwrap();
         };
 
+        // FIXME(#148): Separate Looper::render into several functions.
+        // If you need separate comments like this, you need separate
+        // functions
+
         // Time Cursor
         renderer.set_draw_color(Color::RGB(255, 255, 255));
         draw_time_cursor(self.time_cursor % measure_size_millis, renderer);
