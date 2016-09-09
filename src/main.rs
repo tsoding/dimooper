@@ -1,4 +1,6 @@
 #![deny(warnings)]
+#![feature(plugin)]
+#![plugin(clippy)]
 
 extern crate sdl2;
 extern crate sdl2_ttf;
