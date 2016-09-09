@@ -177,7 +177,8 @@ mod tests {
             [0, 0, DEFAULT_MEASURE.measure_size_millis() * expected_amount_of_measures]
         ];
 
-        let sample = Sample::new(buffer, &DEFAULT_MEASURE);
+        // FIXME(#156): Add Unit Tests for shifted samples
+        let sample = Sample::new(buffer, &DEFAULT_MEASURE, 0);
 
         println!("{}", sample.amount_of_measures);
 
