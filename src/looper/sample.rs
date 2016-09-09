@@ -16,6 +16,7 @@ pub struct Sample {
     pub amount_of_measures: u32,
     quant_shift: Quant,
     notes: Vec<Note>,
+    // FIXME(#155): Get rid of the measure inside of Sample
     measure: Measure,
 }
 
