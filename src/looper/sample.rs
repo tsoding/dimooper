@@ -62,7 +62,7 @@ impl Sample {
         let quant = raw_quant % (Quant(self.amount_of_measures) * self.measure.quants_per_measure());
         for event in &self.buffer {
             if event.quant == quant {
-                // FIXME(): handle result
+                // FIXME(#141): Handle result of the sink message feeding
                 sink.feed(event.message).unwrap();
             }
         }
