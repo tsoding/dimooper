@@ -100,6 +100,7 @@ impl Sample {
         result
     }
 
+    // FIXME(#154): Sample rendering doesn't take into account the quant shift
     pub fn render(&self, raw_measure_number: u32, renderer: &mut Renderer) {
         let current_measure_number = raw_measure_number % self.amount_of_measures;
         let current_measure_notes = self.measure_notes(current_measure_number);
