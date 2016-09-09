@@ -61,6 +61,7 @@ impl Sample {
     }
 
     pub fn replay_quant<Sink: MidiSink>(&self, current_quant: Quant, sink: &mut Sink) {
+        // FIXME(#152): More robust modulo implementation for Sample::replay_quant
         let sample_quant = {
             let sample_quant_length = Quant(self.amount_of_measures) * self.measure.quants_per_measure();
             let normalized_quant = current_quant % sample_quant_length;
