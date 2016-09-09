@@ -53,7 +53,7 @@ impl Updatable for Looper {
 
             if current_quant < next_quant {
                 for sample in &mut self.composition {
-                    // FIXME(): make Quants range iterable
+                    // FIXME(#140): make Quants range iterable
                     let Quant(start) = current_quant;
                     let Quant(end) = next_quant;
                     for q in start + 1..end + 1 {
