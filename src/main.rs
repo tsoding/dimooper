@@ -1,7 +1,8 @@
 // FIXME(#139): Deny warnings only on CI
 // #![deny(warnings)]
-#![feature(plugin)]
-#![plugin(clippy)]
+// FIXME(#160): fix build with clippy
+// #![feature(plugin)]
+// #![plugin(clippy)]
 
 extern crate sdl2;
 extern crate sdl2_ttf;

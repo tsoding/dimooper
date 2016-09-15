@@ -4,7 +4,8 @@ version = "0.1.0"
 authors = ["rexim <reximkut@gmail.com>"]
 
 [dependencies]
-clippy = "0.0.89"
+# FIXME(#160): fix build with clippy
+# clippy = "0.0.89"
 portmidi = "^0.2"
 num = "0.1.32"
 sdl2 = "0.21"
