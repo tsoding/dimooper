@@ -29,10 +29,6 @@ impl Measure {
         Quant(measures) * self.quants_per_measure()
     }
 
-    pub fn quant_to_timestamp(&self, Quant(quant_value): Quant) -> u32 {
-        quant_value * self.quant_size_millis()
-    }
-
     // FIXME(#142): measure should have only converters
     // Get rid of this or make private
     pub fn measure_size_millis(&self) -> u32 {
@@ -116,11 +112,6 @@ mod tests {
         assert_eq!(Quant(1), MEASURE.snap_timestamp_to_quant(MEASURE.quant_size_millis()));
         assert_eq!(Quant(0), MEASURE.snap_timestamp_to_quant(MEASURE.quant_size_millis() / 2 - 1));
         assert_eq!(Quant(1), MEASURE.snap_timestamp_to_quant(MEASURE.quant_size_millis() / 2 + 1));
-    }
-
-    #[test]
-    fn test_quant_to_timestamp() {
-        assert_eq!(5 * MEASURE.quant_size_millis(), MEASURE.quant_to_timestamp(Quant(5)));
     }
 
     #[test]

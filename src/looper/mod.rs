@@ -221,10 +221,6 @@ impl Looper {
                                            self.amount_of_measures,
                                            self.time_cursor % (self.amount_of_measures * self.measure.measure_size_millis()));
 
-        for sample in &mut self.composition {
-            sample.update_measure(&new_measure)
-        }
-
         self.measure = new_measure;
     }
 

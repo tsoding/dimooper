@@ -16,8 +16,8 @@ pub struct Sample {
     pub amount_of_measures: u32,
     quant_shift: Quant,
     notes: Vec<Note>,
-    // FIXME(#155): Get rid of the measure inside of Sample
-    measure: Measure,
+    sample_quant_length: Quant,
+    quants_per_measure: Quant,
 }
 
 impl Sample {
@@ -52,24 +52,20 @@ impl Sample {
         Sample {
             buffer: quant_buffer,
             amount_of_measures: amount_of_measures,
-            measure: measure.clone(),
             notes: notes,
             quant_shift: measure.measures_to_quants(measure_shift),
+            sample_quant_length: Quant(amount_of_measures) * measure.quants_per_measure(),
+            quants_per_measure: measure.quants_per_measure(),
         }
-    }
-
-    pub fn update_measure(&mut self, new_measure: &Measure) {
-        self.measure = new_measure.clone();
     }
 
     pub fn replay_quant<Sink: MidiSink>(&self, current_quant: Quant, sink: &mut Sink) {
         // FIXME(#152): More robust modulo implementation for Sample::replay_quant
         let sample_quant = {
-            let sample_quant_length = Quant(self.amount_of_measures) * self.measure.quants_per_measure();
-            let normalized_quant = current_quant % sample_quant_length;
+            let normalized_quant = current_quant % self.sample_quant_length;
 
             if self.quant_shift > normalized_quant {
-                sample_quant_length - (self.quant_shift - normalized_quant)
+                self.sample_quant_length - (self.quant_shift - normalized_quant)
             } else {
                 normalized_quant - self.quant_shift
             }
@@ -85,15 +81,12 @@ impl Sample {
     }
 
     fn measure_notes(&self, measure_number: u32) -> Vec<Note> {
-        let measure_size_millis = self.measure.measure_size_millis();
-        let start: u32 = measure_number * measure_size_millis;
-        let end: u32 = (measure_number + 1) * measure_size_millis;
+        let start: Quant = Quant(measure_number) * self.quants_per_measure;
+        let end: Quant = Quant(measure_number + 1) * self.quants_per_measure;
         let mut result = Vec::new();
 
         for note in &self.notes {
-            let note_start_abs = self.measure.quant_to_timestamp(note.start_quant);
-            let note_end_abs = self.measure.quant_to_timestamp(note.end_quant);
-            if (start <= note_start_abs && note_start_abs <= end) || (start <= note_end_abs && note_end_abs <= end) {
+            if (start <= note.start_quant && note.start_quant <= end) || (start <= note.end_quant && note.end_quant <= end) {
                 result.push(*note);
             }
         }
@@ -105,10 +98,10 @@ impl Sample {
     pub fn render(&self, raw_measure_number: u32, renderer: &mut Renderer) {
         let current_measure_number = raw_measure_number % self.amount_of_measures;
         let current_measure_notes = self.measure_notes(current_measure_number);
-        let note_shift = Quant(current_measure_number) * self.measure.quants_per_measure();
+        let note_shift = Quant(current_measure_number) * self.quants_per_measure;
 
         for note in &current_measure_notes {
-            note.render(renderer, self.measure.quants_per_measure(), note_shift);
+            note.render(renderer, self.quants_per_measure, note_shift);
         }
     }
 }
