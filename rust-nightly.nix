@@ -13,6 +13,9 @@ let
   mkUrl = { pname, archive, date, system }:
     "${archive}/${date}/${pname}-nightly-${mkTarget system}.tar.gz";
 
+  mkSrcUrl = { pname, archive, date }:
+    "${archive}/${date}/${pname}-src-nightly.tar.gz";
+
   generic = { pname, archive, exes }:
       { date, hash, system ? stdenv.system }:
       stdenv.mkDerivation rec {
@@ -103,5 +106,28 @@ in rec {
     pname = "rust";
     archive = "https://static.rust-lang.org/dist";
     exes = [ "rustc" "rustdoc" "cargo" ];
+  };
+
+  rustSrc = { date, hash }: stdenv.mkDerivation rec {
+    name = "rust-src";
+    version = "nightly-${date}";
+    src = fetchzip {
+      url = mkSrcUrl {
+        inherit date;
+        pname = "rust";
+        archive = "https://static.rust-lang.org/dist";
+      };
+      sha256 = hash;
+    };
+
+    nativeBuildInputs = [ rsync ];
+
+    dontStrip = true;
+
+    unpackPhase = "";           # skip it?
+
+    installPhase = ''
+      rsync --chmod=u+w -r $src/rust-src/lib/rustlib/src/rust/*/ $out/
+    '';
   };
 }
