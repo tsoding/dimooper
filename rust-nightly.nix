@@ -127,7 +127,8 @@ in rec {
     unpackPhase = "";           # skip it?
 
     installPhase = ''
-      rsync --chmod=u+w -r $src/rust-src/lib/rustlib/src/rust/*/ $out/
+      mkdir -p $out/usr/src/
+      rsync --chmod=u+w -r $src/rust-src/lib/rustlib/src/ $out/usr/src/
     '';
   };
 }

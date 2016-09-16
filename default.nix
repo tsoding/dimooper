@@ -19,6 +19,6 @@ in rec {
     version = "0.0.1";
     src = ./.;
     buildInputs = [ pkgs.portmidi pkgs.SDL2 pkgs.SDL2_ttf rustNightly rustSrcNightly ];
-    RUST_SRC_PATH = "${rustSrcNightly}";
+    RUST_SRC_PATH = "${rustSrcNightly}/usr/src/rust/src/";
   };
 }
