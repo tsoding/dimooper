@@ -47,6 +47,7 @@ fn main() {
             std::process::exit(1);
         }
 
+        // FIXME(#163): Clean up command line argument parsing
         (args[1].trim().parse().unwrap(), args[2].trim().parse().unwrap())
     };
 
