@@ -15,6 +15,7 @@ pub struct Sample {
     pub buffer: Vec<QuantMidiEvent>,
     pub amount_of_measures: u32,
     quant_shift: Quant,
+    measure_shift: u32,
     notes: Vec<Note>,
     sample_quant_length: Quant,
     quants_per_measure: Quant,
@@ -56,6 +57,7 @@ impl Sample {
             quant_shift: measure.measures_to_quants(measure_shift),
             sample_quant_length: Quant(amount_of_measures) * measure.quants_per_measure(),
             quants_per_measure: measure.quants_per_measure(),
+            measure_shift: measure_shift,
         }
     }
 
@@ -85,9 +87,8 @@ impl Sample {
         result
     }
 
-    // FIXME(#154): Sample rendering doesn't take into account the quant shift
     pub fn render(&self, raw_measure_number: u32, renderer: &mut Renderer) {
-        let current_measure_number = raw_measure_number % self.amount_of_measures;
+        let current_measure_number = (raw_measure_number + self.measure_shift) % self.amount_of_measures;
         let current_measure_notes = self.measure_notes(current_measure_number);
         let note_shift = Quant(current_measure_number) * self.quants_per_measure;
 
