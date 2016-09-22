@@ -54,6 +54,7 @@ impl Sample {
             buffer: quant_buffer,
             amount_of_measures: amount_of_measures,
             notes: notes,
+            // FIXME(#165): get rid of quant_shift in Sample
             quant_shift: measure.measures_to_quants(measure_shift),
             sample_quant_length: Quant(amount_of_measures) * measure.quants_per_measure(),
             quants_per_measure: measure.quants_per_measure(),
