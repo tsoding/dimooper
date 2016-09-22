@@ -15,13 +15,14 @@ pub struct Sample {
     pub buffer: Vec<QuantMidiEvent>,
     pub amount_of_measures: u32,
     quant_shift: Quant,
+    measure_shift: u32,
     notes: Vec<Note>,
     sample_quant_length: Quant,
     quants_per_measure: Quant,
 }
 
 impl Sample {
-    fn amount_of_measures_in_buffer(buffer: &[AbsMidiEvent], measure: &Measure) -> u32 {
+    pub fn amount_of_measures_in_buffer(buffer: &[AbsMidiEvent], measure: &Measure) -> u32 {
         let n = buffer.len();
 
         if n > 0 {
@@ -53,23 +54,16 @@ impl Sample {
             buffer: quant_buffer,
             amount_of_measures: amount_of_measures,
             notes: notes,
+            // FIXME(#165): get rid of quant_shift in Sample
             quant_shift: measure.measures_to_quants(measure_shift),
             sample_quant_length: Quant(amount_of_measures) * measure.quants_per_measure(),
             quants_per_measure: measure.quants_per_measure(),
+            measure_shift: measure_shift,
         }
     }
 
     pub fn replay_quant<Sink: MidiSink>(&self, current_quant: Quant, sink: &mut Sink) {
-        // FIXME(#152): More robust modulo implementation for Sample::replay_quant
-        let sample_quant = {
-            let normalized_quant = current_quant % self.sample_quant_length;
-
-            if self.quant_shift > normalized_quant {
-                self.sample_quant_length - (self.quant_shift - normalized_quant)
-            } else {
-                normalized_quant - self.quant_shift
-            }
-        };
+        let sample_quant = (current_quant + self.quant_shift) % self.sample_quant_length;
 
         // FIXME(#153): Improve performance of the event look up in sample
         for event in &self.buffer {
@@ -94,9 +88,8 @@ impl Sample {
         result
     }
 
-    // FIXME(#154): Sample rendering doesn't take into account the quant shift
     pub fn render(&self, raw_measure_number: u32, renderer: &mut Renderer) {
-        let current_measure_number = raw_measure_number % self.amount_of_measures;
+        let current_measure_number = (raw_measure_number + self.measure_shift) % self.amount_of_measures;
         let current_measure_notes = self.measure_notes(current_measure_number);
         let note_shift = Quant(current_measure_number) * self.quants_per_measure;
 
