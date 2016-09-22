@@ -21,7 +21,7 @@ pub struct Sample {
 }
 
 impl Sample {
-    fn amount_of_measures_in_buffer(buffer: &[AbsMidiEvent], measure: &Measure) -> u32 {
+    pub fn amount_of_measures_in_buffer(buffer: &[AbsMidiEvent], measure: &Measure) -> u32 {
         let n = buffer.len();
 
         if n > 0 {
@@ -60,16 +60,7 @@ impl Sample {
     }
 
     pub fn replay_quant<Sink: MidiSink>(&self, current_quant: Quant, sink: &mut Sink) {
-        // FIXME(#152): More robust modulo implementation for Sample::replay_quant
-        let sample_quant = {
-            let normalized_quant = current_quant % self.sample_quant_length;
-
-            if self.quant_shift > normalized_quant {
-                self.sample_quant_length - (self.quant_shift - normalized_quant)
-            } else {
-                normalized_quant - self.quant_shift
-            }
-        };
+        let sample_quant = (current_quant + self.quant_shift) % self.sample_quant_length;
 
         // FIXME(#153): Improve performance of the event look up in sample
         for event in &self.buffer {
