@@ -198,7 +198,7 @@ impl Looper {
                 let current_measure = self.measure.timestamp_to_measure(self.time_cursor);
                 self.normalize_record_buffer();
                 // FIXME(#164): Separate Sample::amount_of_measures_in_buffer from Sample
-                let sample_amount_of_measures = Sample::amount_of_measures_in_buffer(&self.record_buffer, &self.measure);
+                let sample_amount_of_measures = self.measure.amount_of_measures_in_buffer(&self.record_buffer);
                 self.amount_of_measures = lcm(self.amount_of_measures, sample_amount_of_measures);
                 let sample = Sample::new(&self.record_buffer, &self.measure, self.amount_of_measures - current_measure - 1);
                 self.composition.push(sample);
