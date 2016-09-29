@@ -25,10 +25,6 @@ impl Measure {
         timestamp / self.measure_size_millis()
     }
 
-    pub fn measures_to_quants(&self, measures: u32) -> Quant {
-        Quant(measures) * self.quants_per_measure()
-    }
-
     // FIXME(#142): measure should have only converters
     // Get rid of this or make private
     pub fn measure_size_millis(&self) -> u32 {
