@@ -21,18 +21,8 @@ pub struct Sample {
 }
 
 impl Sample {
-    pub fn amount_of_measures_in_buffer(buffer: &[AbsMidiEvent], measure: &Measure) -> u32 {
-        let n = buffer.len();
-
-        if n > 0 {
-            (buffer[n - 1].timestamp - buffer[0].timestamp + measure.measure_size_millis()) / measure.measure_size_millis()
-        } else {
-            1
-        }
-    }
-
     pub fn new(buffer: &[AbsMidiEvent], measure: &Measure, measure_shift: u32) -> Sample {
-        let amount_of_measures = Self::amount_of_measures_in_buffer(buffer, measure);
+        let amount_of_measures = measure.amount_of_measures_in_buffer(buffer);
 
         let quant_buffer = {
             let mut result = Vec::new();

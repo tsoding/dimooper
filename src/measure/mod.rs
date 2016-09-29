@@ -1,5 +1,7 @@
 mod quant;
 
+use midi::AbsMidiEvent;
+
 pub use self::quant::Quant;
 
 // FIXME(#142): measure should have only converters
@@ -24,6 +26,17 @@ impl Measure {
     pub fn timestamp_to_measure(&self, timestamp: u32) -> u32 {
         timestamp / self.measure_size_millis()
     }
+
+    pub fn amount_of_measures_in_buffer(&self, buffer: &[AbsMidiEvent]) -> u32 {
+        let n = buffer.len();
+
+        if n > 0 {
+            (buffer[n - 1].timestamp - buffer[0].timestamp + self.measure_size_millis()) / self.measure_size_millis()
+        } else {
+            1
+        }
+    }
+
 
     // FIXME(#142): measure should have only converters
     // Get rid of this or make private
