@@ -14,7 +14,6 @@ pub struct Sample {
     // FIXME(#153): Improve performance of the event look up in sample
     pub buffer: Vec<QuantMidiEvent>,
     pub amount_of_measures: u32,
-    quant_shift: Quant,
     measure_shift: u32,
     notes: Vec<Note>,
     sample_quant_length: Quant,
@@ -54,8 +53,6 @@ impl Sample {
             buffer: quant_buffer,
             amount_of_measures: amount_of_measures,
             notes: notes,
-            // FIXME(#165): get rid of quant_shift in Sample
-            quant_shift: measure.measures_to_quants(measure_shift),
             sample_quant_length: Quant(amount_of_measures) * measure.quants_per_measure(),
             quants_per_measure: measure.quants_per_measure(),
             measure_shift: measure_shift,
@@ -63,7 +60,8 @@ impl Sample {
     }
 
     pub fn replay_quant<Sink: MidiSink>(&self, current_quant: Quant, sink: &mut Sink) {
-        let sample_quant = (current_quant + self.quant_shift) % self.sample_quant_length;
+        let quant_shift = Quant(self.measure_shift) * self.quants_per_measure;
+        let sample_quant = (current_quant + quant_shift) % self.sample_quant_length;
 
         // FIXME(#153): Improve performance of the event look up in sample
         for event in &self.buffer {
