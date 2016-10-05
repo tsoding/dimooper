@@ -4,8 +4,7 @@
 
 Digital Music Looper application focused on live performance.
 
-![screenshot01](http://i.imgur.com/zviXXXm.png)
-![screenshot02](http://i.imgur.com/eedQ7d2.png)
+![screenshot](http://i.imgur.com/S5YzYiR.png)
 
 ## Usage ##
 
