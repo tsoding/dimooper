@@ -34,6 +34,7 @@ impl MidiNoteTracker for PortMidiNoteTracker {
 }
 
 impl MidiSink for PortMidiNoteTracker {
+    // FIXME: don't use Result from the PortMidi library. Make the method more abstract.
     fn feed(&mut self, midi_message: TypedMidiMessage) -> Result<()> {
         match midi_message {
             TypedMidiMessage::NoteOn { channel, key, .. } =>
