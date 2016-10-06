@@ -145,6 +145,7 @@ impl Looper {
         self.record_buffer.clear();
 
         self.amount_of_measures = 1;
+        self.time_cursor = self.amount_of_measures * self.measure.measure_size_millis() - 1;
 
         self.note_tracker.close_opened_notes();
     }
