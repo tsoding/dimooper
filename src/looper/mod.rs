@@ -21,15 +21,14 @@ pub enum State {
     Pause,
 }
 
-pub struct Looper {
+pub struct Looper<NoteTracker: MidiNoteTracker> {
     pub state: State,
     pub next_state: Option<State>,
 
     pub composition: Vec<Sample>,
     pub record_buffer: Vec<AbsMidiEvent>,
 
-
-    pub note_tracker: PortMidiNoteTracker,
+    pub note_tracker: NoteTracker,
 
     time_cursor: u32,
     amount_of_measures: u32,
@@ -37,7 +36,7 @@ pub struct Looper {
     pub measure: Measure,
 }
 
-impl Updatable for Looper {
+impl<NoteTracker: MidiNoteTracker> Updatable for Looper<NoteTracker> {
     fn update(&mut self, delta_time: u32) {
         if self.state != State::Pause {
             let current_measure_bar = self.measure.timestamp_to_measure(self.time_cursor);
@@ -67,7 +66,7 @@ impl Updatable for Looper {
     }
 }
 
-impl Renderable for Looper {
+impl<NoteTracker: MidiNoteTracker> Renderable for Looper<NoteTracker> {
     fn render(&self, renderer: &mut Renderer) {
         let window_width = renderer.viewport().width();
         let window_height = renderer.viewport().height();
@@ -116,8 +115,8 @@ impl Renderable for Looper {
     }
 }
 
-impl Looper {
-    pub fn new(note_tracker: PortMidiNoteTracker) -> Looper {
+impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
+    pub fn new(note_tracker: NoteTracker) -> Looper<NoteTracker> {
         let mut looper = Looper {
             state: State::Looping,
             next_state: None,
