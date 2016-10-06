@@ -1,6 +1,6 @@
 use pm::OutputPort;
 use pm::types::Result;
-use midi::{TypedMidiMessage, MidiSink};
+use midi::{TypedMidiMessage, MidiSink, MidiNoteTracker};
 use config::*;
 
 pub struct PortMidiNoteTracker {
@@ -15,8 +15,10 @@ impl PortMidiNoteTracker {
             notes: [[false; 128]; 16],
         }
     }
+}
 
-    pub fn close_opened_notes(&mut self) {
+impl MidiNoteTracker for PortMidiNoteTracker {
+    fn close_opened_notes(&mut self) {
         for channel in 0..AMOUNT_OF_MIDI_CHANNELS {
             for key in 0..AMOUNT_OF_MIDI_KEYS {
                 if self.notes[channel][key] {
