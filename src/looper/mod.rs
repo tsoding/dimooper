@@ -268,9 +268,11 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
 #[cfg(test)]
 mod tests {
     use super::Looper;
+    use midi::DummyMidiNoteTracker;
 
     #[test]
     fn test_looper_initial_time_cursor() {
-
+        let looper = Looper::new(DummyMidiNoteTracker);
+        assert_eq!(looper.time_cursor, looper.amount_of_measures * looper.measure.measure_size_millis() - 1);
     }
 }
