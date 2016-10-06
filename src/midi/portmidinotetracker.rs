@@ -3,14 +3,14 @@ use pm::types::Result;
 use midi::{TypedMidiMessage, MidiSink};
 use config::*;
 
-pub struct MidiNoteTracker {
+pub struct PortMidiNoteTracker {
     out_port: OutputPort,
     notes: [[bool; 128]; 16],
 }
 
-impl MidiNoteTracker {
-    pub fn new(out_port: OutputPort) -> MidiNoteTracker {
-        MidiNoteTracker {
+impl PortMidiNoteTracker {
+    pub fn new(out_port: OutputPort) -> PortMidiNoteTracker {
+        PortMidiNoteTracker {
             out_port: out_port,
             notes: [[false; 128]; 16],
         }
@@ -31,7 +31,7 @@ impl MidiNoteTracker {
     }
 }
 
-impl MidiSink for MidiNoteTracker {
+impl MidiSink for PortMidiNoteTracker {
     fn feed(&mut self, midi_message: TypedMidiMessage) -> Result<()> {
         match midi_message {
             TypedMidiMessage::NoteOn { channel, key, .. } =>

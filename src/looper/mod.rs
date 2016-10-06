@@ -1,4 +1,4 @@
-use midi::{AbsMidiEvent, TypedMidiMessage, MidiNoteTracker, MidiSink};
+use midi::{AbsMidiEvent, TypedMidiMessage, PortMidiNoteTracker, MidiSink};
 use config::*;
 use num::integer::lcm;
 
@@ -29,7 +29,7 @@ pub struct Looper {
     pub record_buffer: Vec<AbsMidiEvent>,
 
 
-    pub note_tracker: MidiNoteTracker,
+    pub note_tracker: PortMidiNoteTracker,
 
     time_cursor: u32,
     amount_of_measures: u32,
@@ -117,7 +117,7 @@ impl Renderable for Looper {
 }
 
 impl Looper {
-    pub fn new(note_tracker: MidiNoteTracker) -> Looper {
+    pub fn new(note_tracker: PortMidiNoteTracker) -> Looper {
         let mut looper = Looper {
             state: State::Looping,
             next_state: None,
@@ -263,5 +263,15 @@ impl Looper {
                 event.timestamp -= t0;
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Looper;
+
+    #[test]
+    fn test_looper_initial_time_cursor() {
+
     }
 }
