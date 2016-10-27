@@ -31,7 +31,7 @@ pub enum MessageType {
     Other,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, RustcDecodable, RustcEncodable)]
 pub enum TypedMidiMessage {
     NoteOn {channel: u8, key: u8, velocity: u8},
     NoteOff {channel: u8, key: u8, velocity: u8},

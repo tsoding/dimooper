@@ -3,8 +3,9 @@ use sdl2::render::Renderer;
 use midi;
 use midi::{AbsMidiEvent, TypedMidiMessage, Note, MidiSink};
 use measure::*;
+use rustc_serialize::json;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(RustcDecodable, RustcEncodable)]
 pub struct QuantMidiEvent {
     pub message: TypedMidiMessage,
     pub quant: Quant,
@@ -36,6 +37,8 @@ impl Sample {
 
             result
         };
+
+        println!("{}", json::encode(&quant_buffer).unwrap());
 
         let notes = midi::events_to_notes(&quant_buffer);
 

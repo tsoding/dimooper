@@ -1,8 +1,17 @@
 use std::ops::{Add, Mul, Sub, Rem, Div};
 
+use rustc_serialize::{Encodable, Encoder};
+
 // FIXME(#125): Autoderive arithmetic operations for Quant
-#[derive(Clone, Copy, PartialEq, Eq, Debug, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, PartialOrd, Ord, RustcDecodable)]
 pub struct Quant(pub u32);
+
+impl Encodable for Quant {
+    fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
+        let &Quant(this) = self;
+        s.emit_u32(this)
+    }
+}
 
 impl Add for Quant {
     type Output = Quant;
