@@ -1,9 +1,9 @@
 {
-    "measure": [
+    "measure": {
         "tempo_bpm": 344,
         "measure_size_bpm": 455,
         "quantation_level": 2,
-    ],
+    },
 
     "samples": [
         {
@@ -16,11 +16,11 @@
                     },
                     "quant": 3
                 },
-                ...
+                // ...
             ],
 
             "measure_shift": 34,
         },
-        ...
+        // ...
     ]
 }
