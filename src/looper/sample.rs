@@ -3,7 +3,7 @@ use sdl2::render::Renderer;
 use midi;
 use midi::{AbsMidiEvent, TypedMidiMessage, Note, MidiSink};
 use measure::*;
-use rustc_serialize::{Encodable, Encoder};
+use rustc_serialize::{Decodable, Encodable, Encoder, Decoder};
 
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct QuantMidiEvent {
@@ -23,12 +23,16 @@ pub struct Sample {
 
 impl Encodable for Sample {
     fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
-        s.emit_struct("Sample", 2, |s| {
+        s.emit_struct("Sample", 3, |s| {
             s.emit_struct_field("buffer", 0, |s| {
                 self.buffer.encode(s)
             }).and_then(|_| {
                 s.emit_struct_field("measure_shift", 1, |s| {
                     s.emit_u32(self.measure_shift)
+                })
+            }).and_then(|_| {
+                s.emit_struct_field("quants_per_measure", 2, |s| {
+                    self.quants_per_measure.encode(s)
                 })
             })
         })
