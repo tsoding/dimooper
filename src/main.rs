@@ -8,6 +8,7 @@ extern crate sdl2;
 extern crate sdl2_ttf;
 extern crate portmidi as pm;
 extern crate num;
+extern crate rustc_serialize;
 
 use std::path::Path;
 
