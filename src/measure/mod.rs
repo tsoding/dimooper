@@ -6,7 +6,7 @@ pub use self::quant::Quant;
 
 // FIXME(#142): measure should have only converters
 // make all of the fields private
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, RustcDecodable, RustcEncodable)]
 pub struct Measure {
     pub tempo_bpm: u32,
     pub measure_size_bpm: u32,
