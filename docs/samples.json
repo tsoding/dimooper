@@ -1,0 +1,26 @@
+{
+    "measure": [
+        "tempo_bpm": 344,
+        "measure_size_bpm": 455,
+        "quantation_level": 2,
+    ],
+
+    "samples": [
+        {
+            "buffer": [
+                {
+                    "message": {
+                        "status": 38,
+                        "data1": 43,
+                        "data2": 34
+                    },
+                    "quant": 3
+                },
+                ...
+            ],
+
+            "measure_shift": 34,
+        },
+        ...
+    ]
+}
