@@ -39,7 +39,52 @@ impl Encodable for Sample {
     }
 }
 
+impl Decodable for Sample {
+    fn decode<D: Decoder>(d: &mut D) -> Result<Self, D::Error> {
+        d.read_struct("Sample", 2, |d| {
+            d.read_struct_field("buffer", 0, |d| {
+                Vec::<QuantMidiEvent>::decode(d)
+            }).and_then(|buffer| {
+                d.read_struct_field("measure_shift", 1, |d| {
+                    u32::decode(d)
+                }).and_then(|measure_shift| {
+                    d.read_struct_field("quants_per_measure", 2, |d| {
+                        Quant::decode(d)
+                    }).and_then(|quants_per_measure| {
+                        Ok(Sample::from_quants(buffer, quants_per_measure, measure_shift))
+                    })
+                })
+            })
+        })
+    }
+}
+
 impl Sample {
+    fn amount_of_measures_in_buffer(buffer: &Vec<QuantMidiEvent>, quants_per_measure: Quant) -> u32 {
+        let n = buffer.len();
+
+        if n > 0 {
+            let Quant(result) = (buffer[n - 1].quant - buffer[0].quant + quants_per_measure) / quants_per_measure;
+            result
+        } else {
+            1
+        }
+    }
+
+    pub fn from_quants(buffer: Vec<QuantMidiEvent>, quants_per_measure: Quant, measure_shift: u32) -> Sample {
+        let notes = midi::events_to_notes(&buffer);
+        let amount_of_measures = Self::amount_of_measures_in_buffer(&buffer, quants_per_measure);
+
+        Sample {
+            buffer: buffer,
+            amount_of_measures: amount_of_measures,
+            notes: notes,
+            sample_quant_length: Quant(amount_of_measures) * quants_per_measure,
+            quants_per_measure: quants_per_measure,
+            measure_shift: measure_shift
+        }
+    }
+
     pub fn new(buffer: &[AbsMidiEvent], measure: &Measure, measure_shift: u32) -> Sample {
         let amount_of_measures = measure.amount_of_measures_in_buffer(buffer);
 
