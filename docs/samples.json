@@ -9,12 +9,15 @@
         {
             "buffer": [
                 {
-                    "message": {
-                        "status": 38,
-                        "data1": 43,
-                        "data2": 34
-                    },
-                    "quant": 3
+                    "quant" : 0,
+                    "message" : {
+                        "fields" : [
+                            0,
+                            36,
+                            103
+                        ],
+                        "variant" : "NoteOn"
+                    }
                 },
                 // ...
             ],
