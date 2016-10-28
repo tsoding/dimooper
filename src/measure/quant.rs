@@ -63,3 +63,17 @@ impl Rem for Quant {
         Quant(this % other)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Quant;
+    use rustc_serialize::json;
+
+    #[test]
+    fn test_quant_serialization() {
+        let q = Quant(42);
+
+        assert_eq!(Quant(42),
+                   json::decode(&json::encode(&q).unwrap()).unwrap())
+    }
+}
