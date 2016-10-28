@@ -5,7 +5,7 @@ use midi::{AbsMidiEvent, TypedMidiMessage, Note, MidiSink};
 use measure::*;
 use rustc_serialize::{Decodable, Encodable, Encoder, Decoder};
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(RustcDecodable, RustcEncodable, Debug, PartialEq, Eq)]
 pub struct QuantMidiEvent {
     pub message: TypedMidiMessage,
     pub quant: Quant,
@@ -159,6 +159,8 @@ mod tests {
     use measure::Measure;
     use midi::{AbsMidiEvent, TypedMidiMessage};
 
+    use rustc_serialize::json;
+
     const DEFAULT_MEASURE: Measure = Measure {
         tempo_bpm: DEFAULT_TEMPO_BPM,
         measure_size_bpm: DEFAULT_MEASURE_SIZE_BPM,
@@ -221,5 +223,26 @@ mod tests {
         println!("{}", sample.amount_of_measures);
 
         assert_eq!(expected_amount_of_measures, sample.amount_of_measures);
+    }
+
+    #[test]
+    fn test_sample_serialization() {
+        let expected_amount_of_measures = 2;
+        let buffer = test_sample_data! [
+            [0, 0, DEFAULT_MEASURE.measure_size_millis() * expected_amount_of_measures]
+        ];
+
+        let sample = Sample::new(buffer, &DEFAULT_MEASURE, 0);
+
+        let massaged_sample: Sample = json::decode(&json::encode(&sample).unwrap()).unwrap();
+
+        assert_eq!(sample.buffer, massaged_sample.buffer);
+        assert_eq!(sample.measure_shift, massaged_sample.measure_shift);
+        assert_eq!(sample.notes, massaged_sample.notes);
+        assert_eq!(sample.quants_per_measure, massaged_sample.quants_per_measure);
+
+        // TODO: fix sample measure info serialization
+        // assert_eq!(sample.amount_of_measures, massaged_sample.amount_of_measures);
+        // assert_eq!(sample.sample_quant_length, massaged_sample.sample_quant_length);
     }
 }
