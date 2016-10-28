@@ -241,7 +241,7 @@ mod tests {
         assert_eq!(sample.notes, massaged_sample.notes);
         assert_eq!(sample.quants_per_measure, massaged_sample.quants_per_measure);
 
-        // TODO(#174): fix sample measure info serialization
+        // TODO(#178): fix sample measure info serialization
         // assert_eq!(sample.amount_of_measures, massaged_sample.amount_of_measures);
         // assert_eq!(sample.sample_quant_length, massaged_sample.sample_quant_length);
     }
