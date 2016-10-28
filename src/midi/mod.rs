@@ -71,7 +71,7 @@ pub struct AbsMidiEvent {
     pub timestamp: u32,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Note {
     pub start_quant: Quant,
     pub end_quant: Quant,

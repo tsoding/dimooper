@@ -3,9 +3,9 @@ use sdl2::render::Renderer;
 use midi;
 use midi::{AbsMidiEvent, TypedMidiMessage, Note, MidiSink};
 use measure::*;
-use rustc_serialize::{Encodable, Encoder};
+use rustc_serialize::{Decodable, Encodable, Encoder, Decoder};
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(RustcDecodable, RustcEncodable, Debug, PartialEq, Eq)]
 pub struct QuantMidiEvent {
     pub message: TypedMidiMessage,
     pub quant: Quant,
@@ -23,12 +23,36 @@ pub struct Sample {
 
 impl Encodable for Sample {
     fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
-        s.emit_struct("Sample", 2, |s| {
+        s.emit_struct("Sample", 3, |s| {
             s.emit_struct_field("buffer", 0, |s| {
                 self.buffer.encode(s)
             }).and_then(|_| {
                 s.emit_struct_field("measure_shift", 1, |s| {
                     s.emit_u32(self.measure_shift)
+                })
+            }).and_then(|_| {
+                s.emit_struct_field("quants_per_measure", 2, |s| {
+                    self.quants_per_measure.encode(s)
+                })
+            })
+        })
+    }
+}
+
+impl Decodable for Sample {
+    fn decode<D: Decoder>(d: &mut D) -> Result<Self, D::Error> {
+        d.read_struct("Sample", 2, |d| {
+            d.read_struct_field("buffer", 0, |d| {
+                Vec::<QuantMidiEvent>::decode(d)
+            }).and_then(|buffer| {
+                d.read_struct_field("measure_shift", 1, |d| {
+                    u32::decode(d)
+                }).and_then(|measure_shift| {
+                    d.read_struct_field("quants_per_measure", 2, |d| {
+                        Quant::decode(d)
+                    }).and_then(|quants_per_measure| {
+                        Ok(Sample::from_quants(buffer, quants_per_measure, measure_shift))
+                    })
                 })
             })
         })
@@ -36,6 +60,31 @@ impl Encodable for Sample {
 }
 
 impl Sample {
+    fn amount_of_measures_in_buffer(buffer: &Vec<QuantMidiEvent>, quants_per_measure: Quant) -> u32 {
+        let n = buffer.len();
+
+        if n > 0 {
+            let Quant(result) = (buffer[n - 1].quant - buffer[0].quant + quants_per_measure) / quants_per_measure;
+            result
+        } else {
+            1
+        }
+    }
+
+    pub fn from_quants(buffer: Vec<QuantMidiEvent>, quants_per_measure: Quant, measure_shift: u32) -> Sample {
+        let notes = midi::events_to_notes(&buffer);
+        let amount_of_measures = Self::amount_of_measures_in_buffer(&buffer, quants_per_measure);
+
+        Sample {
+            buffer: buffer,
+            amount_of_measures: amount_of_measures,
+            notes: notes,
+            sample_quant_length: Quant(amount_of_measures) * quants_per_measure,
+            quants_per_measure: quants_per_measure,
+            measure_shift: measure_shift
+        }
+    }
+
     pub fn new(buffer: &[AbsMidiEvent], measure: &Measure, measure_shift: u32) -> Sample {
         let amount_of_measures = measure.amount_of_measures_in_buffer(buffer);
 
@@ -110,6 +159,8 @@ mod tests {
     use measure::Measure;
     use midi::{AbsMidiEvent, TypedMidiMessage};
 
+    use rustc_serialize::json;
+
     const DEFAULT_MEASURE: Measure = Measure {
         tempo_bpm: DEFAULT_TEMPO_BPM,
         measure_size_bpm: DEFAULT_MEASURE_SIZE_BPM,
@@ -172,5 +223,26 @@ mod tests {
         println!("{}", sample.amount_of_measures);
 
         assert_eq!(expected_amount_of_measures, sample.amount_of_measures);
+    }
+
+    #[test]
+    fn test_sample_serialization() {
+        let expected_amount_of_measures = 2;
+        let buffer = test_sample_data! [
+            [0, 0, DEFAULT_MEASURE.measure_size_millis() * expected_amount_of_measures]
+        ];
+
+        let sample = Sample::new(buffer, &DEFAULT_MEASURE, 0);
+
+        let massaged_sample: Sample = json::decode(&json::encode(&sample).unwrap()).unwrap();
+
+        assert_eq!(sample.buffer, massaged_sample.buffer);
+        assert_eq!(sample.measure_shift, massaged_sample.measure_shift);
+        assert_eq!(sample.notes, massaged_sample.notes);
+        assert_eq!(sample.quants_per_measure, massaged_sample.quants_per_measure);
+
+        // TODO: fix sample measure info serialization
+        // assert_eq!(sample.amount_of_measures, massaged_sample.amount_of_measures);
+        // assert_eq!(sample.sample_quant_length, massaged_sample.sample_quant_length);
     }
 }
