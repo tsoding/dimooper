@@ -8,7 +8,7 @@ impl MidiNoteTracker for DummyMidiNoteTracker {
 }
 
 impl MidiSink for DummyMidiNoteTracker {
-    fn feed(&mut self, midi_message: TypedMidiMessage) -> Result<()> {
+    fn feed(&mut self, _: TypedMidiMessage) -> Result<()> {
         Ok(())
     }
 }
