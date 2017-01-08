@@ -11,6 +11,8 @@ use sdl2::render::Renderer;
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
 
+use rustc_serialize::{Decodable, Encodable, Encoder, Decoder, json};
+
 #[derive(PartialEq)]
 enum State {
     Recording,
@@ -31,6 +33,20 @@ pub struct Looper<NoteTracker: MidiNoteTracker> {
     amount_of_measures: u32,
 
     measure: Measure,
+}
+
+impl<NoteTracker: MidiNoteTracker> Encodable for Looper<NoteTracker> {
+    fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
+        s.emit_struct("Looper", 2, |s| {
+            s.emit_struct_field("measure", 0, |s| {
+                self.measure.encode(s)
+            }).and_then(|_| {
+                s.emit_struct_field("samples", 1, |s| {
+                    self.composition.encode(s)
+                })
+            })
+        })
+    }
 }
 
 impl<NoteTracker: MidiNoteTracker> Updatable for Looper<NoteTracker> {
