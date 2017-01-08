@@ -1,8 +1,10 @@
 mod quant;
+mod quant_midi_event;
 
 use midi::AbsMidiEvent;
 
 pub use self::quant::Quant;
+pub use self::quant_midi_event::QuantMidiEvent;
 
 // FIXME(#142): measure should have only converters
 // make all of the fields private
@@ -37,6 +39,17 @@ impl Measure {
         }
     }
 
+    pub fn quantize_buffer(&self, buffer: &[AbsMidiEvent]) -> Vec<QuantMidiEvent> {
+        let amount_of_measures = self.amount_of_measures_in_buffer(buffer);
+        let quants_per_sample = Quant(amount_of_measures) * self.quants_per_measure();
+
+        buffer.iter().map(|event| {
+            QuantMidiEvent {
+                message: event.message,
+                quant: self.snap_timestamp_to_quant(event.timestamp) % quants_per_sample,
+            }
+        }).collect()
+    }
 
     // FIXME(#142): measure should have only converters
     // Get rid of this or make private
