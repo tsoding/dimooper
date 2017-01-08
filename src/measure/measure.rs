@@ -84,7 +84,8 @@ impl Measure {
 #[cfg(test)]
 mod tests {
     use super::{Measure};
-    use measure::Quant;
+    use measure::{Quant, QuantMidiEvent};
+    use midi::{TypedMidiMessage, AbsMidiEvent};
 
     const TEMPO_BPM: u32 = 120;
     const MEASURE_SIZE_BPM: u32 = 4;
@@ -163,5 +164,26 @@ mod tests {
                    MEASURE.scale_time_cursor(&new_measure,
                                              amount_of_measures,
                                              time_cursor))
+    }
+
+    #[test]
+    fn test_quantize_buffer() {
+        let buffer = &[
+            AbsMidiEvent {
+                timestamp: MEASURE.measure_size_millis() - 1,
+                message: TypedMidiMessage::NoteOn {
+                    channel: 0,
+                    key: 0,
+                    velocity: 0
+                }
+            }
+        ];
+
+        let quantized_buffer = MEASURE.quantize_buffer(buffer);
+
+        assert_eq!(vec![QuantMidiEvent {
+            message: TypedMidiMessage::NoteOn { channel: 0, key: 0, velocity: 0 },
+            quant: Quant(0),
+        }], quantized_buffer);
     }
 }
