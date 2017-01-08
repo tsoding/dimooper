@@ -35,20 +35,6 @@ pub struct Looper<NoteTracker: MidiNoteTracker> {
     measure: Measure,
 }
 
-impl<NoteTracker: MidiNoteTracker> Encodable for Looper<NoteTracker> {
-    fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
-        s.emit_struct("Looper", 2, |s| {
-            s.emit_struct_field("measure", 0, |s| {
-                self.measure.encode(s)
-            }).and_then(|_| {
-                s.emit_struct_field("samples", 1, |s| {
-                    self.composition.encode(s)
-                })
-            })
-        })
-    }
-}
-
 impl<NoteTracker: MidiNoteTracker> Updatable for Looper<NoteTracker> {
     fn update(&mut self, delta_time: u32) {
         if self.state != State::Pause {
