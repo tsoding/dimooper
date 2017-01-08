@@ -7,8 +7,7 @@ use sdl2::render::Renderer;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 
-use looper::sample::QuantMidiEvent;
-use measure::Quant;
+use measure::{Quant, QuantMidiEvent};
 
 mod portmidinotetracker;
 mod dummymidinotetracker;

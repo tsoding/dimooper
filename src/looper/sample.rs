@@ -1,15 +1,10 @@
 use sdl2::render::Renderer;
 
 use midi;
-use midi::{AbsMidiEvent, TypedMidiMessage, Note, MidiSink};
+use midi::{AbsMidiEvent, Note, MidiSink};
 use measure::*;
 use rustc_serialize::{Decodable, Encodable, Encoder, Decoder};
 
-#[derive(RustcDecodable, RustcEncodable, Debug, PartialEq, Eq)]
-pub struct QuantMidiEvent {
-    pub message: TypedMidiMessage,
-    pub quant: Quant,
-}
 
 pub struct Sample {
     // FIXME(#153): Improve performance of the event look up in sample
@@ -89,19 +84,7 @@ impl Sample {
 
     pub fn new(buffer: &[AbsMidiEvent], measure: &Measure, measure_shift: u32) -> Sample {
         let amount_of_measures = measure.amount_of_measures_in_buffer(buffer);
-
-        let quant_buffer = {
-            let mut result = Vec::new();
-
-            for event in buffer {
-                result.push(QuantMidiEvent {
-                    message: event.message,
-                    quant: measure.snap_timestamp_to_quant(event.timestamp),
-                })
-            }
-
-            result
-        };
+        let quant_buffer = measure.quantize_buffer(buffer);
 
         let notes = midi::events_to_notes(&quant_buffer);
 
