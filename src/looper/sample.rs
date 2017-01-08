@@ -89,19 +89,14 @@ impl Sample {
 
     pub fn new(buffer: &[AbsMidiEvent], measure: &Measure, measure_shift: u32) -> Sample {
         let amount_of_measures = measure.amount_of_measures_in_buffer(buffer);
+        let quants_per_sample = Quant(amount_of_measures) * measure.quants_per_measure();
 
-        let quant_buffer = {
-            let mut result = Vec::new();
-
-            for event in buffer {
-                result.push(QuantMidiEvent {
-                    message: event.message,
-                    quant: measure.snap_timestamp_to_quant(event.timestamp),
-                })
+        let quant_buffer: Vec<QuantMidiEvent> = buffer.iter().map(|event| {
+            QuantMidiEvent {
+                message: event.message,
+                quant: measure.snap_timestamp_to_quant(event.timestamp) % quants_per_sample,
             }
-
-            result
-        };
+        }).collect();
 
         let notes = midi::events_to_notes(&quant_buffer);
 
