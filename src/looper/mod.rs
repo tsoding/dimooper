@@ -15,25 +15,25 @@ pub mod sample;
 use self::sample::Sample;
 
 #[derive(PartialEq)]
-pub enum State {
+enum State {
     Recording,
     Looping,
     Pause,
 }
 
 pub struct Looper<NoteTracker: MidiNoteTracker> {
-    pub state: State,
-    pub next_state: Option<State>,
+    state: State,
+    next_state: Option<State>,
 
-    pub composition: Vec<Sample>,
-    pub record_buffer: Vec<AbsMidiEvent>,
+    composition: Vec<Sample>,
+    record_buffer: Vec<AbsMidiEvent>,
 
-    pub note_tracker: NoteTracker,
+    note_tracker: NoteTracker,
 
     time_cursor: u32,
     amount_of_measures: u32,
 
-    pub measure: Measure,
+    measure: Measure,
 }
 
 impl<NoteTracker: MidiNoteTracker> Updatable for Looper<NoteTracker> {
