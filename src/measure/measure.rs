@@ -3,7 +3,7 @@ use measure::{Quant, QuantMidiEvent};
 
 // FIXME(#142): measure should have only converters
 // make all of the fields private
-#[derive(Debug, Clone, RustcDecodable, RustcEncodable)]
+#[derive(Debug, Clone, RustcDecodable, RustcEncodable, PartialEq)]
 pub struct Measure {
     pub tempo_bpm: u32,
     pub measure_size_bpm: u32,

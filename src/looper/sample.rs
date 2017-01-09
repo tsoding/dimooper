@@ -5,7 +5,6 @@ use midi::{AbsMidiEvent, Note, MidiSink};
 use measure::*;
 use rustc_serialize::{Decodable, Encodable, Encoder, Decoder};
 
-
 pub struct Sample {
     // FIXME(#153): Improve performance of the event look up in sample
     pub buffer: Vec<QuantMidiEvent>,
