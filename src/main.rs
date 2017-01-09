@@ -19,7 +19,7 @@ use sdl2::pixels::Color;
 mod looper;
 mod traits;
 mod midi;
-mod graphicsprimitives;
+mod graphics_primitives;
 mod config;
 mod measure;
 mod popup;

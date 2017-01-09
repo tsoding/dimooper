@@ -3,7 +3,7 @@ use config::*;
 use num::integer::lcm;
 
 use traits::{Updatable, Renderable};
-use graphicsprimitives::CircleRenderer;
+use graphics_primitives::CircleRenderer;
 use measure::*;
 use looper::Sample;
 
