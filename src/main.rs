@@ -22,11 +22,11 @@ mod midi;
 mod graphics_primitives;
 mod config;
 mod measure;
-mod popup;
+mod ui;
 
 use traits::{Updatable, Renderable};
 use midi::{AbsMidiEvent, TypedMidiMessage, PortMidiNoteTracker};
-use popup::Popup;
+use ui::Popup;
 
 use config::*;
 
