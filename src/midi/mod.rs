@@ -9,15 +9,15 @@ use sdl2::rect::Rect;
 
 use measure::{Quant, QuantMidiEvent};
 
-mod portmidinotetracker;
-mod dummymidinotetracker;
-mod midinotetracker;
-mod midisink;
+mod port_midi_note_tracker;
+mod dummy_midi_note_tracker;
+mod midi_note_tracker;
+mod midi_sink;
 
-pub use self::portmidinotetracker::PortMidiNoteTracker;
-pub use self::midisink::MidiSink;
-pub use self::midinotetracker::MidiNoteTracker;
-pub use self::dummymidinotetracker::DummyMidiNoteTracker;
+pub use self::port_midi_note_tracker::PortMidiNoteTracker;
+pub use self::midi_sink::MidiSink;
+pub use self::midi_note_tracker::MidiNoteTracker;
+pub use self::dummy_midi_note_tracker::DummyMidiNoteTracker;
 
 const NOTE_ON_STATUS: u8 = 0b10010000;
 const NOTE_OFF_STATUS: u8 = 0b10000000;
