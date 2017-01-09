@@ -11,8 +11,6 @@ use sdl2::render::Renderer;
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
 
-use rustc_serialize::{Decodable, Encodable, Encoder, Decoder, json};
-
 #[derive(PartialEq)]
 enum State {
     Recording,
