@@ -19,14 +19,14 @@ use sdl2::pixels::Color;
 mod looper;
 mod traits;
 mod midi;
-mod graphicsprimitives;
+mod graphics_primitives;
 mod config;
 mod measure;
-mod popup;
+mod ui;
 
 use traits::{Updatable, Renderable};
 use midi::{AbsMidiEvent, TypedMidiMessage, PortMidiNoteTracker};
-use popup::Popup;
+use ui::Popup;
 
 use config::*;
 

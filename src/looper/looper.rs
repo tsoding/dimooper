@@ -3,15 +3,13 @@ use config::*;
 use num::integer::lcm;
 
 use traits::{Updatable, Renderable};
-use graphicsprimitives::CircleRenderer;
+use graphics_primitives::CircleRenderer;
 use measure::*;
 use looper::Sample;
 
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
-
-use rustc_serialize::{Decodable, Encodable, Encoder, Decoder, json};
 
 #[derive(PartialEq)]
 enum State {
