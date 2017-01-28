@@ -116,6 +116,10 @@ fn main() {
                     looper.toggle_pause();
                 }
 
+                Event::KeyDown { keycode: Some(Keycode::S), .. } => {
+                    looper.save_state_to_file(Path::new(STATE_FILE_PATH));
+                }
+
                 _ => {}
             }
         }

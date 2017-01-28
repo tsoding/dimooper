@@ -9,7 +9,7 @@ pub struct Composition {
 }
 
 impl Composition {
-    fn new(measure: Measure, samples: Vec<Sample>) -> Composition {
+    pub fn new(measure: Measure, samples: Vec<Sample>) -> Composition {
         Composition {
             measure: measure,
             samples: samples

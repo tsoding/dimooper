@@ -1,6 +1,13 @@
+use std::{path, io, fs, error};
+use std::io::prelude::*;
+
 use midi::*;
 use config::*;
 use num::integer::lcm;
+use rustc_serialize::json;
+use rustc_serialize::json::*;
+use looper::Composition;
+use looper::StateError;
 
 use traits::{Updatable, Renderable};
 use graphics_primitives::CircleRenderer;
@@ -221,6 +228,17 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
                                            self.time_cursor % (self.amount_of_measures * self.measure.measure_size_millis()));
 
         self.measure = new_measure;
+    }
+
+    pub fn save_state_to_file(&self, path: &path::Path) -> Result<(), StateError> {
+        let composition: Composition = Composition::new(self.measure.clone(),
+                                                        self.composition.clone());
+
+        let serialized_composition: String = try!(json::encode(&composition));
+        let mut file = try!(fs::File::create(path));
+        try!(file.write_all(serialized_composition.as_bytes()));
+
+        Ok(())
     }
 
     fn make_metronome(&self) -> Sample {
