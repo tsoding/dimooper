@@ -116,6 +116,8 @@ fn main() {
                     looper.toggle_pause();
                 }
 
+                // TODO: Handle state errors
+
                 Event::KeyDown { keycode: Some(Keycode::S), .. } => {
                     looper.save_state_to_file(Path::new(STATE_FILE_PATH));
                 }
