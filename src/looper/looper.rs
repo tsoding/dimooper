@@ -1,11 +1,10 @@
-use std::{path, io, fs, error};
+use std::{path, fs};
 use std::io::prelude::*;
 
 use midi::*;
 use config::*;
 use num::integer::lcm;
 use rustc_serialize::json;
-use rustc_serialize::json::*;
 use looper::Composition;
 use looper::StateError;
 
