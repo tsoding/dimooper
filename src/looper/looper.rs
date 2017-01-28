@@ -235,6 +235,7 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
         try!(file.read_to_string(&mut serialized_composition));
         let composition: Composition = try!(json::decode(&serialized_composition));
 
+        self.note_tracker.close_opened_notes();
         self.composition = composition.samples;
         self.measure = composition.measure;
         self.time_cursor = 0;
