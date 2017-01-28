@@ -4,8 +4,8 @@ use measure::Measure;
 use rustc_serialize::{Decodable, Encodable, Encoder, Decoder};
 
 pub struct Composition {
-    samples: Vec<Sample>,
-    measure: Measure,
+    pub samples: Vec<Sample>,
+    pub measure: Measure,
 }
 
 impl Composition {

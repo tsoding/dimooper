@@ -120,6 +120,10 @@ fn main() {
                     looper.save_state_to_file(Path::new(STATE_FILE_PATH));
                 }
 
+                Event::KeyDown { keycode: Some(Keycode::L), .. } => {
+                    looper.load_state_from_file(Path::new(STATE_FILE_PATH));
+                }
+
                 _ => {}
             }
         }

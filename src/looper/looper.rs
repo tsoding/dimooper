@@ -230,6 +230,25 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
         self.measure = new_measure;
     }
 
+    pub fn load_state_from_file(&mut self, path: &path::Path) -> Result<(), StateError> {
+        let mut file = try!(fs::File::open(path));
+        let mut serialized_composition = String::new();
+        try!(file.read_to_string(&mut serialized_composition));
+        let composition: Composition = try!(json::decode(&serialized_composition));
+
+        self.composition = composition.samples;
+        self.measure = composition.measure;
+        self.time_cursor = 0;
+
+        self.amount_of_measures = 1;
+        for sample in &self.composition {
+            self.amount_of_measures = lcm(self.amount_of_measures,
+                                          sample.amount_of_measures);
+        }
+
+        Ok(())
+    }
+
     pub fn save_state_to_file(&self, path: &path::Path) -> Result<(), StateError> {
         let composition: Composition = Composition::new(self.measure.clone(),
                                                         self.composition.clone());
