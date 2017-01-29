@@ -116,6 +116,20 @@ fn main() {
                     looper.toggle_pause();
                 }
 
+                Event::KeyDown { keycode: Some(Keycode::S), .. } => {
+                    match looper.save_state_to_file(Path::new(STATE_FILE_PATH)) {
+                        Ok(_) => println!("Saved looper state to {}", STATE_FILE_PATH),
+                        Err(e) => println!("[ERROR] {}", e),
+                    }
+                }
+
+                Event::KeyDown { keycode: Some(Keycode::L), .. } => {
+                    match looper.load_state_from_file(Path::new(STATE_FILE_PATH)) {
+                        Ok(_) => println!("Loaded looper state from {}", STATE_FILE_PATH),
+                        Err(e) => println!("[ERROR] {}", e),
+                    }
+                }
+
                 _ => {}
             }
         }

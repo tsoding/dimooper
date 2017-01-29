@@ -1,6 +1,12 @@
+use std::{path, fs};
+use std::io::prelude::*;
+
 use midi::*;
 use config::*;
 use num::integer::lcm;
+use rustc_serialize::json;
+use looper::Composition;
+use looper::PersistenceError;
 
 use traits::{Updatable, Renderable};
 use graphics_primitives::CircleRenderer;
@@ -221,6 +227,43 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
                                            self.time_cursor % (self.amount_of_measures * self.measure.measure_size_millis()));
 
         self.measure = new_measure;
+    }
+
+    pub fn load_state_from_file(&mut self, path: &path::Path) -> Result<(), PersistenceError> {
+        let mut file = try!(fs::File::open(path));
+        let mut serialized_composition = String::new();
+        try!(file.read_to_string(&mut serialized_composition));
+        let composition: Composition = try!(json::decode(&serialized_composition));
+
+        self.note_tracker.close_opened_notes();
+        self.composition = composition.samples;
+        self.measure = composition.measure;
+        self.time_cursor = 0;
+
+        // TODO: Extract recalculation of the amount of measures.
+        //
+        // Right know Looper has a lot of duplicate code for
+        // recalculating amount of measures of the composition. We
+        // need to centralize that somehow.
+        self.amount_of_measures = 1;
+        for sample in &self.composition {
+            self.amount_of_measures = lcm(self.amount_of_measures,
+                                          sample.amount_of_measures);
+        }
+        self.time_cursor = self.amount_of_measures * self.measure.measure_size_millis() - 1;
+
+        Ok(())
+    }
+
+    pub fn save_state_to_file(&self, path: &path::Path) -> Result<(), PersistenceError> {
+        let composition: Composition = Composition::new(self.measure.clone(),
+                                                        self.composition.clone());
+
+        let serialized_composition: String = try!(json::encode(&composition));
+        let mut file = try!(fs::File::create(path));
+        try!(file.write_all(serialized_composition.as_bytes()));
+
+        Ok(())
     }
 
     fn make_metronome(&self) -> Sample {

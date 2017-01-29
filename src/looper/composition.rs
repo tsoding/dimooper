@@ -4,12 +4,12 @@ use measure::Measure;
 use rustc_serialize::{Decodable, Encodable, Encoder, Decoder};
 
 pub struct Composition {
-    samples: Vec<Sample>,
-    measure: Measure,
+    pub samples: Vec<Sample>,
+    pub measure: Measure,
 }
 
 impl Composition {
-    fn new(measure: Measure, samples: Vec<Sample>) -> Composition {
+    pub fn new(measure: Measure, samples: Vec<Sample>) -> Composition {
         Composition {
             measure: measure,
             samples: samples
