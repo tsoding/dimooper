@@ -246,6 +246,7 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
             self.amount_of_measures = lcm(self.amount_of_measures,
                                           sample.amount_of_measures);
         }
+        self.time_cursor = self.amount_of_measures * self.measure.measure_size_millis() - 1;
 
         Ok(())
     }
