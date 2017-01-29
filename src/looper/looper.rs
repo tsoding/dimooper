@@ -240,7 +240,7 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
         self.measure = composition.measure;
         self.time_cursor = 0;
 
-        // TODO: Extract recalculation of the amount of measures.
+        // TODO(#186): Extract recalculation of the amount of measures.
         //
         // Right know Looper has a lot of duplicate code for
         // recalculating amount of measures of the composition. We
