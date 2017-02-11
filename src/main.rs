@@ -23,10 +23,12 @@ mod graphics_primitives;
 mod config;
 mod measure;
 mod ui;
+mod state;
 
 use traits::{Updatable, Renderable};
 use midi::{AbsMidiEvent, TypedMidiMessage, PortMidiNoteTracker};
 use ui::Popup;
+use state::*;
 
 use config::*;
 
@@ -88,99 +90,38 @@ fn main() {
 
     let mut previuos_ticks = timer_subsystem.ticks();
 
+    let mut current_controller = MainLooperController::<PortMidiNoteTracker>::new(looper, bpm_popup);
+
     while running {
         let current_ticks = timer_subsystem.ticks();
         let delta_time = current_ticks - previuos_ticks;
         previuos_ticks = current_ticks;
 
-        for event in event_pump.poll_iter() {
-            match event {
-                Event::Quit { .. } |
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-                    running = false;
-                }
+        let sdl_events: Vec<Event> = event_pump.poll_iter().collect();
+        current_controller.handle_sdl_events(&sdl_events);
 
-                Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
-                    looper.toggle_recording();
-                }
 
-                Event::KeyDown { keycode: Some(Keycode::Z), .. } => {
-                    looper.reset();
-                }
-
-                Event::KeyDown { keycode: Some(Keycode::Q), .. } => {
-                    looper.undo_last_recording();
-                }
-
-                Event::KeyDown { keycode: Some(Keycode::P), .. } => {
-                    looper.toggle_pause();
-                }
-
-                Event::KeyDown { keycode: Some(Keycode::S), .. } => {
-                    match looper.save_state_to_file(Path::new(STATE_FILE_PATH)) {
-                        Ok(_) => println!("Saved looper state to {}", STATE_FILE_PATH),
-                        Err(e) => println!("[ERROR] {}", e),
-                    }
-                }
-
-                Event::KeyDown { keycode: Some(Keycode::L), .. } => {
-                    match looper.load_state_from_file(Path::new(STATE_FILE_PATH)) {
-                        Ok(_) => println!("Loaded looper state from {}", STATE_FILE_PATH),
-                        Err(e) => println!("[ERROR] {}", e),
-                    }
-                }
-
-                _ => {}
-            }
+        if let Ok(Some(raw_midi_events)) = in_port.read_n(1024) {
+            let midi_events: Vec<AbsMidiEvent> = raw_midi_events
+                .iter()
+                .filter_map(|e| midi::parse_midi_event(e))
+                .collect();
+            current_controller.handle_midi_events(&midi_events);
         }
 
-        if let Ok(Some(events)) = in_port.read_n(1024) {
-            for event in events {
-                // FIXME(#149): Extract MIDI logging into a separate entity
-                println!("{:?}", event.message);
-
-                if midi::is_note_message(&event.message) &&
-                    midi::get_note_channel(&event.message) == CONTROL_CHANNEL_NUMBER {
-                        if midi::get_message_type(&event.message) == midi::MessageType::NoteOn &&
-                       midi::get_note_key(&event.message) == CONTROL_KEY_NUMBER {
-                           looper.toggle_recording();
-                    }
-                } else if let Some(event) = midi::parse_midi_event(&event) {
-                    match event {
-                        AbsMidiEvent {
-                            message: TypedMidiMessage::ControlChange {
-                                number: TEMPO_CHANGE_CONTROL_NUMBER,
-                                value,
-                                ..
-                            },
-                            ..
-                        } => {
-                            let bpm = value as u32 + 90;
-                            looper.update_tempo_bpm(bpm);
-                            bpm_popup.bump(format!("{:03}", bpm).as_str());
-                        },
-
-                        _ => looper.on_midi_event(&event),
-                    }
-                }
-            }
+        if let State::Quit = current_controller.update(delta_time) {
+            running = false;
         }
-
-        looper.update(delta_time);
-        bpm_popup.update(delta_time);
 
         renderer.set_draw_color(Color::RGB(0, 0, 0));
         renderer.clear();
 
-        looper.render(&mut renderer);
-        bpm_popup.render(&mut renderer);
+        current_controller.render(&mut renderer);
 
         renderer.present();
 
         std::thread::sleep(std::time::Duration::from_millis(EVENT_LOOP_SLEEP_TIMEOUT));
     }
-
-    looper.reset();
 }
 
 #[cfg(test)]
