@@ -100,6 +100,15 @@ impl<NoteTracker: MidiNoteTracker> StateController for MainLooperController<Note
                     self.looper.toggle_recording();
                 },
 
+                AbsMidiEvent {
+                    message: TypedMidiMessage::NoteOff {
+                        key: CONTROL_KEY_NUMBER,
+                        channel: CONTROL_CHANNEL_NUMBER,
+                        ..
+                    },
+                    ..
+                } => {},
+
                 _ => self.looper.on_midi_event(&event),
 
             }
