@@ -10,25 +10,16 @@ use sdl2::rect::Rect;
 use measure::{Quant, QuantMidiEvent};
 
 mod port_midi_note_tracker;
-mod dummy_midi_note_tracker;
 mod midi_note_tracker;
 mod midi_sink;
 
 pub use self::port_midi_note_tracker::PortMidiNoteTracker;
 pub use self::midi_sink::MidiSink;
 pub use self::midi_note_tracker::MidiNoteTracker;
-pub use self::dummy_midi_note_tracker::DummyMidiNoteTracker;
 
 const NOTE_ON_STATUS: u8 = 0b10010000;
 const NOTE_OFF_STATUS: u8 = 0b10000000;
 const CONTROL_CHANGE_STATUS: u8 = 0b10110000;
-
-#[derive(PartialEq)]
-pub enum MessageType {
-    NoteOn,
-    NoteOff,
-    Other,
-}
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, RustcDecodable, RustcEncodable)]
 pub enum TypedMidiMessage {
@@ -200,28 +191,6 @@ pub fn events_to_notes(replay_buffer: &[QuantMidiEvent]) -> Vec<Note> {
 
 pub fn get_message_type_code(message: &MidiMessage) -> u8 {
     message.status & 0b11110000
-}
-
-pub fn get_message_type(message: &MidiMessage) -> MessageType {
-    match get_message_type_code(message) {
-        NOTE_ON_STATUS => MessageType::NoteOn,
-        NOTE_OFF_STATUS => MessageType::NoteOff,
-        _ => MessageType::Other
-    }
-}
-
-pub fn is_note_on(message: &MidiMessage) -> bool {
-    let message_type = get_message_type_code(message);
-    message_type == 0b10010000
-}
-
-pub fn is_note_off(message: &MidiMessage) -> bool {
-    let message_type = get_message_type_code(message);
-    message_type == 0b10000000
-}
-
-pub fn is_note_message(message: &MidiMessage) -> bool {
-    is_note_on(message) || is_note_off(message)
 }
 
 pub fn get_note_key(message: &MidiMessage) -> u8 {
