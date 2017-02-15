@@ -13,7 +13,6 @@ extern crate rustc_serialize;
 use std::path::Path;
 
 use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 
 mod looper;
@@ -25,8 +24,7 @@ mod measure;
 mod ui;
 mod state;
 
-use traits::{Updatable, Renderable};
-use midi::{AbsMidiEvent, TypedMidiMessage, PortMidiNoteTracker};
+use midi::{AbsMidiEvent, PortMidiNoteTracker};
 use ui::Popup;
 use state::*;
 
@@ -78,14 +76,14 @@ fn main() {
 
     let mut renderer = window.renderer().build().unwrap();
 
-    let mut bpm_popup = {
+    let bpm_popup = {
         let font = ttf_context.load_font(Path::new(TTF_FONT_PATH), 50).unwrap();
         Popup::new(font)
     };
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let mut looper = looper::Looper::new(PortMidiNoteTracker::new(out_port));
+    let looper = looper::Looper::new(PortMidiNoteTracker::new(out_port));
     let mut running = true;
 
     let mut previuos_ticks = timer_subsystem.ticks();

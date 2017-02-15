@@ -23,13 +23,6 @@ const NOTE_ON_STATUS: u8 = 0b10010000;
 const NOTE_OFF_STATUS: u8 = 0b10000000;
 const CONTROL_CHANGE_STATUS: u8 = 0b10110000;
 
-#[derive(PartialEq)]
-pub enum MessageType {
-    NoteOn,
-    NoteOff,
-    Other,
-}
-
 #[derive(Clone, Copy, PartialEq, Eq, Debug, RustcDecodable, RustcEncodable)]
 pub enum TypedMidiMessage {
     NoteOn {channel: u8, key: u8, velocity: u8},
@@ -200,28 +193,6 @@ pub fn events_to_notes(replay_buffer: &[QuantMidiEvent]) -> Vec<Note> {
 
 pub fn get_message_type_code(message: &MidiMessage) -> u8 {
     message.status & 0b11110000
-}
-
-pub fn get_message_type(message: &MidiMessage) -> MessageType {
-    match get_message_type_code(message) {
-        NOTE_ON_STATUS => MessageType::NoteOn,
-        NOTE_OFF_STATUS => MessageType::NoteOff,
-        _ => MessageType::Other
-    }
-}
-
-pub fn is_note_on(message: &MidiMessage) -> bool {
-    let message_type = get_message_type_code(message);
-    message_type == 0b10010000
-}
-
-pub fn is_note_off(message: &MidiMessage) -> bool {
-    let message_type = get_message_type_code(message);
-    message_type == 0b10000000
-}
-
-pub fn is_note_message(message: &MidiMessage) -> bool {
-    is_note_on(message) || is_note_off(message)
 }
 
 pub fn get_note_key(message: &MidiMessage) -> u8 {
