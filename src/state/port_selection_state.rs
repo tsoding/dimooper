@@ -4,5 +4,6 @@
 // should remember the choice and if the list of available ports
 // didn't change since the previous session, autoselect the ports
 // selected before.
+#[allow(dead_code)]
 pub struct PortSelectionState {
 }
