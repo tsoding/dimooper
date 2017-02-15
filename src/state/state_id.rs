@@ -1,5 +1,5 @@
 #[derive(Clone, Copy)]
-pub enum State {
+pub enum StateId {
     PortSelection,
     MainLooper,
     Quit

@@ -2,7 +2,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::render::Renderer;
 use midi::*;
-use state::{State, StateController};
+use state::{StateId, StateController};
 use ui::Popup;
 use looper::Looper;
 use config::*;
@@ -12,7 +12,7 @@ use traits::*;
 pub struct MainLooperController<NoteTracker: MidiNoteTracker> {
     looper: Looper<NoteTracker>,
     bpm_popup: Popup,
-    next_state: State
+    next_state: StateId
 }
 
 impl<NoteTracker: MidiNoteTracker> MainLooperController<NoteTracker> {
@@ -20,7 +20,7 @@ impl<NoteTracker: MidiNoteTracker> MainLooperController<NoteTracker> {
         MainLooperController {
             looper: looper,
             bpm_popup: bpm_popup,
-            next_state: State::MainLooper
+            next_state: StateId::MainLooper
         }
     }
 }
@@ -31,7 +31,7 @@ impl<NoteTracker: MidiNoteTracker> StateController for MainLooperController<Note
             match *event {
                 Event::Quit { .. } |
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-                    self.next_state = State::Quit;
+                    self.next_state = StateId::Quit;
                     self.looper.reset();
                 }
 
@@ -115,7 +115,7 @@ impl<NoteTracker: MidiNoteTracker> StateController for MainLooperController<Note
         }
     }
 
-    fn update(&mut self, delta_time: u32) -> State {
+    fn update(&mut self, delta_time: u32) -> StateId {
         self.looper.update(delta_time);
         self.bpm_popup.update(delta_time);
         self.next_state
