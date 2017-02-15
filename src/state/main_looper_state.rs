@@ -9,15 +9,15 @@ use config::*;
 use std::path::Path;
 use traits::*;
 
-pub struct MainLooperController<NoteTracker: MidiNoteTracker> {
+pub struct MainLooperState<NoteTracker: MidiNoteTracker> {
     looper: Looper<NoteTracker>,
     bpm_popup: Popup,
     next_state: StateId
 }
 
-impl<NoteTracker: MidiNoteTracker> MainLooperController<NoteTracker> {
-    pub fn new(looper: Looper<NoteTracker>, bpm_popup: Popup) -> MainLooperController<NoteTracker> {
-        MainLooperController {
+impl<NoteTracker: MidiNoteTracker> MainLooperState<NoteTracker> {
+    pub fn new(looper: Looper<NoteTracker>, bpm_popup: Popup) -> MainLooperState<NoteTracker> {
+        MainLooperState {
             looper: looper,
             bpm_popup: bpm_popup,
             next_state: StateId::MainLooper
@@ -25,7 +25,7 @@ impl<NoteTracker: MidiNoteTracker> MainLooperController<NoteTracker> {
     }
 }
 
-impl<NoteTracker: MidiNoteTracker> State for MainLooperController<NoteTracker> {
+impl<NoteTracker: MidiNoteTracker> State for MainLooperState<NoteTracker> {
     fn handle_sdl_events(&mut self, events: &[Event]) {
         for event in events {
             match *event {

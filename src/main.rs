@@ -90,7 +90,7 @@ fn main() {
 
     let mut previuos_ticks = timer_subsystem.ticks();
 
-    let mut current_controller = MainLooperController::<PortMidiNoteTracker>::new(looper, bpm_popup);
+    let mut current_controller = MainLooperState::<PortMidiNoteTracker>::new(looper, bpm_popup);
 
     while running {
         let current_ticks = timer_subsystem.ticks();
