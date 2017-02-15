@@ -96,7 +96,7 @@ fn main() {
     // State switch is basically a map StateId -> &State. When
     // State::update() returns a different StateId the corresponding
     // state should become the current state.
-    let mut current_controller = MainLooperState::<PortMidiNoteTracker>::new(looper, bpm_popup);
+    let mut current_state = MainLooperState::<PortMidiNoteTracker>::new(looper, bpm_popup);
 
     while running {
         let current_ticks = timer_subsystem.ticks();
@@ -104,7 +104,7 @@ fn main() {
         previuos_ticks = current_ticks;
 
         let sdl_events: Vec<Event> = event_pump.poll_iter().collect();
-        current_controller.handle_sdl_events(&sdl_events);
+        current_state.handle_sdl_events(&sdl_events);
 
 
         if let Ok(Some(raw_midi_events)) = in_port.read_n(1024) {
@@ -112,17 +112,17 @@ fn main() {
                 .iter()
                 .filter_map(|e| midi::parse_midi_event(e))
                 .collect();
-            current_controller.handle_midi_events(&midi_events);
+            current_state.handle_midi_events(&midi_events);
         }
 
-        if let StateId::Quit = current_controller.update(delta_time) {
+        if let StateId::Quit = current_state.update(delta_time) {
             running = false;
         }
 
         renderer.set_draw_color(Color::RGB(0, 0, 0));
         renderer.clear();
 
-        current_controller.render(&mut renderer);
+        current_state.render(&mut renderer);
 
         renderer.present();
 
