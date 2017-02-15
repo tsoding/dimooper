@@ -308,7 +308,20 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
 #[cfg(test)]
 mod tests {
     use super::Looper;
-    use midi::DummyMidiNoteTracker;
+    use pm::types::Result;
+    use midi::{TypedMidiMessage, MidiSink, MidiNoteTracker};
+
+    pub struct DummyMidiNoteTracker;
+
+    impl MidiNoteTracker for DummyMidiNoteTracker {
+        fn close_opened_notes(&mut self) {}
+    }
+
+    impl MidiSink for DummyMidiNoteTracker {
+        fn feed(&mut self, _: TypedMidiMessage) -> Result<()> {
+            Ok(())
+        }
+    }
 
     #[test]
     fn test_looper_initial_time_cursor() {
