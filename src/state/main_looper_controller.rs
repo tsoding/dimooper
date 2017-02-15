@@ -2,7 +2,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::render::Renderer;
 use midi::*;
-use state::{StateId, StateController};
+use state::{StateId, State};
 use ui::Popup;
 use looper::Looper;
 use config::*;
@@ -25,7 +25,7 @@ impl<NoteTracker: MidiNoteTracker> MainLooperController<NoteTracker> {
     }
 }
 
-impl<NoteTracker: MidiNoteTracker> StateController for MainLooperController<NoteTracker> {
+impl<NoteTracker: MidiNoteTracker> State for MainLooperController<NoteTracker> {
     fn handle_sdl_events(&mut self, events: &[Event]) {
         for event in events {
             match *event {
