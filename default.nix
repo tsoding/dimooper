@@ -5,13 +5,13 @@ let
 
   # Archive is here: https://static.rust-lang.org/dist/index.html
   rustNightly = funs.rust {
-    date = "2016-09-08";
-    hash = "19m8xlhq608f8rw4dy78d9s1gsfwpj9b5pma7i3ivdkh9ap751h8";
+    date = "2017-03-01";
+    hash = "1jrh2j9mlj13z52qz6w99h60azayqbx4bicimy49jx7zrlq0p9lr";
   };
 
   rustSrcNightly = funs.rustSrc {
-    date = "2016-09-08";
-    hash = "1g1mw6m1w9yp2lppmy37cz9rq5wffsgy6f00rmjy60iqb77ff25y";
+    date = "2017-03-01";
+    hash = "0i8p0463469x7138i4aslqs7yfh852p31pfp7rlc6kyw75pzvby1";
   };
 in rec {
   dimooperEnv = stdenv.mkDerivation rec {
