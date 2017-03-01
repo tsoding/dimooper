@@ -23,6 +23,7 @@ mod hardcode;
 mod measure;
 mod ui;
 mod state;
+mod config;
 
 use midi::{AbsMidiEvent, PortMidiNoteTracker};
 use ui::Popup;
