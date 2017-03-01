@@ -54,7 +54,7 @@ impl Decodable for Composition {
 #[cfg(test)]
 mod tests {
     use super::Composition;
-    use config::*;
+    use hardcode::*;
     use measure::Measure;
     use looper::Sample;
     use rustc_serialize::json;

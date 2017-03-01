@@ -7,7 +7,7 @@ use sdl2_ttf::Font;
 
 use traits::{Updatable, Renderable};
 
-use config::{POPUP_FADEOUT_TIME, POPUP_STAY_TIME};
+use hardcode::{POPUP_FADEOUT_TIME, POPUP_STAY_TIME};
 
 pub struct Popup {
     text: String,
@@ -85,7 +85,7 @@ mod tests {
 
     use sdl2_ttf;
     use sdl2_ttf::Font;
-    use config::{
+    use hardcode::{
         TTF_FONT_PATH,
         POPUP_STAY_TIME,
         POPUP_FADEOUT_TIME,
