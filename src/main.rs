@@ -10,7 +10,9 @@ extern crate portmidi as pm;
 extern crate num;
 extern crate rustc_serialize;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::env;
+use std::io;
 
 use sdl2::event::Event;
 use sdl2::pixels::Color;
@@ -28,6 +30,7 @@ mod config;
 use midi::{AbsMidiEvent, PortMidiNoteTracker};
 use ui::Popup;
 use state::*;
+use config::Config;
 
 use hardcode::*;
 
@@ -35,6 +38,12 @@ fn print_devices(pm: &pm::PortMidi) {
     for dev in pm.devices().unwrap() {
         println!("{}", dev);
     }
+}
+
+fn config_path() -> io::Result<PathBuf> {
+    env::home_dir()
+        .ok_or(io::Error::new(io::ErrorKind::Other, "Home directory not found".to_owned()))
+        .map(|config_dir| config_dir.join(hardcode::CONFIG_FILE_NAME))
 }
 
 fn main() {
@@ -89,6 +98,12 @@ fn main() {
 
     let mut previuos_ticks = timer_subsystem.ticks();
 
+    let config = config_path()
+        .and_then(|path| Config::load(path.as_path()))
+        // TODO: Output the path to the config file
+        .map_err(|err| { println!("[WARNING] Cannot load config: {}. Using default config.", err); err })
+        .unwrap_or_default();
+
     // TODO: Implement state switcher and incorporte Port Selection
     // State in it.
     //
@@ -127,6 +142,10 @@ fn main() {
 
         std::thread::sleep(std::time::Duration::from_millis(EVENT_LOOP_SLEEP_TIMEOUT));
     }
+
+    config_path()
+        .and_then(|path| config.save(path.as_path()))
+        .expect("Cannot save the config file");
 }
 
 #[cfg(test)]
