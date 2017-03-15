@@ -2,7 +2,7 @@ use std::{path, fs};
 use std::io::prelude::*;
 
 use midi::*;
-use config::*;
+use hardcode::*;
 use num::integer::lcm;
 use rustc_serialize::json;
 use looper::Composition;

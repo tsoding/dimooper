@@ -19,16 +19,17 @@ mod looper;
 mod traits;
 mod midi;
 mod graphics_primitives;
-mod config;
+mod hardcode;
 mod measure;
 mod ui;
 mod state;
+mod config;
 
 use midi::{AbsMidiEvent, PortMidiNoteTracker};
 use ui::Popup;
 use state::*;
 
-use config::*;
+use hardcode::*;
 
 fn print_devices(pm: &pm::PortMidi) {
     for dev in pm.devices().unwrap() {

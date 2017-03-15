@@ -139,7 +139,7 @@ impl Sample {
 #[cfg(test)]
 mod tests {
     use super::Sample;
-    use config::*;
+    use hardcode::*;
 
     use measure::Measure;
     use midi::{AbsMidiEvent, TypedMidiMessage};

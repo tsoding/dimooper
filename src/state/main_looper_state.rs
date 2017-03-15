@@ -5,7 +5,7 @@ use midi::*;
 use state::{StateId, State};
 use ui::Popup;
 use looper::Looper;
-use config::*;
+use hardcode::*;
 use std::path::Path;
 use traits::*;
 

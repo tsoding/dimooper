@@ -1,7 +1,7 @@
 use pm::OutputPort;
 use pm::types::Result;
 use midi::{TypedMidiMessage, MidiSink, MidiNoteTracker};
-use config::*;
+use hardcode::*;
 
 pub struct PortMidiNoteTracker {
     out_port: OutputPort,
