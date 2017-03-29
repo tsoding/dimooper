@@ -1,7 +1,7 @@
 use rustc_serialize::json;
 use std::{io, fmt};
 
-// TODO: use io::Error instead of that
+// TODO(faea653d-7974-46ee-ac3c-b7310998a025): use io::Error instead of that
 pub enum PersistenceError {
     IoError(io::Error),
     DecodingError(json::DecoderError),

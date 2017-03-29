@@ -100,7 +100,7 @@ fn main() {
 
     let config = config_path()
         .and_then(|path| Config::load(path.as_path()))
-        // TODO: Output the path to the config file
+        // TODO(f19dedf2-afdb-4cd9-9dab-20ebbe89fd9d): Output the path to the config file
         .map_err(|err| { println!("[WARNING] Cannot load config: {}. Using default config.", err); err })
         .unwrap_or_default();
 
