@@ -1,6 +1,6 @@
 use pm::{DeviceInfo, PortMidiDeviceId};
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Debug, RustcDecodable, RustcEncodable)]
 pub struct ConfigDeviceInfo {
     id: PortMidiDeviceId,
     name: String,
