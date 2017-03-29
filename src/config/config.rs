@@ -30,6 +30,7 @@ impl Config {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn update_last_ports(input_port: DeviceInfo,
                              output_port: DeviceInfo) -> Config {
         Config {
