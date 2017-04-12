@@ -12,7 +12,6 @@ extern crate rustc_serialize;
 
 use std::path::{Path, PathBuf};
 use std::env;
-use std::io;
 
 use sdl2::event::Event;
 use sdl2::pixels::Color;
@@ -26,13 +25,14 @@ mod measure;
 mod ui;
 mod state;
 mod config;
+mod error;
 
 use midi::{AbsMidiEvent, PortMidiNoteTracker};
 use ui::Popup;
 use state::*;
 use config::Config;
-
 use hardcode::*;
+use error::Result;
 
 fn print_devices(pm: &pm::PortMidi) {
     for dev in pm.devices().unwrap() {
@@ -40,9 +40,9 @@ fn print_devices(pm: &pm::PortMidi) {
     }
 }
 
-fn config_path() -> io::Result<PathBuf> {
+fn config_path() -> Result<PathBuf> {
     env::home_dir()
-        .ok_or(io::Error::new(io::ErrorKind::Other, "Home directory not found".to_owned()))
+        .ok_or("Home directory not found".into())
         .map(|config_dir| config_dir.join(hardcode::CONFIG_FILE_NAME))
 }
 
