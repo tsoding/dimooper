@@ -1,10 +1,12 @@
-use pm::DeviceInfo;
-use std::path::Path;
-use config::ConfigDeviceInfo;
-use rustc_serialize::json;
 use std::fs;
-use std::io;
 use std::io::{Read, Write};
+use std::path::Path;
+
+use pm::DeviceInfo;
+use rustc_serialize::json;
+
+use config::ConfigDeviceInfo;
+use error::Result;
 
 #[derive(Default, Debug, RustcDecodable, RustcEncodable)]
 pub struct Config {
@@ -13,18 +15,16 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn load(file_path: &Path) -> io::Result<Config> {
+    pub fn load(file_path: &Path) -> Result<Config> {
         let mut serialized_config = String::new();
         let mut file = try!(fs::File::open(file_path));
         try!(file.read_to_string(&mut serialized_config));
-        let config: Config = try!(json::decode(&serialized_config)
-                                  .map_err(|err| io::Error::new(io::ErrorKind::Other, err)));
+        let config: Config = try!(json::decode(&serialized_config));
         Ok(config)
     }
 
-    pub fn save(&self, file_path: &Path) -> io::Result<()> {
-        let serialized_config: String = try!(json::encode(&self)
-                                             .map_err(|err| io::Error::new(io::ErrorKind::Other, err)));
+    pub fn save(&self, file_path: &Path) -> Result<()> {
+        let serialized_config: String = try!(json::encode(&self));
         let mut file = try!(fs::File::create(file_path));
         try!(file.write_all(serialized_config.as_bytes()));
         Ok(())

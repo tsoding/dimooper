@@ -1,4 +1,4 @@
-use std::{path, fs, result, error};
+use std::{path, fs};
 use std::io::prelude::*;
 
 use midi::*;
@@ -6,6 +6,7 @@ use hardcode::*;
 use num::integer::lcm;
 use rustc_serialize::json;
 use looper::Composition;
+use error::Result;
 
 use traits::{Updatable, Renderable};
 use graphics_primitives::CircleRenderer;
@@ -15,8 +16,6 @@ use looper::Sample;
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
-
-type Result<T> = result::Result<T, Box<error::Error>>;
 
 #[derive(PartialEq)]
 enum State {
@@ -234,7 +233,7 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
         let mut file = try!(fs::File::open(path));
         let mut serialized_composition = String::new();
         try!(file.read_to_string(&mut serialized_composition));
-        let composition: Composition = try!(json::decode(&serialized_composition).into());
+        let composition: Composition = try!(json::decode(&serialized_composition));
 
         self.note_tracker.close_opened_notes();
         self.composition = composition.samples;
@@ -260,7 +259,7 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
         let composition: Composition = Composition::new(self.measure.clone(),
                                                         self.composition.clone());
 
-        let serialized_composition: String = try!(json::encode(&composition).into());
+        let serialized_composition: String = try!(json::encode(&composition));
         let mut file = try!(fs::File::create(path));
         try!(file.write_all(serialized_composition.as_bytes()));
 
