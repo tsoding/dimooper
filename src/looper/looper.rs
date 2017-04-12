@@ -1,4 +1,4 @@
-use std::{path, fs, io};
+use std::{path, fs, result, error};
 use std::io::prelude::*;
 
 use midi::*;
@@ -15,6 +15,8 @@ use looper::Sample;
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
+
+type Result<T> = result::Result<T, Box<error::Error>>;
 
 #[derive(PartialEq)]
 enum State {
@@ -228,12 +230,11 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
         self.measure = new_measure;
     }
 
-    pub fn load_state_from_file(&mut self, path: &path::Path) -> io::Result<()> {
+    pub fn load_state_from_file(&mut self, path: &path::Path) -> Result<()> {
         let mut file = try!(fs::File::open(path));
         let mut serialized_composition = String::new();
         try!(file.read_to_string(&mut serialized_composition));
-        let composition: Composition = try!(json::decode(&serialized_composition)
-                                            .map_err(|err| io::Error::new(io::ErrorKind::Other, err)));
+        let composition: Composition = try!(json::decode(&serialized_composition).into());
 
         self.note_tracker.close_opened_notes();
         self.composition = composition.samples;
@@ -255,12 +256,11 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
         Ok(())
     }
 
-    pub fn save_state_to_file(&self, path: &path::Path) -> io::Result<()> {
+    pub fn save_state_to_file(&self, path: &path::Path) -> Result<()> {
         let composition: Composition = Composition::new(self.measure.clone(),
                                                         self.composition.clone());
 
-        let serialized_composition: String = try!(json::encode(&composition)
-                                                  .map_err(|err| io::Error::new(io::ErrorKind::Other, err)));
+        let serialized_composition: String = try!(json::encode(&composition).into());
         let mut file = try!(fs::File::create(path));
         try!(file.write_all(serialized_composition.as_bytes()));
 
