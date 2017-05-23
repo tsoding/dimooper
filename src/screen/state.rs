@@ -1,7 +1,7 @@
 use sdl2::event::Event;
 use sdl2::render::{Renderer};
 use midi::AbsMidiEvent;
-use state::StateId;
+use screen::StateId;
 
 // TODO: Incorporate configuration passing into the state graph
 //

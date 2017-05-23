@@ -2,7 +2,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::render::Renderer;
 use midi::*;
-use state::{StateId, State};
+use screen::{StateId, State};
 use ui::Popup;
 use looper::Looper;
 use hardcode::*;

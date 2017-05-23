@@ -23,13 +23,13 @@ mod graphics_primitives;
 mod hardcode;
 mod measure;
 mod ui;
-mod state;
+mod screen;
 mod config;
 mod error;
 
 use midi::{AbsMidiEvent, PortMidiNoteTracker};
 use ui::Popup;
-use state::*;
+use screen::*;
 use config::Config;
 use hardcode::*;
 use error::Result;
