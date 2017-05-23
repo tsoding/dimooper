@@ -105,11 +105,3 @@ fn main() {
         .and_then(|path| config.save(path.as_path()))
         .expect("Cannot save the config file");
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_hello() {
-        assert!(true);
-    }
-}
