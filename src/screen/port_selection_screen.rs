@@ -5,5 +5,5 @@
 // didn't change since the previous session, autoselect the ports
 // selected before.
 #[allow(dead_code)]
-pub struct PortSelectionState {
+pub struct PortSelectionScreen {
 }
