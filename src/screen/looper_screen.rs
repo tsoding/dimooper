@@ -9,15 +9,15 @@ use hardcode::*;
 use std::path::Path;
 use traits::*;
 
-pub struct MainLooperState<NoteTracker: MidiNoteTracker> {
+pub struct LooperScreen<NoteTracker: MidiNoteTracker> {
     looper: Looper<NoteTracker>,
     bpm_popup: Popup,
     next_state: StateId
 }
 
-impl<NoteTracker: MidiNoteTracker> MainLooperState<NoteTracker> {
-    pub fn new(looper: Looper<NoteTracker>, bpm_popup: Popup) -> MainLooperState<NoteTracker> {
-        MainLooperState {
+impl<NoteTracker: MidiNoteTracker> LooperScreen<NoteTracker> {
+    pub fn new(looper: Looper<NoteTracker>, bpm_popup: Popup) -> LooperScreen<NoteTracker> {
+        LooperScreen {
             looper: looper,
             bpm_popup: bpm_popup,
             next_state: StateId::MainLooper
@@ -25,7 +25,7 @@ impl<NoteTracker: MidiNoteTracker> MainLooperState<NoteTracker> {
     }
 }
 
-impl<NoteTracker: MidiNoteTracker> State for MainLooperState<NoteTracker> {
+impl<NoteTracker: MidiNoteTracker> State for LooperScreen<NoteTracker> {
     fn handle_sdl_events(&mut self, events: &[Event]) {
         for event in events {
             match *event {

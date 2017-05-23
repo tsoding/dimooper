@@ -110,7 +110,7 @@ fn main() {
     // State switch is basically a map StateId -> &State. When
     // State::update() returns a different StateId the corresponding
     // state should become the current state.
-    let mut current_state = MainLooperState::<PortMidiNoteTracker>::new(looper, bpm_popup);
+    let mut current_state = LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup);
 
     while running {
         let current_ticks = timer_subsystem.ticks();
