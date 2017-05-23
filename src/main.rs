@@ -104,7 +104,7 @@ fn main() {
         .map_err(|err| { println!("[WARNING] Cannot load config: {}. Using default config.", err); err })
         .unwrap_or_default();
 
-    let mut current_state = LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup);
+    let mut current_screen = LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup);
 
     while running {
         let current_ticks = timer_subsystem.ticks();
@@ -112,7 +112,7 @@ fn main() {
         previuos_ticks = current_ticks;
 
         let sdl_events: Vec<Event> = event_pump.poll_iter().collect();
-        current_state.handle_sdl_events(&sdl_events);
+        current_screen.handle_sdl_events(&sdl_events);
 
 
         if let Ok(Some(raw_midi_events)) = in_port.read_n(1024) {
@@ -120,10 +120,10 @@ fn main() {
                 .iter()
                 .filter_map(|e| midi::parse_midi_event(e))
                 .collect();
-            current_state.handle_midi_events(&midi_events);
+            current_screen.handle_midi_events(&midi_events);
         }
 
-        if let Some(_) = current_state.update(delta_time) {
+        if let Some(_) = current_screen.update(delta_time) {
             running = false;
         }
 
