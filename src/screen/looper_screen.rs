@@ -3,13 +3,12 @@ use sdl2::keyboard::Keycode;
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;
 use midi::*;
-use screen::{StateId, Screen};
+use screen::Screen;
 use ui::Popup;
 use looper::Looper;
 use hardcode::*;
 use std::path::Path;
 use traits::*;
-use config::Config;
 
 pub struct LooperScreen<NoteTracker: MidiNoteTracker> {
     looper: Looper<NoteTracker>,

@@ -14,7 +14,6 @@ use std::path::{Path, PathBuf};
 use std::env;
 
 use sdl2::event::Event;
-use sdl2::pixels::Color;
 
 mod looper;
 mod traits;
