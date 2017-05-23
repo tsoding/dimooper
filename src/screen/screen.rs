@@ -9,9 +9,9 @@ use screen::StateId;
 // of the application, be passed between the states and then persistet
 // back when the application is finished. During the passing the
 // states may mutate the configuration as they see fit.
-pub trait Screen {
+pub trait Screen<T> {
     fn handle_sdl_events(&mut self, events: &[Event]);
     fn handle_midi_events(&mut self, events: &[AbsMidiEvent]);
-    fn update(&mut self, delta_time: u32) -> StateId;
+    fn update(&mut self, delta_time: u32) -> Option<T>;
     fn render(&self, renderer: &mut Renderer);
 }

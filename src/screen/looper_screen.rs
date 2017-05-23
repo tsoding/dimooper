@@ -8,11 +8,12 @@ use looper::Looper;
 use hardcode::*;
 use std::path::Path;
 use traits::*;
+use config::Config;
 
 pub struct LooperScreen<NoteTracker: MidiNoteTracker> {
     looper: Looper<NoteTracker>,
     bpm_popup: Popup,
-    next_state: StateId
+    quit: bool
 }
 
 impl<NoteTracker: MidiNoteTracker> LooperScreen<NoteTracker> {
@@ -20,18 +21,18 @@ impl<NoteTracker: MidiNoteTracker> LooperScreen<NoteTracker> {
         LooperScreen {
             looper: looper,
             bpm_popup: bpm_popup,
-            next_state: StateId::MainLooper
+            quit: false
         }
     }
 }
 
-impl<NoteTracker: MidiNoteTracker> Screen for LooperScreen<NoteTracker> {
+impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
     fn handle_sdl_events(&mut self, events: &[Event]) {
         for event in events {
             match *event {
                 Event::Quit { .. } |
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-                    self.next_state = StateId::Quit;
+                    self.quit = true;
                     self.looper.reset();
                 }
 
@@ -115,10 +116,15 @@ impl<NoteTracker: MidiNoteTracker> Screen for LooperScreen<NoteTracker> {
         }
     }
 
-    fn update(&mut self, delta_time: u32) -> StateId {
+    fn update(&mut self, delta_time: u32) -> Option<()> {
         self.looper.update(delta_time);
         self.bpm_popup.update(delta_time);
-        self.next_state
+
+        if self.quit {
+            Some({})
+        } else {
+            None
+        }
     }
 
     fn render(&self, renderer: &mut Renderer) {

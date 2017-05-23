@@ -129,7 +129,7 @@ fn main() {
             current_state.handle_midi_events(&midi_events);
         }
 
-        if let StateId::Quit = current_state.update(delta_time) {
+        if let Some(_) = current_state.update(delta_time) {
             running = false;
         }
 
