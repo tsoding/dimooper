@@ -104,12 +104,6 @@ fn main() {
         .map_err(|err| { println!("[WARNING] Cannot load config: {}. Using default config.", err); err })
         .unwrap_or_default();
 
-    // TODO: Implement state switcher and incorporte Port Selection
-    // State in it.
-    //
-    // State switch is basically a map StateId -> &State. When
-    // State::update() returns a different StateId the corresponding
-    // state should become the current state.
     let mut current_state = LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup);
 
     while running {
