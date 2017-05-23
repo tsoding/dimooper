@@ -127,11 +127,7 @@ fn main() {
             running = false;
         }
 
-        renderer.set_draw_color(Color::RGB(0, 0, 0));
-        renderer.clear();
-
-        current_state.render(&mut renderer);
-
+        current_screen.render(&mut renderer);
         renderer.present();
 
         std::thread::sleep(std::time::Duration::from_millis(EVENT_LOOP_SLEEP_TIMEOUT));

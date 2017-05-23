@@ -1,6 +1,7 @@
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::render::Renderer;
+use sdl2::pixels::Color;
 use midi::*;
 use screen::{StateId, Screen};
 use ui::Popup;
@@ -128,6 +129,8 @@ impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
     }
 
     fn render(&self, renderer: &mut Renderer) {
+        renderer.set_draw_color(Color::RGB(0, 0, 0));
+        renderer.clear();
         self.looper.render(renderer);
         self.bpm_popup.render(renderer);
     }
