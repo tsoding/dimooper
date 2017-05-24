@@ -7,6 +7,7 @@ use screen::Screen;
 use ui::Popup;
 use looper::Looper;
 use hardcode::*;
+use std;
 use std::path::Path;
 use traits::*;
 
@@ -53,10 +54,13 @@ impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
                 }
 
                 Event::KeyDown { keycode: Some(Keycode::S), .. } => {
-                    match self.looper.save_state_to_file(Path::new(STATE_FILE_PATH)) {
+                    let state_file_path = Path::new(STATE_FILE_PATH);
+                    match self.looper.save_state_to_file(state_file_path) {
                         Ok(_) => println!("Saved looper state to {}", STATE_FILE_PATH),
                         Err(e) => println!("[ERROR] Could not save state to {}. Reason: {}",
-                                           STATE_FILE_PATH,
+                                           std::env::current_dir().map(|d| {
+                                               d.join(state_file_path).display().to_string()
+                                           }).unwrap_or(String::from(STATE_FILE_PATH)),
                                            e),
                     }
                 }
