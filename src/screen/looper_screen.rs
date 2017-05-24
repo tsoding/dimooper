@@ -8,8 +8,9 @@ use ui::Popup;
 use looper::Looper;
 use hardcode::*;
 use std;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use traits::*;
+use path;
 
 pub struct LooperScreen<NoteTracker: MidiNoteTracker> {
     looper: Looper<NoteTracker>,
@@ -25,6 +26,7 @@ impl<NoteTracker: MidiNoteTracker> LooperScreen<NoteTracker> {
             quit: false
         }
     }
+
 }
 
 impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
@@ -58,9 +60,7 @@ impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
                     match self.looper.save_state_to_file(state_file_path) {
                         Ok(_) => println!("Saved looper state to {}", STATE_FILE_PATH),
                         Err(e) => println!("[ERROR] Could not save state to {}. Reason: {}",
-                                           std::env::current_dir().map(|d| {
-                                               d.join(state_file_path).display().to_string()
-                                           }).unwrap_or(String::from(STATE_FILE_PATH)),
+                                           path::absolute_path(state_file_path).display(),
                                            e),
                     }
                 }
