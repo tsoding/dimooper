@@ -24,6 +24,9 @@ pub const TTF_FONT_PATH: &'static str = "fonts/minoru.ttf";
 pub const POPUP_FADEOUT_TIME: u32 = 500;
 pub const POPUP_STAY_TIME: u32 = 500;
 
+// TODO(be91501b-fd60-450d-b5c7-5ee4ad261c0c): make STATE_FILE_PATH a Path
+//
+// Consider using https://crates.io/crates/lazy_static
 pub const STATE_FILE_PATH: &'static str = "state.json";
 
 pub const CONFIG_FILE_NAME: &'static str = ".dimooper";
