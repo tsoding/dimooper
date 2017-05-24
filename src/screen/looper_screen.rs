@@ -66,9 +66,12 @@ impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
                 }
 
                 Event::KeyDown { keycode: Some(Keycode::L), .. } => {
-                    match self.looper.load_state_from_file(Path::new(STATE_FILE_PATH)) {
+                    let state_file_path = Path::new(STATE_FILE_PATH);
+                    match self.looper.load_state_from_file(state_file_path) {
                         Ok(_) => println!("Loaded looper state from {}", STATE_FILE_PATH),
-                        Err(e) => println!("[ERROR] {}", e),
+                        Err(e) => println!("[ERROR] Could not load state from {}. Reason: {}",
+                                           path::absolute_path(state_file_path).display(),
+                                           e),
                     }
                 }
 
