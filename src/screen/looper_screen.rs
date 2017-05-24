@@ -7,8 +7,7 @@ use screen::Screen;
 use ui::Popup;
 use looper::Looper;
 use hardcode::*;
-use std;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use traits::*;
 use path;
 
@@ -57,7 +56,7 @@ impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
 
                 Event::KeyDown { keycode: Some(Keycode::S), .. } => {
                     let state_file_path = Path::new(STATE_FILE_PATH);
-                    let absolute_path = path::absolute_path(state_file_path);
+                    let absolute_path = path::display_absolute_path(state_file_path);
                     match self.looper.save_state_to_file(state_file_path) {
                         Ok(_) => println!("Saved looper state to {}", absolute_path.display()),
                         Err(e) => println!("[ERROR] Could not save state to {}. Reason: {}",
@@ -68,7 +67,7 @@ impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
 
                 Event::KeyDown { keycode: Some(Keycode::L), .. } => {
                     let state_file_path = Path::new(STATE_FILE_PATH);
-                    let absolute_path = path::absolute_path(state_file_path);
+                    let absolute_path = path::display_absolute_path(state_file_path);
                     match self.looper.load_state_from_file(state_file_path) {
                         Ok(_) => println!("Loaded looper state from {}", absolute_path.display()),
                         Err(e) => println!("[ERROR] Could not load state from {}. Reason: {}",
