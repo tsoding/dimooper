@@ -55,7 +55,9 @@ impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
                 Event::KeyDown { keycode: Some(Keycode::S), .. } => {
                     match self.looper.save_state_to_file(Path::new(STATE_FILE_PATH)) {
                         Ok(_) => println!("Saved looper state to {}", STATE_FILE_PATH),
-                        Err(e) => println!("[ERROR] {}", e),
+                        Err(e) => println!("[ERROR] Could not save state to {}. Reason: {}",
+                                           STATE_FILE_PATH,
+                                           e),
                     }
                 }
 
