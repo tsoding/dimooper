@@ -23,6 +23,7 @@ mod ui;
 mod screen;
 mod config;
 mod error;
+mod path;
 
 use midi::PortMidiNoteTracker;
 use ui::Popup;
