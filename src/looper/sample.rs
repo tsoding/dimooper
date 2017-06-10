@@ -4,12 +4,14 @@ use midi;
 use midi::{AbsMidiEvent, Note, MidiSink};
 use measure::*;
 use rustc_serialize::{Decodable, Encodable, Encoder, Decoder};
+use std::collections::{HashMap, BTreeMap};
 
 #[derive(Clone)]
 pub struct Sample {
     // FIXME(#153): Improve performance of the event look up in sample
     pub buffer: Vec<QuantMidiEvent>,
     pub amount_of_measures: u32,
+    buffer_index: HashMap<Quant, Vec<QuantMidiEvent>>,
     measure_shift: u32,
     notes: Vec<Note>,
     sample_quant_length: Quant,
@@ -66,14 +68,31 @@ impl Decodable for Sample {
 }
 
 impl Sample {
+    fn build_buffer_index(buffer: &[QuantMidiEvent]) -> HashMap<Quant, Vec<QuantMidiEvent>> {
+        let mut buffer_index = HashMap::new();
+        for event in buffer {
+            let quant = event.quant;
+
+            if !buffer_index.contains_key(&quant) {
+                buffer_index.insert(quant, Vec::new());
+            }
+
+            buffer_index.get_mut(&quant).map(|events| events.push(event.clone()));
+        }
+
+        buffer_index
+    }
+
     pub fn restore(buffer: Vec<QuantMidiEvent>,
                    quants_per_measure: Quant,
                    measure_shift: u32,
                    amount_of_measures: u32) -> Sample {
         let notes = midi::events_to_notes(&buffer);
+        let buffer_index = Sample::build_buffer_index(&buffer);
 
         Sample {
             buffer: buffer,
+            buffer_index: buffer_index,
             amount_of_measures: amount_of_measures,
             notes: notes,
             sample_quant_length: Quant(amount_of_measures) * quants_per_measure,
@@ -85,11 +104,13 @@ impl Sample {
     pub fn new(buffer: &[AbsMidiEvent], measure: &Measure, measure_shift: u32) -> Sample {
         let amount_of_measures = measure.amount_of_measures_in_buffer(buffer);
         let quant_buffer = measure.quantize_buffer(buffer);
+        let buffer_index = Sample::build_buffer_index(&quant_buffer);
 
         let notes = midi::events_to_notes(&quant_buffer);
 
         Sample {
             buffer: quant_buffer,
+            buffer_index: buffer_index,
             amount_of_measures: amount_of_measures,
             notes: notes,
             sample_quant_length: Quant(amount_of_measures) * measure.quants_per_measure(),
@@ -102,13 +123,12 @@ impl Sample {
         let quant_shift = Quant(self.measure_shift) * self.quants_per_measure;
         let sample_quant = (current_quant + quant_shift) % self.sample_quant_length;
 
-        // FIXME(#153): Improve performance of the event look up in sample
-        for event in &self.buffer {
-            if event.quant == sample_quant {
+        self.buffer_index.get(&sample_quant).map(|events| {
+            for event in events {
                 // FIXME(#141): Handle result of the sink message feeding
                 sink.feed(event.message).unwrap();
             }
-        }
+        });
     }
 
     fn measure_notes(&self, measure_number: u32) -> Vec<Note> {
@@ -260,11 +280,9 @@ mod tests {
         ];
 
         let sample = Sample::new(buffer, &DEFAULT_MEASURE, 0);
-
+        let mut sink = DummyMidiNoteTracker;
 
         b.iter(|| {
-            let mut sink = DummyMidiNoteTracker;
-
             for _ in 0..1000 {
                 for i in 0..7 {
                     sample.replay_quant(Quant(i), &mut sink)

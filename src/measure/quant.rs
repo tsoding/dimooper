@@ -3,7 +3,7 @@ use std::ops::{Add, Mul, Sub, Rem, Div};
 use rustc_serialize::{Encodable, Encoder, Decodable, Decoder};
 
 // FIXME(#125): Autoderive arithmetic operations for Quant
-#[derive(Clone, Copy, PartialEq, Eq, Debug, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, PartialOrd, Ord, Hash)]
 pub struct Quant(pub u32);
 
 impl Encodable for Quant {
