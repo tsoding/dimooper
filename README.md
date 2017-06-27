@@ -10,6 +10,15 @@ Digital Music Looper application focused on live performance.
 
 [![DIMOOPER DEMO](https://img.youtube.com/vi/qURmwdedUAI/0.jpg)](https://www.youtube.com/watch?v=qURmwdedUAI)
 
-## Usage ##
+## Quick Start ##
+
+```console
+$ cargo build                           # build dimooper
+$ cargo run <input-port> <output-port>  # run dimooper
+$ cargo test                            # run unit tests
+$ cargo bench                           # run benchmarks
+```
+
+## Setting Up With a Controller ##
 
 Please, take a look at https://github.com/tsoding/dimooper/wiki/NixOS-QSynth-Setup-Guide

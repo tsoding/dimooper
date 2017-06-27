@@ -138,11 +138,12 @@ impl Sample {
 
 #[cfg(test)]
 mod tests {
+    use test::{Bencher};
     use super::Sample;
     use hardcode::*;
-
-    use measure::Measure;
+    use measure::{Quant, Measure};
     use midi::{AbsMidiEvent, TypedMidiMessage};
+    use midi::DummyMidiNoteTracker;
 
     use rustc_serialize::json;
 
@@ -228,5 +229,47 @@ mod tests {
 
         assert_eq!(sample.amount_of_measures, massaged_sample.amount_of_measures);
         assert_eq!(sample.sample_quant_length, massaged_sample.sample_quant_length);
+    }
+
+    #[bench]
+    fn sample_replay_quant_bench(b: &mut Bencher) {
+        let quant_size_millis = DEFAULT_MEASURE.quant_size_millis();
+
+        let buffer = test_sample_data! [
+            [0, 0, quant_size_millis * 2],
+            [1, 0, quant_size_millis * 2],
+            [2, 0, quant_size_millis * 2],
+            [0, 1 * quant_size_millis, quant_size_millis * 2],
+            [1, 1 * quant_size_millis, quant_size_millis * 2],
+            [2, 1 * quant_size_millis, quant_size_millis * 2],
+            [0, 2 * quant_size_millis, quant_size_millis * 2],
+            [1, 2 * quant_size_millis, quant_size_millis * 2],
+            [2, 2 * quant_size_millis, quant_size_millis * 2],
+            [0, 3 * quant_size_millis, quant_size_millis * 2],
+            [1, 3 * quant_size_millis, quant_size_millis * 2],
+            [2, 3 * quant_size_millis, quant_size_millis * 2],
+            [0, 4 * quant_size_millis, quant_size_millis * 2],
+            [1, 4 * quant_size_millis, quant_size_millis * 2],
+            [2, 4 * quant_size_millis, quant_size_millis * 2],
+            [0, 5 * quant_size_millis, quant_size_millis * 2],
+            [1, 5 * quant_size_millis, quant_size_millis * 2],
+            [2, 5 * quant_size_millis, quant_size_millis * 2],
+            [0, 6 * quant_size_millis, quant_size_millis * 2],
+            [1, 6 * quant_size_millis, quant_size_millis * 2],
+            [2, 6 * quant_size_millis, quant_size_millis * 2]
+        ];
+
+        let sample = Sample::new(buffer, &DEFAULT_MEASURE, 0);
+
+
+        b.iter(|| {
+            let mut sink = DummyMidiNoteTracker;
+
+            for _ in 0..1000 {
+                for i in 0..7 {
+                    sample.replay_quant(Quant(i), &mut sink)
+                }
+            }
+        });
     }
 }
