@@ -169,7 +169,7 @@ impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
     }
 
     fn update(&mut self, delta_time: u32) -> Option<()> {
-        // TODO: calculate current timestamp with PortMidi mechanisms
+        // TODO(#217): calculate current timestamp with PortMidi mechanisms
         self.timestamp += delta_time;
         self.looper.update(delta_time);
         self.bpm_popup.update(delta_time);
