@@ -19,6 +19,8 @@ $ cargo test                            # run unit tests
 $ cargo bench                           # run benchmarks
 ```
 
+<!-- TODO: document NixOS environment setup -->
+
 ## Setting Up With a Controller ##
 
 Please, take a look at https://github.com/tsoding/dimooper/wiki/NixOS-QSynth-Setup-Guide
