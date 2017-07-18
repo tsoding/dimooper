@@ -28,9 +28,9 @@ impl<NoteTracker: MidiNoteTracker> LooperScreen<NoteTracker> {
             looper: looper,
             bpm_popup: bpm_popup,
             quit: false,
-            // TODO: unhardcode keyboard layout
+            // TODO(#216): unhardcode keyboard layout
             keycode_map: [(Keycode::G, 59),
-                           (Keycode::H, 61)]
+                          (Keycode::H, 61)]
                 .iter().cloned().collect(),
             timestamp: 0,
         }
