@@ -30,3 +30,6 @@ pub const POPUP_STAY_TIME: u32 = 500;
 pub const STATE_FILE_PATH: &'static str = "state.json";
 
 pub const CONFIG_FILE_NAME: &'static str = ".dimooper";
+
+pub const KEYBOARD_MESSAGE_VELOCITY: u8 = 100;
+pub const KEYBOARD_MESSAGE_CHANNEL: u8 = 2;

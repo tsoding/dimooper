@@ -2,19 +2,24 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;
+
+use std::path::Path;
+use std::collections::HashMap;
+
 use midi::*;
 use screen::Screen;
 use ui::Popup;
 use looper::Looper;
 use hardcode::*;
-use std::path::Path;
 use traits::*;
 use path;
 
 pub struct LooperScreen<NoteTracker: MidiNoteTracker> {
+    timestamp: u32,
     looper: Looper<NoteTracker>,
     bpm_popup: Popup,
-    quit: bool
+    quit: bool,
+    keycode_map: HashMap<Keycode, u8>,
 }
 
 impl<NoteTracker: MidiNoteTracker> LooperScreen<NoteTracker> {
@@ -22,7 +27,11 @@ impl<NoteTracker: MidiNoteTracker> LooperScreen<NoteTracker> {
         LooperScreen {
             looper: looper,
             bpm_popup: bpm_popup,
-            quit: false
+            quit: false,
+            keycode_map: [(Keycode::G, 59),
+                           (Keycode::H, 61)]
+                .iter().cloned().collect(),
+            timestamp: 0,
         }
     }
 
@@ -76,6 +85,38 @@ impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
                     }
                 }
 
+                Event::KeyDown { keycode: Some(keycode), .. } => {
+                    self.keycode_map
+                        .get(&keycode)
+                        .map(|x| x.clone())
+                        .map(|midi_key| {
+                            self.looper.on_midi_event(&AbsMidiEvent {
+                                message: TypedMidiMessage::NoteOn {
+                                    key: midi_key,
+                                    channel: KEYBOARD_MESSAGE_CHANNEL,
+                                    velocity: KEYBOARD_MESSAGE_VELOCITY,
+                                },
+                                timestamp: self.timestamp
+                            });
+                        });
+                }
+
+                Event::KeyUp { keycode: Some(keycode), .. } => {
+                    self.keycode_map
+                        .get(&keycode)
+                        .map(|x| x.clone())
+                        .map(|midi_key| {
+                            self.looper.on_midi_event(&AbsMidiEvent {
+                                message: TypedMidiMessage::NoteOff {
+                                    key: midi_key,
+                                    channel: KEYBOARD_MESSAGE_CHANNEL,
+                                    velocity: KEYBOARD_MESSAGE_VELOCITY,
+                                },
+                                timestamp: self.timestamp
+                            });
+                        });
+                }
+
                 _ => {}
             }
         }
@@ -127,6 +168,7 @@ impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
     }
 
     fn update(&mut self, delta_time: u32) -> Option<()> {
+        self.timestamp += delta_time;
         self.looper.update(delta_time);
         self.bpm_popup.update(delta_time);
 
