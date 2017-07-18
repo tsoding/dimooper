@@ -28,6 +28,7 @@ impl<NoteTracker: MidiNoteTracker> LooperScreen<NoteTracker> {
             looper: looper,
             bpm_popup: bpm_popup,
             quit: false,
+            // TODO: unhardcode keyboard layout
             keycode_map: [(Keycode::G, 59),
                            (Keycode::H, 61)]
                 .iter().cloned().collect(),
@@ -168,6 +169,7 @@ impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
     }
 
     fn update(&mut self, delta_time: u32) -> Option<()> {
+        // TODO: calculate current timestamp with PortMidi mechanisms
         self.timestamp += delta_time;
         self.looper.update(delta_time);
         self.bpm_popup.update(delta_time);
