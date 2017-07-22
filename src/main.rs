@@ -3,13 +3,11 @@
 // FIXME(#160): fix build with clippy
 // #![feature(plugin)]
 // #![plugin(clippy)]
-#![feature(test)]
 
 extern crate sdl2;
 extern crate sdl2_ttf;
 extern crate portmidi as pm;
 extern crate num;
-extern crate test;
 
 extern crate serde;
 extern crate serde_json;

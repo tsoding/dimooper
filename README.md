@@ -16,7 +16,6 @@ Digital Music Looper application focused on live performance.
 $ cargo build                           # build dimooper
 $ cargo run <input-port> <output-port>  # run dimooper
 $ cargo test                            # run unit tests
-$ cargo bench                           # run benchmarks
 ```
 
 <!-- TODO: document NixOS environment setup -->

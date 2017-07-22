@@ -2,8 +2,7 @@ let
   pkgs = import <nixpkgs> {};
   stdenv = pkgs.stdenv;
   dimooperChannel = pkgs.rustChannelOf {
-    date = "2017-03-01";
-    channel = "nightly";
+    channel = "1.17.0";
   };
 in rec {
   dimooperEnv = stdenv.mkDerivation rec {
