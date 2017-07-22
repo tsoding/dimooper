@@ -3,14 +3,12 @@
 // FIXME(#160): fix build with clippy
 // #![feature(plugin)]
 // #![plugin(clippy)]
-#![feature(test)]
 
 extern crate sdl2;
 extern crate sdl2_ttf;
 extern crate portmidi as pm;
 extern crate num;
 extern crate rustc_serialize;
-extern crate test;
 
 use std::path::{Path, PathBuf};
 use std::env;
