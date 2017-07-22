@@ -1,54 +1,13 @@
-use looper::Sample;
+use looper::{SampleData};
 use measure::Measure;
 
-use rustc_serialize::{Decodable, Encodable, Encoder, Decoder};
-
+// TODO: rename Composition to CompositionData.
+//
+// Because it has the same purpose as SampleData
+#[derive(Serialize, Deserialize)]
 pub struct Composition {
-    pub samples: Vec<Sample>,
+    pub samples: Vec<SampleData>,
     pub measure: Measure,
-}
-
-impl Composition {
-    pub fn new(measure: Measure, samples: Vec<Sample>) -> Composition {
-        Composition {
-            measure: measure,
-            samples: samples
-        }
-    }
-}
-
-impl Encodable for Composition {
-    fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
-        s.emit_struct("Composition", 2, |s| {
-            s.emit_struct_field("measure", 0, |s| {
-                self.measure.encode(s)
-            }).and_then(|_| {
-                s.emit_struct_field("samples", 1, |s| {
-                    self.samples.encode(s)
-                })
-            })
-        })
-    }
-}
-
-impl Decodable for Composition {
-    fn decode<D: Decoder>(d: &mut D) -> Result<Self, D::Error> {
-        d.read_struct("Looper", 2, |d| {
-            let measure_field = d.read_struct_field("measure", 0, |d| {
-                Measure::decode(d)
-            });
-
-            let samples_field = d.read_struct_field("samples", 1, |d| {
-                Vec::<Sample>::decode(d)
-            });
-
-            measure_field.and_then(|measure| {
-                samples_field.and_then(|samples| {
-                    Ok(Self::new(measure, samples))
-                })
-            })
-        })
-    }
 }
 
 #[cfg(test)]
@@ -57,7 +16,7 @@ mod tests {
     use hardcode::*;
     use measure::Measure;
     use looper::Sample;
-    use rustc_serialize::json;
+    use serde_json;
     use midi::{AbsMidiEvent, TypedMidiMessage};
 
     const DEFAULT_MEASURE: Measure = Measure {
@@ -102,8 +61,11 @@ mod tests {
             Sample::new(buffer, &DEFAULT_MEASURE, 0)
         ];
 
-        let composition = Composition::new(DEFAULT_MEASURE, samples);
-        let massaged_composition: Composition = json::decode(&json::encode(&composition).unwrap()).unwrap();
+        let composition = Composition {
+            measure: DEFAULT_MEASURE,
+            samples: samples.iter().map(|sample| sample.as_sample_data()).collect(),
+        };
+        let massaged_composition: Composition = serde_json::from_str(&serde_json::to_string(&composition).unwrap()).unwrap();
 
         assert_eq!(composition.measure, massaged_composition.measure)
     }

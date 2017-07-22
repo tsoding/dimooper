@@ -1,0 +1,4 @@
+# TODO: migrate samples to new state format
+#
+# After #209 it was slightly changed (for good actually, now it's more human readable).
+# But we still have all samples that use the old format. We need to migrate them somehow.

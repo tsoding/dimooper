@@ -8,7 +8,11 @@ extern crate sdl2;
 extern crate sdl2_ttf;
 extern crate portmidi as pm;
 extern crate num;
-extern crate rustc_serialize;
+
+extern crate serde;
+extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
 
 use std::path::{Path, PathBuf};
 use std::env;

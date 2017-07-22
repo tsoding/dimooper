@@ -23,7 +23,7 @@ const NOTE_ON_STATUS: u8 = 0b10010000;
 const NOTE_OFF_STATUS: u8 = 0b10000000;
 const CONTROL_CHANGE_STATUS: u8 = 0b10110000;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, RustcDecodable, RustcEncodable)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum TypedMidiMessage {
     NoteOn {channel: u8, key: u8, velocity: u8},
     NoteOff {channel: u8, key: u8, velocity: u8},
