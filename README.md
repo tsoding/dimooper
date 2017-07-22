@@ -18,7 +18,7 @@ $ cargo run <input-port> <output-port>  # run dimooper
 $ cargo test                            # run unit tests
 ```
 
-<!-- TODO: document NixOS environment setup -->
+<!-- TODO(#222): document NixOS environment setup -->
 
 ## Setting Up With a Controller ##
 
