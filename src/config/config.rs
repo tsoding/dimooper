@@ -26,9 +26,14 @@ impl Default for Config {
             last_input_port: None,
             last_output_port: None,
             // TODO: get rid of unwrap
-            keyboard_layout: [(Keycode::G.to_u64().unwrap(), 59),
-                              (Keycode::H.to_u64().unwrap(), 61)]
-                .iter().cloned().collect()
+            keyboard_layout: [(Keycode::G, 59),
+                              (Keycode::H, 61)]
+                .iter()
+                .cloned()
+                .filter_map(|(keycode, midicode)| {
+                    keycode.to_u64().map(|keyvalue| (keyvalue, midicode))
+                })
+                .collect()
         }
     }
 }
