@@ -236,7 +236,7 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
         let composition: Composition = try!(serde_json::from_str(&serialized_composition));
 
         self.note_tracker.close_opened_notes();
-        self.composition = composition.samples;
+        self.composition = composition.samples.iter().map(|sample_data| Sample::from_sample_data(sample_data)).collect();
         self.measure = composition.measure;
         self.time_cursor = 0;
 
@@ -256,8 +256,10 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
     }
 
     pub fn save_state_to_file(&self, path: &path::Path) -> Result<()> {
-        let composition: Composition = Composition::new(self.measure.clone(),
-                                                        self.composition.clone());
+        let composition = Composition {
+            measure: self.measure.clone(),
+            samples: self.composition.iter().map(|sample| sample.as_sample_data()).collect(),
+        };
 
         let serialized_composition: String = try!(serde_json::to_string(&composition));
         let mut file = try!(fs::File::create(path));

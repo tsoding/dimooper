@@ -1,25 +1,13 @@
 use std::ops::{Add, Mul, Sub, Rem, Div};
 
-use serde::{Serialize, Serializer, Deserialize, Deserializer};
-
 // FIXME(#125): Autoderive arithmetic operations for Quant
-#[derive(Clone, Copy, PartialEq, Eq, Debug, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Quant(pub u32);
 
-impl Serialize for Quant {
-    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        unimplemented!()
-        // TODO: reimplement with serde
-        // let &Quant(this) = self;
-        // s.emit_u32(this)
-    }
-}
-
-impl<'de> Deserialize<'de> for Quant {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        unimplemented!()
-        // TODO: reimplement with serde
-        // d.read_u32().map(|q| Quant(q))
+impl Quant {
+    pub fn as_u32(&self) -> u32 {
+        let Quant(this) = *self;
+        this
     }
 }
 

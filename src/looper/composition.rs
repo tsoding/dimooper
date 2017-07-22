@@ -1,58 +1,13 @@
-use looper::Sample;
+use looper::{SampleData};
 use measure::Measure;
 
-use serde::{Deserialize, Serialize, Serializer, Deserializer};
-
+// TODO: rename Composition to CompositionData.
+//
+// Because it has the same purpose as SampleData
+#[derive(Serialize, Deserialize)]
 pub struct Composition {
-    pub samples: Vec<Sample>,
+    pub samples: Vec<SampleData>,
     pub measure: Measure,
-}
-
-impl Composition {
-    pub fn new(measure: Measure, samples: Vec<Sample>) -> Composition {
-        Composition {
-            measure: measure,
-            samples: samples
-        }
-    }
-}
-
-impl Serialize for Composition {
-    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        unimplemented!()
-        // TODO: reimplement with serde
-        // s.emit_struct("Composition", 2, |s| {
-        //     s.emit_struct_field("measure", 0, |s| {
-        //         self.measure.encode(s)
-        //     }).and_then(|_| {
-        //         s.emit_struct_field("samples", 1, |s| {
-        //             self.samples.encode(s)
-        //         })
-        //     })
-        // })
-    }
-}
-
-impl<'de> Deserialize<'de> for Composition {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        unimplemented!()
-        // TODO: reimplement with serde
-        // d.read_struct("Looper", 2, |d| {
-        //     let measure_field = d.read_struct_field("measure", 0, |d| {
-        //         Measure::decode(d)
-        //     });
-
-        //     let samples_field = d.read_struct_field("samples", 1, |d| {
-        //         Vec::<Sample>::decode(d)
-        //     });
-
-        //     measure_field.and_then(|measure| {
-        //         samples_field.and_then(|samples| {
-        //             Ok(Self::new(measure, samples))
-        //         })
-        //     })
-        // })
-    }
 }
 
 #[cfg(test)]
@@ -106,7 +61,10 @@ mod tests {
             Sample::new(buffer, &DEFAULT_MEASURE, 0)
         ];
 
-        let composition = Composition::new(DEFAULT_MEASURE, samples);
+        let composition = Composition {
+            measure: DEFAULT_MEASURE,
+            samples: samples.iter().map(|sample| sample.as_sample_data()).collect(),
+        };
         let massaged_composition: Composition = serde_json::from_str(&serde_json::to_string(&composition).unwrap()).unwrap();
 
         assert_eq!(composition.measure, massaged_composition.measure)
