@@ -3,7 +3,7 @@ use sdl2::render::Renderer;
 use midi;
 use midi::{AbsMidiEvent, Note, MidiSink};
 use measure::*;
-use rustc_serialize::{Decodable, Encodable, Encoder, Decoder};
+use serde::{Deserialize, Serialize, Serializer, Deserializer};
 
 #[derive(Clone)]
 pub struct Sample {
@@ -16,52 +16,56 @@ pub struct Sample {
     quants_per_measure: Quant,
 }
 
-impl Encodable for Sample {
-    fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
-        s.emit_struct("Sample", 4, |s| {
-            s.emit_struct_field("buffer", 0, |s| {
-                self.buffer.encode(s)
-            }).and_then(|_| {
-                s.emit_struct_field("measure_shift", 1, |s| {
-                    s.emit_u32(self.measure_shift)
-                })
-            }).and_then(|_| {
-                s.emit_struct_field("quants_per_measure", 2, |s| {
-                    self.quants_per_measure.encode(s)
-                })
-            }).and_then(|_| {
-                s.emit_struct_field("amount_of_measures", 3, |s| {
-                    self.amount_of_measures.encode(s)
-                })
-            })
-        })
+impl Serialize for Sample {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        unimplemented!()
+        // TODO: reimplement with serde
+        // s.emit_struct("Sample", 4, |s| {
+        //     s.emit_struct_field("buffer", 0, |s| {
+        //         self.buffer.encode(s)
+        //     }).and_then(|_| {
+        //         s.emit_struct_field("measure_shift", 1, |s| {
+        //             s.emit_u32(self.measure_shift)
+        //         })
+        //     }).and_then(|_| {
+        //         s.emit_struct_field("quants_per_measure", 2, |s| {
+        //             self.quants_per_measure.encode(s)
+        //         })
+        //     }).and_then(|_| {
+        //         s.emit_struct_field("amount_of_measures", 3, |s| {
+        //             self.amount_of_measures.encode(s)
+        //         })
+        //     })
+        // })
     }
 }
 
-impl Decodable for Sample {
-    fn decode<D: Decoder>(d: &mut D) -> Result<Self, D::Error> {
-        d.read_struct("Sample", 3, |d| {
-            d.read_struct_field("buffer", 0, |d| {
-                Vec::<QuantMidiEvent>::decode(d)
-            }).and_then(|buffer| {
-                d.read_struct_field("measure_shift", 1, |d| {
-                    u32::decode(d)
-                }).and_then(|measure_shift| {
-                    d.read_struct_field("quants_per_measure", 2, |d| {
-                        Quant::decode(d)
-                    }).and_then(|quants_per_measure| {
-                        d.read_struct_field("amount_of_measures", 3, |d| {
-                            u32::decode(d)
-                        }).and_then(|amount_of_measures| {
-                            Ok(Sample::restore(buffer,
-                                               quants_per_measure,
-                                               measure_shift,
-                                               amount_of_measures))
-                        })
-                    })
-                })
-            })
-        })
+impl<'de> Deserialize<'de> for Sample {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        unimplemented!()
+        // TODO: reimplement with serde
+        // d.read_struct("Sample", 3, |d| {
+        //     d.read_struct_field("buffer", 0, |d| {
+        //         Vec::<QuantMidiEvent>::decode(d)
+        //     }).and_then(|buffer| {
+        //         d.read_struct_field("measure_shift", 1, |d| {
+        //             u32::decode(d)
+        //         }).and_then(|measure_shift| {
+        //             d.read_struct_field("quants_per_measure", 2, |d| {
+        //                 Quant::decode(d)
+        //             }).and_then(|quants_per_measure| {
+        //                 d.read_struct_field("amount_of_measures", 3, |d| {
+        //                     u32::decode(d)
+        //                 }).and_then(|amount_of_measures| {
+        //                     Ok(Sample::restore(buffer,
+        //                                        quants_per_measure,
+        //                                        measure_shift,
+        //                                        amount_of_measures))
+        //                 })
+        //             })
+        //         })
+        //     })
+        // })
     }
 }
 
@@ -145,7 +149,7 @@ mod tests {
     use midi::{AbsMidiEvent, TypedMidiMessage};
     use midi::DummyMidiNoteTracker;
 
-    use rustc_serialize::json;
+    use serde::json;
 
     const DEFAULT_MEASURE: Measure = Measure {
         tempo_bpm: DEFAULT_TEMPO_BPM,

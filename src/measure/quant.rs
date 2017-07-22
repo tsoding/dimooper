@@ -1,21 +1,25 @@
 use std::ops::{Add, Mul, Sub, Rem, Div};
 
-use rustc_serialize::{Encodable, Encoder, Decodable, Decoder};
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
 // FIXME(#125): Autoderive arithmetic operations for Quant
 #[derive(Clone, Copy, PartialEq, Eq, Debug, PartialOrd, Ord)]
 pub struct Quant(pub u32);
 
-impl Encodable for Quant {
-    fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
-        let &Quant(this) = self;
-        s.emit_u32(this)
+impl Serialize for Quant {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        unimplemented!()
+        // TODO: reimplement with serde
+        // let &Quant(this) = self;
+        // s.emit_u32(this)
     }
 }
 
-impl Decodable for Quant {
-    fn decode<D: Decoder>(d: &mut D) -> Result<Self, D::Error> {
-        d.read_u32().map(|q| Quant(q))
+impl<'de> Deserialize<'de> for Quant {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        unimplemented!()
+        // TODO: reimplement with serde
+        // d.read_u32().map(|q| Quant(q))
     }
 }
 
@@ -67,7 +71,7 @@ impl Rem for Quant {
 #[cfg(test)]
 mod tests {
     use super::Quant;
-    use rustc_serialize::json;
+    use serde::json;
 
     #[test]
     fn test_quant_serialization() {

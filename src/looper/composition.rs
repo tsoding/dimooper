@@ -1,7 +1,7 @@
 use looper::Sample;
 use measure::Measure;
 
-use rustc_serialize::{Decodable, Encodable, Encoder, Decoder};
+use serde::{Deserialize, Serialize, Serializer, Deserializer};
 
 pub struct Composition {
     pub samples: Vec<Sample>,
@@ -17,37 +17,41 @@ impl Composition {
     }
 }
 
-impl Encodable for Composition {
-    fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
-        s.emit_struct("Composition", 2, |s| {
-            s.emit_struct_field("measure", 0, |s| {
-                self.measure.encode(s)
-            }).and_then(|_| {
-                s.emit_struct_field("samples", 1, |s| {
-                    self.samples.encode(s)
-                })
-            })
-        })
+impl Serialize for Composition {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        unimplemented!()
+        // TODO: reimplement with serde
+        // s.emit_struct("Composition", 2, |s| {
+        //     s.emit_struct_field("measure", 0, |s| {
+        //         self.measure.encode(s)
+        //     }).and_then(|_| {
+        //         s.emit_struct_field("samples", 1, |s| {
+        //             self.samples.encode(s)
+        //         })
+        //     })
+        // })
     }
 }
 
-impl Decodable for Composition {
-    fn decode<D: Decoder>(d: &mut D) -> Result<Self, D::Error> {
-        d.read_struct("Looper", 2, |d| {
-            let measure_field = d.read_struct_field("measure", 0, |d| {
-                Measure::decode(d)
-            });
+impl<'de> Deserialize<'de> for Composition {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        unimplemented!()
+        // TODO: reimplement with serde
+        // d.read_struct("Looper", 2, |d| {
+        //     let measure_field = d.read_struct_field("measure", 0, |d| {
+        //         Measure::decode(d)
+        //     });
 
-            let samples_field = d.read_struct_field("samples", 1, |d| {
-                Vec::<Sample>::decode(d)
-            });
+        //     let samples_field = d.read_struct_field("samples", 1, |d| {
+        //         Vec::<Sample>::decode(d)
+        //     });
 
-            measure_field.and_then(|measure| {
-                samples_field.and_then(|samples| {
-                    Ok(Self::new(measure, samples))
-                })
-            })
-        })
+        //     measure_field.and_then(|measure| {
+        //         samples_field.and_then(|samples| {
+        //             Ok(Self::new(measure, samples))
+        //         })
+        //     })
+        // })
     }
 }
 
@@ -57,7 +61,7 @@ mod tests {
     use hardcode::*;
     use measure::Measure;
     use looper::Sample;
-    use rustc_serialize::json;
+    use serde::json;
     use midi::{AbsMidiEvent, TypedMidiMessage};
 
     const DEFAULT_MEASURE: Measure = Measure {
