@@ -1,7 +1,7 @@
 use looper::{SampleData};
 use measure::Measure;
 
-// TODO: rename Composition to CompositionData.
+// TODO(#224): rename Composition to CompositionData.
 //
 // Because it has the same purpose as SampleData
 #[derive(Serialize, Deserialize)]
