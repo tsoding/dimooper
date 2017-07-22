@@ -13,6 +13,7 @@ use hardcode::*;
 use traits::*;
 use path;
 use screen::KeyboardLayout;
+use config::Config;
 
 pub struct LooperScreen<NoteTracker: MidiNoteTracker> {
     timestamp: u32,
@@ -23,14 +24,14 @@ pub struct LooperScreen<NoteTracker: MidiNoteTracker> {
 }
 
 impl<NoteTracker: MidiNoteTracker> LooperScreen<NoteTracker> {
-    pub fn new(looper: Looper<NoteTracker>, bpm_popup: Popup) -> LooperScreen<NoteTracker> {
+    pub fn new(looper: Looper<NoteTracker>,
+               bpm_popup: Popup,
+               config: &Config) -> LooperScreen<NoteTracker> {
         LooperScreen {
             looper: looper,
             bpm_popup: bpm_popup,
             quit: false,
-            // TODO(#216): unhardcode keyboard layout
-            keyboard_layout: KeyboardLayout::from_slice(&[(Keycode::G, 59),
-                                                          (Keycode::H, 61)]),
+            keyboard_layout: KeyboardLayout::from_config(config),
             timestamp: 0,
         }
     }

@@ -1,33 +1,30 @@
-use std::path::Path;
 use sdl2::keyboard::Keycode;
 use std::collections::HashMap;
+use num::ToPrimitive;
 
-use error::Result;
 use midi::*;
 use hardcode::*;
 use looper::Looper;
+use config::Config;
 
 pub struct KeyboardLayout {
-    layout: HashMap<Keycode, u8>,
+    layout: HashMap<u64, u8>,
 }
 
 impl KeyboardLayout {
-    pub fn from_slice(mappings: &[(Keycode, u8)]) -> KeyboardLayout {
+    pub fn from_config(config: &Config) -> KeyboardLayout {
         KeyboardLayout {
-            layout: mappings.iter().cloned().collect()
+            layout: config.keyboard_layout.clone()
         }
     }
-
-    // pub fn from_path(path: &Path) -> Result<KeyboardLayout> {
-
-    // }
 
     pub fn key_down<NoteTracker: MidiNoteTracker>(&self,
                                                   looper: &mut Looper<NoteTracker>,
                                                   keycode: &Keycode,
                                                   timestamp: u32) {
+        // TODO: get rid of unwrap
         self.layout
-            .get(keycode)
+            .get(&keycode.to_u64().unwrap())
             .map(|midi_key| {
                 looper.on_midi_event(&AbsMidiEvent {
                     message: TypedMidiMessage::NoteOn {
@@ -44,8 +41,9 @@ impl KeyboardLayout {
                                                 looper: &mut Looper<NoteTracker>,
                                                 keycode: &Keycode,
                                                 timestamp: u32) {
+        // TODO: get rid of unwrap
         self.layout
-            .get(keycode)
+            .get(&keycode.clone().to_u64().unwrap())
             .map(|midi_key| {
                 looper.on_midi_event(&AbsMidiEvent {
                     message: TypedMidiMessage::NoteOff {
