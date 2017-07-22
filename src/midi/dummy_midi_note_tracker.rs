@@ -1,7 +1,7 @@
 use pm::types::Result;
 use midi::{TypedMidiMessage, MidiSink, MidiNoteTracker};
 
-// TODO: find a way to get rid of the DummyMidiNoteTracker warn
+// TODO(#225): find a way to get rid of the DummyMidiNoteTracker warn
 pub struct DummyMidiNoteTracker;
 
 impl MidiNoteTracker for DummyMidiNoteTracker {
