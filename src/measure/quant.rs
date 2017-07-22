@@ -71,13 +71,13 @@ impl Rem for Quant {
 #[cfg(test)]
 mod tests {
     use super::Quant;
-    use serde::json;
+    use serde_json;
 
     #[test]
     fn test_quant_serialization() {
         let q = Quant(42);
 
         assert_eq!(Quant(42),
-                   json::decode(&json::encode(&q).unwrap()).unwrap())
+                   serde_json::from_str(&serde_json::to_string(&q).unwrap()).unwrap())
     }
 }

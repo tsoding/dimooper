@@ -61,7 +61,7 @@ mod tests {
     use hardcode::*;
     use measure::Measure;
     use looper::Sample;
-    use serde::json;
+    use serde_json;
     use midi::{AbsMidiEvent, TypedMidiMessage};
 
     const DEFAULT_MEASURE: Measure = Measure {
@@ -107,7 +107,7 @@ mod tests {
         ];
 
         let composition = Composition::new(DEFAULT_MEASURE, samples);
-        let massaged_composition: Composition = json::decode(&json::encode(&composition).unwrap()).unwrap();
+        let massaged_composition: Composition = serde_json::from_str(&serde_json::to_string(&composition).unwrap()).unwrap();
 
         assert_eq!(composition.measure, massaged_composition.measure)
     }

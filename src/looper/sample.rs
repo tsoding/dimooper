@@ -149,7 +149,7 @@ mod tests {
     use midi::{AbsMidiEvent, TypedMidiMessage};
     use midi::DummyMidiNoteTracker;
 
-    use serde::json;
+    use serde_json;
 
     const DEFAULT_MEASURE: Measure = Measure {
         tempo_bpm: DEFAULT_TEMPO_BPM,
@@ -224,7 +224,7 @@ mod tests {
 
         let sample = Sample::new(buffer, &DEFAULT_MEASURE, 0);
 
-        let massaged_sample: Sample = json::decode(&json::encode(&sample).unwrap()).unwrap();
+        let massaged_sample: Sample = serde_json::from_str(&serde_json::to_string(&sample).unwrap()).unwrap();
 
         assert_eq!(sample.buffer, massaged_sample.buffer);
         assert_eq!(sample.measure_shift, massaged_sample.measure_shift);
