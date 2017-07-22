@@ -22,9 +22,9 @@ impl KeyboardLayout {
                                                   looper: &mut Looper<NoteTracker>,
                                                   keycode: &Keycode,
                                                   timestamp: u32) {
-        // TODO: get rid of unwrap
-        self.layout
-            .get(&keycode.to_u64().unwrap())
+        keycode
+            .to_u64()
+            .and_then(|keyvalue| self.layout.get(&keyvalue))
             .map(|midi_key| {
                 looper.on_midi_event(&AbsMidiEvent {
                     message: TypedMidiMessage::NoteOn {
@@ -35,15 +35,16 @@ impl KeyboardLayout {
                     timestamp: timestamp
                 });
             });
+
     }
 
     pub fn key_up<NoteTracker: MidiNoteTracker>(&self,
                                                 looper: &mut Looper<NoteTracker>,
                                                 keycode: &Keycode,
                                                 timestamp: u32) {
-        // TODO: get rid of unwrap
-        self.layout
-            .get(&keycode.clone().to_u64().unwrap())
+        keycode
+            .to_u64()
+            .and_then(|keyvalue| self.layout.get(&keyvalue))
             .map(|midi_key| {
                 looper.on_midi_event(&AbsMidiEvent {
                     message: TypedMidiMessage::NoteOff {

@@ -25,7 +25,6 @@ impl Default for Config {
         Config {
             last_input_port: None,
             last_output_port: None,
-            // TODO: get rid of unwrap
             keyboard_layout: [(Keycode::G, 59),
                               (Keycode::H, 61)]
                 .iter()
