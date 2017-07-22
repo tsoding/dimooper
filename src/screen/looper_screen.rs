@@ -4,7 +4,6 @@ use sdl2::render::Renderer;
 use sdl2::pixels::Color;
 
 use std::path::Path;
-use std::collections::HashMap;
 
 use midi::*;
 use screen::Screen;
@@ -13,25 +12,26 @@ use looper::Looper;
 use hardcode::*;
 use traits::*;
 use path;
+use screen::KeyboardLayout;
+use config::Config;
 
 pub struct LooperScreen<NoteTracker: MidiNoteTracker> {
     timestamp: u32,
     looper: Looper<NoteTracker>,
     bpm_popup: Popup,
     quit: bool,
-    keycode_map: HashMap<Keycode, u8>,
+    keyboard_layout: KeyboardLayout,
 }
 
 impl<NoteTracker: MidiNoteTracker> LooperScreen<NoteTracker> {
-    pub fn new(looper: Looper<NoteTracker>, bpm_popup: Popup) -> LooperScreen<NoteTracker> {
+    pub fn new(looper: Looper<NoteTracker>,
+               bpm_popup: Popup,
+               config: &Config) -> LooperScreen<NoteTracker> {
         LooperScreen {
             looper: looper,
             bpm_popup: bpm_popup,
             quit: false,
-            // TODO(#216): unhardcode keyboard layout
-            keycode_map: [(Keycode::G, 59),
-                          (Keycode::H, 61)]
-                .iter().cloned().collect(),
+            keyboard_layout: KeyboardLayout::from_config(config),
             timestamp: 0,
         }
     }
@@ -87,35 +87,15 @@ impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
                 }
 
                 Event::KeyDown { keycode: Some(keycode), .. } => {
-                    self.keycode_map
-                        .get(&keycode)
-                        .map(|x| x.clone())
-                        .map(|midi_key| {
-                            self.looper.on_midi_event(&AbsMidiEvent {
-                                message: TypedMidiMessage::NoteOn {
-                                    key: midi_key,
-                                    channel: KEYBOARD_MESSAGE_CHANNEL,
-                                    velocity: KEYBOARD_MESSAGE_VELOCITY,
-                                },
-                                timestamp: self.timestamp
-                            });
-                        });
+                    self.keyboard_layout.key_down::<NoteTracker>(&mut self.looper,
+                                                                 &keycode,
+                                                                 self.timestamp);
                 }
 
                 Event::KeyUp { keycode: Some(keycode), .. } => {
-                    self.keycode_map
-                        .get(&keycode)
-                        .map(|x| x.clone())
-                        .map(|midi_key| {
-                            self.looper.on_midi_event(&AbsMidiEvent {
-                                message: TypedMidiMessage::NoteOff {
-                                    key: midi_key,
-                                    channel: KEYBOARD_MESSAGE_CHANNEL,
-                                    velocity: KEYBOARD_MESSAGE_VELOCITY,
-                                },
-                                timestamp: self.timestamp
-                            });
-                        });
+                    self.keyboard_layout.key_up::<NoteTracker>(&mut self.looper,
+                                                               &keycode,
+                                                               self.timestamp);
                 }
 
                 _ => {}

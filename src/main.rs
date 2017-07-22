@@ -104,7 +104,7 @@ fn main() {
         .unwrap_or_default();
 
     let mut event_loop = EventLoop::new(timer_subsystem, event_pump, in_port, renderer);
-    event_loop.run(LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup));
+    event_loop.run(LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup, &config));
 
     config_path()
         .and_then(|path| config.save(path.as_path()))

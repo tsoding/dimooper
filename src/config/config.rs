@@ -1,6 +1,11 @@
 use std::fs;
 use std::io::{Read, Write};
 use std::path::Path;
+use std::collections::HashMap;
+
+use sdl2::keyboard::Keycode;
+
+use num::ToPrimitive;
 
 use pm::DeviceInfo;
 use serde_json;
@@ -8,10 +13,28 @@ use serde_json;
 use config::ConfigDeviceInfo;
 use error::Result;
 
-#[derive(Default, Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
-    last_input_port: Option<ConfigDeviceInfo>,
-    last_output_port: Option<ConfigDeviceInfo>,
+    pub last_input_port: Option<ConfigDeviceInfo>,
+    pub last_output_port: Option<ConfigDeviceInfo>,
+    pub keyboard_layout: HashMap<u64, u8>
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            last_input_port: None,
+            last_output_port: None,
+            keyboard_layout: [(Keycode::G, 59),
+                              (Keycode::H, 61)]
+                .iter()
+                .cloned()
+                .filter_map(|(keycode, midicode)| {
+                    keycode.to_u64().map(|keyvalue| (keyvalue, midicode))
+                })
+                .collect()
+        }
+    }
 }
 
 impl Config {
@@ -31,11 +54,13 @@ impl Config {
     }
 
     #[allow(dead_code)]
-    pub fn update_last_ports(input_port: DeviceInfo,
+    pub fn update_last_ports(self,
+                             input_port: DeviceInfo,
                              output_port: DeviceInfo) -> Config {
         Config {
             last_input_port: Some(ConfigDeviceInfo::new(&input_port)),
-            last_output_port: Some(ConfigDeviceInfo::new(&output_port))
+            last_output_port: Some(ConfigDeviceInfo::new(&output_port)),
+            keyboard_layout: self.keyboard_layout
         }
     }
 }
