@@ -1,18 +1,18 @@
 use looper::{SampleData};
 use measure::Measure;
 
-// TODO(#224): rename Composition to CompositionData.
-//
-// Because it has the same purpose as SampleData
+/// The purpose of this struct is to be serialized or deserialized by
+/// serde without implementing custom Deserialize trait, because doing
+/// that comparing to rustc_serialize is more difficult.
 #[derive(Serialize, Deserialize)]
-pub struct Composition {
+pub struct CompositionData {
     pub samples: Vec<SampleData>,
     pub measure: Measure,
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Composition;
+    use super::CompositionData;
     use hardcode::*;
     use measure::Measure;
     use looper::Sample;
@@ -61,11 +61,12 @@ mod tests {
             Sample::new(buffer, &DEFAULT_MEASURE, 0)
         ];
 
-        let composition = Composition {
+        let composition = CompositionData {
             measure: DEFAULT_MEASURE,
             samples: samples.iter().map(|sample| sample.as_sample_data()).collect(),
         };
-        let massaged_composition: Composition = serde_json::from_str(&serde_json::to_string(&composition).unwrap()).unwrap();
+        let massaged_composition: CompositionData =
+            serde_json::from_str(&serde_json::to_string(&composition).unwrap()).unwrap();
 
         assert_eq!(composition.measure, massaged_composition.measure)
     }

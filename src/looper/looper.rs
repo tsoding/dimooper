@@ -5,7 +5,7 @@ use midi::*;
 use hardcode::*;
 use num::integer::lcm;
 use serde_json;
-use looper::Composition;
+use looper::CompositionData;
 use error::Result;
 
 use traits::{Updatable, Renderable};
@@ -233,7 +233,7 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
         let mut file = try!(fs::File::open(path));
         let mut serialized_composition = String::new();
         try!(file.read_to_string(&mut serialized_composition));
-        let composition: Composition = try!(serde_json::from_str(&serialized_composition));
+        let composition: CompositionData = try!(serde_json::from_str(&serialized_composition));
 
         self.note_tracker.close_opened_notes();
         self.composition = composition.samples.iter().map(|sample_data| Sample::from_sample_data(sample_data)).collect();
@@ -256,7 +256,7 @@ impl<NoteTracker: MidiNoteTracker> Looper<NoteTracker> {
     }
 
     pub fn save_state_to_file(&self, path: &path::Path) -> Result<()> {
-        let composition = Composition {
+        let composition = CompositionData {
             measure: self.measure.clone(),
             samples: self.composition.iter().map(|sample| sample.as_sample_data()).collect(),
         };
