@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/tsoding/dimooper.svg?branch=master)](https://travis-ci.org/tsoding/dimooper)
+[![codecov](https://codecov.io/gh/tsoding/dimooper/branch/master/graph/badge.svg)](https://codecov.io/gh/tsoding/dimooper)
 
 # dimooper #
 
@@ -13,9 +14,18 @@ Digital Music Looper application focused on live performance.
 ## Quick Start ##
 
 ```console
-$ cargo build                           # build dimooper
+$ cargo build                               # build dimooper
 $ cargo run <input-port> <output-port>  # run dimooper
-$ cargo test                            # run unit tests
+$ cargo test                                # run unit tests
+```
+
+## Coverage ##
+
+```console
+$ cargo install kcov
+$ cargo build
+$ cargo kcov
+$ <browser> target/cov/index.html
 ```
 
 <!-- TODO(#222): document NixOS environment setup -->

@@ -2,6 +2,33 @@ sudo: required
 dist: trusty
 language: rust
 rust: 1.17.0
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq libportmidi-dev libsdl2-dev libsdl2-ttf-dev
+addons:
+  apt:
+    packages:
+      - libportmidi-dev
+      - libsdl2-dev
+      - libsdl2-ttf-dev
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - libiberty-dev
+      - binutils-dev
+      - cmake
+      - gcc
+install:
+  - wget https://github.com/SimonKagstrom/kcov/archive/v33.tar.gz
+  - tar xzf v33.tar.gz
+  - mkdir -p kcov-33/build/
+  - pushd kcov-33/build/
+  - cmake ..
+  - make
+  - sudo make install
+  - popd
+  - rm -rf kcov-33/
+  - sudo pip install codecov
+  - cargo install cargo-kcov
+script:
+  - cargo build --verbose
+  - cargo kcov --verbose
+after_success:
+  - codecov
