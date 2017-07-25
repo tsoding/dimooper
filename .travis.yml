@@ -27,7 +27,6 @@ install:
   - cargo install cargo-kcov
 script:
   - cargo build --verbose
-  - cargo test --verbose
+  - cargo kcov --verbose
 after_success:
-  - cp target/cov/kcov-merged/cobertura.xml ./
   - codecov
