@@ -29,4 +29,5 @@ script:
   - cargo build --verbose
   - cargo test --verbose
 after_success:
+  - cp target/cov/kcov-merged/cobertura.xml ./
   - codecov
