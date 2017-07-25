@@ -27,6 +27,6 @@ install:
   - cargo install cargo-kcov
 script:
   - cargo build --verbose
-  - cargo kcov --verbose
+  - cargo test --verbose
 after_success:
   - codecov
