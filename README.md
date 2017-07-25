@@ -18,6 +18,15 @@ $ cargo run <input-port> <output-port>  # run dimooper
 $ cargo test                            # run unit tests
 ```
 
+## Coverage ##
+
+```console
+$ cargo install kcov
+$ cargo build
+$ cargo kcov
+$ <browser> target/cov/index.html
+```
+
 <!-- TODO(#222): document NixOS environment setup -->
 
 ## Setting Up With a Controller ##
