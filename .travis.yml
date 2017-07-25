@@ -16,13 +16,13 @@ addons:
 install:
   - wget https://github.com/SimonKagstrom/kcov/archive/v32.tar.gz
   - tar xzf v32.tar.gz
-  - cd kcov-32/
-  - mkdir build
-  - pushd build
+  - mkdir -p kcov-32/build/
+  - pushd kcov-32/build/
   - cmake ..
   - make
   - sudo make install
   - popd
+  - rm -r kcov-32/
   - sudo pip install codecov
   - cargo install cargo-kcov
 script:
