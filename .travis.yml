@@ -15,15 +15,15 @@ addons:
       - cmake
       - gcc
 install:
-  - wget https://github.com/SimonKagstrom/kcov/archive/v32.tar.gz
-  - tar xzf v32.tar.gz
-  - mkdir -p kcov-32/build/
-  - pushd kcov-32/build/
+  - wget https://github.com/SimonKagstrom/kcov/archive/v33.tar.gz
+  - tar xzf v33.tar.gz
+  - mkdir -p kcov-33/build/
+  - pushd kcov-33/build/
   - cmake ..
   - make
   - sudo make install
   - popd
-  - rm -rf kcov-32/
+  - rm -rf kcov-33/
   - sudo pip install codecov
   - cargo install cargo-kcov
 script:
