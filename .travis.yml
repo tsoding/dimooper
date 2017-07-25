@@ -14,9 +14,9 @@ addons:
       - cmake
       - gcc
 install:
-  - wget https://github.com/SimonKagstrom/kcov/archive/v33.tar.gz
-  - tar xzf v33.tar.gz
-  - cd kcov-33/
+  - wget https://github.com/SimonKagstrom/kcov/archive/v32.tar.gz
+  - tar xzf v32.tar.gz
+  - cd kcov-32/
   - mkdir build
   - pushd build
   - cmake ..
