@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/tsoding/dimooper.svg?branch=master)](https://travis-ci.org/tsoding/dimooper)
+[![codecov](https://codecov.io/gh/tsoding/dimooper/branch/master/graph/badge.svg)](https://codecov.io/gh/tsoding/dimooper)
 
 # dimooper #
 
