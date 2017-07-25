@@ -13,9 +13,9 @@ Digital Music Looper application focused on live performance.
 ## Quick Start ##
 
 ```console
-$ cargo build                           # build dimooper
+$ cargo build                               # build dimooper
 $ cargo run <input-port> <output-port>  # run dimooper
-$ cargo test                            # run unit tests
+$ cargo test                                # run unit tests
 ```
 
 ## Coverage ##
