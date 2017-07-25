@@ -2,9 +2,14 @@ sudo: required
 dist: trusty
 language: rust
 rust: 1.17.0
+addons:
+  apt:
+    packages:
+      - libportmidi-dev
+      - libsdl2-dev
+      - libsdl2-ttf-dev
+      - kcov
 install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq libportmidi-dev libsdl2-dev libsdl2-ttf-dev
   - sudo pip install codecov
   - cargo install cargo-kcov
 script:
