@@ -22,7 +22,7 @@ install:
   - make
   - sudo make install
   - popd
-  - rm -r kcov-32/
+  - rm -rf kcov-32/
   - sudo pip install codecov
   - cargo install cargo-kcov
 script:
