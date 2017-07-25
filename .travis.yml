@@ -8,8 +8,21 @@ addons:
       - libportmidi-dev
       - libsdl2-dev
       - libsdl2-ttf-dev
-      - kcov
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - cmake
+      - gcc
 install:
+  - wget https://github.com/SimonKagstrom/kcov/archive/v33.tar.gz
+  - tar xzf v33.tar.gz
+  - cd kcov-33/
+  - mkdir build
+  - pushd build
+  - cmake ..
+  - make
+  - sudo make install
+  - popd
   - sudo pip install codecov
   - cargo install cargo-kcov
 script:
