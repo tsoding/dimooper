@@ -31,7 +31,7 @@ mod error;
 mod path;
 
 use midi::PortMidiNoteTracker;
-use pm::PortMidiDeviceId;
+use pm::PortMidiDeviceId as DeviceId;
 use ui::Popup;
 use screen::*;
 use config::Config;
@@ -44,7 +44,6 @@ fn config_path() -> Result<PathBuf> {
         .map(|config_dir| config_dir.join(hardcode::CONFIG_FILE_NAME))
 }
 
-type DeviceId = PortMidiDeviceId;
 type Looper = looper::Looper<PortMidiNoteTracker>;
 
 fn create_looper(context: &pm::PortMidi, output_id: DeviceId) -> Result<Looper> { 
