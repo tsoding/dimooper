@@ -97,14 +97,15 @@ fn main() {
 
     let looper = looper::Looper::new(PortMidiNoteTracker::new(out_port));
 
-    let config = config_path()
+    let mut config = config_path()
         .and_then(|path| Config::load(path.as_path()))
         // TODO(f19dedf2-afdb-4cd9-9dab-20ebbe89fd9d): Output the path to the config file
         .map_err(|err| { println!("[WARNING] Cannot load config: {}. Using default config.", err); err })
         .unwrap_or_default();
 
     let mut event_loop = EventLoop::new(timer_subsystem, event_pump, in_port, renderer);
-    event_loop.run(LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup, &config));
+    // event_loop.run(LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup, &config));
+    config = event_loop.run(KeyboardLayoutScreen::new(config));
 
     config_path()
         .and_then(|path| config.save(path.as_path()))

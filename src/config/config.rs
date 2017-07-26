@@ -13,7 +13,7 @@ use serde_json;
 use config::ConfigDeviceInfo;
 use error::Result;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Config {
     pub last_input_port: Option<ConfigDeviceInfo>,
     pub last_output_port: Option<ConfigDeviceInfo>,
