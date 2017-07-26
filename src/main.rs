@@ -87,7 +87,7 @@ fn init_font() -> Result<Popup> {
 }
 
 fn main() {
-    use clap::{App, SubCommand, ArgMatches};
+    use clap::{App, Arg, ArgMatches};
 
     let context = pm::PortMidi::new().expect("Unable to initialize PortMidi");
     let devices = context.devices()
@@ -97,16 +97,22 @@ fn main() {
         .collect::<Vec<_>>()
         .join("\n");
 
-    let usage = "<INPUT_ID> 'input device id' 
-                 <OUTPUT_ID> 'output device id'";
-
     let matches = App::new("Dimooper")
         .about("Digital music looper")
-        .after_help(format!("Avaliable devices:\n {}", devices).as_ref())
-        .args_from_usage(usage)
-        .subcommand(SubCommand::with_name("keyboard")
-            .about("Open keyboard screen")
-            .args_from_usage(usage))
+        .after_help(format!("Avaliable devices:\n{}", devices).as_ref())
+        .arg(Arg::with_name("INPUT_ID")
+            .help("Input device id")
+            .index(1)
+            .required(true))
+        .arg(Arg::with_name("OUTPUT_ID")
+            .help("Output device id")
+            .index(2)
+            .required(true))
+        .arg(Arg::with_name("SCREEN")
+            .short("s")
+            .long("screen")
+            .possible_values(&["looper", "keyboard"])
+            .default_value("looper"))
         .get_matches();
 
     let mut config = config_path()
@@ -127,21 +133,23 @@ fn main() {
         Ok((input_id, output_id))
     };
 
-    if let Some(matches) = matches.subcommand_matches("keyboard") {
-        let (input_id, _output_id) = get_ids(matches)
-            .expect("Unable to parse ids");
-        let mut event_loop = create_event_loop(&context, input_id)
-            .expect("Initialization error");
-        config = event_loop.run(KeyboardLayoutScreen::new(config)); 
-    } else {
-        let (input_id, output_id) = get_ids(&matches)
-            .expect("Unable to parse ids");
-        let looper = create_looper(&context, output_id)
-            .expect("Looper initialization error");
-        let mut event_loop = create_event_loop(&context, input_id)
-            .expect("Event loop initialization error");
-        let bpm_popup = init_font().expect("Unable to initialize fonts");
-        event_loop.run(LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup, &config))       
+    let (input_id, output_id) = get_ids(&matches)
+        .expect("Unable to parse ids");
+
+    let mut event_loop = create_event_loop(&context, input_id)
+        .expect("Initialization error");
+
+    match matches.value_of("SCREEN").unwrap() {
+        "keyboard" => {
+            config = event_loop.run(KeyboardLayoutScreen::new(config));
+        },
+        "looper" => {
+            let looper = create_looper(&context, output_id)
+                .expect("Looper initialization error");
+            let bpm_popup = init_font().expect("Unable to initialize fonts");
+            event_loop.run(LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup, &config))       
+        },
+        _ => unreachable!() 
     }
 
     config_path()
