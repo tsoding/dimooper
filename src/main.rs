@@ -79,7 +79,7 @@ fn create_event_loop(context: &pm::PortMidi, input_id: DeviceId) -> Result<Event
     Ok(event_loop)
 }
 
-fn init_font() -> Result<Popup> {
+fn create_popup() -> Result<Popup> {
     let ttf_context = try!(sdl2_ttf::init());
     let font = try!(ttf_context.load_font(Path::new(TTF_FONT_PATH), 50));
     let popup = Popup::new(font);
@@ -146,7 +146,7 @@ fn main() {
         "looper" => {
             let looper = create_looper(&context, output_id)
                 .expect("Looper initialization error");
-            let bpm_popup = init_font().expect("Unable to initialize fonts");
+            let bpm_popup = create_popup().expect("Unable to create popup");
             event_loop.run(LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup, &config))       
         },
         _ => unreachable!() 
