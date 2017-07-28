@@ -36,7 +36,7 @@ use ui::Popup;
 use screen::*;
 use config::Config;
 use hardcode::*;
-use error::Result;
+use error::{Result, OrExit};
 
 fn config_path() -> Result<PathBuf> {
     env::home_dir()
@@ -87,33 +87,53 @@ fn create_popup() -> Result<Popup> {
 }
 
 fn main() {
-    use clap::{App, Arg, ArgMatches};
+    use clap::{App, AppSettings, Arg, SubCommand};
 
-    let context = pm::PortMidi::new().expect("Unable to initialize PortMidi");
+    let context = pm::PortMidi::new().or_exit("Unable to initialize PortMidi");
     let devices = context.devices()
-        .expect("Unable to get list of devices")
+        .or_exit("Unable to get list of devices")
         .iter()
         .map(ToString::to_string)
         .collect::<Vec<_>>()
         .join("\n");
 
+    let input_id_arg = Arg::with_name("INPUT_ID")
+        .help("Input device id")
+        .index(1)
+        .required(true);
+
+    let output_id_arg = Arg::with_name("OUTPUT_ID")
+        .help("Output device id")
+        .index(2)
+        .required(true);
+
+    let ids = &[input_id_arg, output_id_arg];
+
     let matches = App::new("Dimooper")
         .about("Digital music looper")
         .after_help(format!("Avaliable devices:\n{}", devices).as_ref())
-        .arg(Arg::with_name("INPUT_ID")
-            .help("Input device id")
-            .index(1)
-            .required(true))
-        .arg(Arg::with_name("OUTPUT_ID")
-            .help("Output device id")
-            .index(2)
-            .required(true))
-        .arg(Arg::with_name("SCREEN")
-            .short("s")
-            .long("screen")
-            .possible_values(&["looper", "keyboard"])
-            .default_value("looper"))
+        .setting(AppSettings::SubcommandRequiredElseHelp)
+        .subcommand(SubCommand::with_name("looper")
+            .about("Looper mode")
+            .args(ids))
+        .subcommand(SubCommand::with_name("keyboard")
+            .about("Keyboard configuration mode")
+            .args(ids))
         .get_matches();
+     
+    let (mode, matches) = matches.subcommand();
+    let (input_id, output_id) = matches.map(|matches| {
+        let input_id = matches.value_of("INPUT_ID")
+            .unwrap()   // arg is required
+            .parse()
+            .or_exit("Unable to parse input device id");  
+        let output_id = matches.value_of("OUTPUT_ID")
+            .unwrap()
+            .parse()
+            .or_exit("Unable to parse output device id");
+
+        (input_id, output_id)
+    }).unwrap(); // subcommand is required
 
     let mut config = config_path()
         .and_then(|path| Config::load(path.as_path()))
@@ -121,35 +141,19 @@ fn main() {
         .map_err(|err| { println!("[WARNING] Cannot load config: {}. Using default config.", err); err })
         .unwrap_or_default();
 
-    let get_ids = |matches: &ArgMatches| -> Result<(DeviceId, DeviceId)> {
-        let input_id = try!(matches.value_of("INPUT_ID")
-            .unwrap()
-            .parse());
-        
-        let output_id = try!(matches.value_of("OUTPUT_ID")
-            .unwrap()
-            .parse());
-
-        Ok((input_id, output_id))
-    };
-
-    let (input_id, output_id) = get_ids(&matches)
-        .expect("Unable to parse ids");
-
     let mut event_loop = create_event_loop(&context, input_id)
-        .expect("Initialization error");
-
-    match matches.value_of("SCREEN").unwrap() {
-        "keyboard" => {
-            config = event_loop.run(KeyboardLayoutScreen::new(config));
-        },
+        .or_exit("Initialization error");
+    match mode {
         "looper" => {
+            let bpm_popup = create_popup().or_exit("Unable to create popup");
             let looper = create_looper(&context, output_id)
-                .expect("Looper initialization error");
-            let bpm_popup = create_popup().expect("Unable to create popup");
+                .or_exit("Looper initialization error");         
             event_loop.run(LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup, &config))       
         },
-        _ => unreachable!() 
+        "keyboard" => {
+            config = event_loop.run(KeyboardLayoutScreen::new(config));
+        }, 
+        _ => unreachable!()
     }
 
     config_path()
