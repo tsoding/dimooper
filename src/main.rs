@@ -79,8 +79,7 @@ fn create_event_loop(context: &pm::PortMidi, input_id: DeviceId) -> Result<Event
     Ok(event_loop)
 }
 
-fn create_popup() -> Result<Popup> {
-    let ttf_context = try!(sdl2_ttf::init());
+fn create_popup(ttf_context: &sdl2_ttf::Sdl2TtfContext) -> Result<Popup> {
     let font = try!(ttf_context.load_font(Path::new(TTF_FONT_PATH), 50));
     let popup = Popup::new(font);
     Ok(popup)
@@ -89,6 +88,7 @@ fn create_popup() -> Result<Popup> {
 fn main() {
     use clap::{App, AppSettings, Arg, SubCommand};
 
+    let ttf_context = sdl2_ttf::init().or_exit("Unable to initialize SDL_ttf context");
     let context = pm::PortMidi::new().or_exit("Unable to initialize PortMidi");
     let devices = context.devices()
         .or_exit("Unable to get list of devices")
@@ -145,7 +145,7 @@ fn main() {
         .or_exit("Initialization error");
     match mode {
         "looper" => {
-            let bpm_popup = create_popup().or_exit("Unable to create popup");
+            let bpm_popup = create_popup(&ttf_context).or_exit("Unable to create popup");
             let looper = create_looper(&context, output_id)
                 .or_exit("Looper initialization error");
             event_loop.run(LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup, &config))
