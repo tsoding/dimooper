@@ -7,7 +7,7 @@ pub trait OrExit {
     type T;
 
     fn or_exit(self, message: &str) -> Self::T;
-} 
+}
 
 impl<T, E> OrExit for result::Result<T, E>
     where E: Display {

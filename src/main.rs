@@ -46,7 +46,7 @@ fn config_path() -> Result<PathBuf> {
 
 type Looper = looper::Looper<PortMidiNoteTracker>;
 
-fn create_looper(context: &pm::PortMidi, output_id: DeviceId) -> Result<Looper> { 
+fn create_looper(context: &pm::PortMidi, output_id: DeviceId) -> Result<Looper> {
     let out_info = try!(context.device(output_id));
     println!("Sending recorded events: {} {}",
              out_info.id(),
@@ -120,13 +120,13 @@ fn main() {
             .about("Keyboard configuration mode")
             .args(ids))
         .get_matches();
-     
+
     let (mode, matches) = matches.subcommand();
     let (input_id, output_id) = matches.map(|matches| {
         let input_id = matches.value_of("INPUT_ID")
             .unwrap()   // arg is required
             .parse()
-            .or_exit("Unable to parse input device id");  
+            .or_exit("Unable to parse input device id");
         let output_id = matches.value_of("OUTPUT_ID")
             .unwrap()
             .parse()
@@ -147,12 +147,12 @@ fn main() {
         "looper" => {
             let bpm_popup = create_popup().or_exit("Unable to create popup");
             let looper = create_looper(&context, output_id)
-                .or_exit("Looper initialization error");         
-            event_loop.run(LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup, &config))       
+                .or_exit("Looper initialization error");
+            event_loop.run(LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup, &config))
         },
         "keyboard" => {
             config = event_loop.run(KeyboardLayoutScreen::new(config));
-        }, 
+        },
         _ => unreachable!()
     }
 
