@@ -23,15 +23,12 @@ impl VirtualKeyboard {
     }
 
     pub fn activate_binding(&mut self, keycode: &Keycode) {
-        unimplemented!()
     }
 
     pub fn cancel_binding(&mut self) {
-        unimplemented!()
     }
 
     pub fn bind_midicode(&mut self, midicode: u8) {
-        unimplemented!()
     }
 }
 
