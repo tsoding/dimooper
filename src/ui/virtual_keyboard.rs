@@ -12,7 +12,7 @@ pub struct VirtualKeyboard {
     layout: HashMap<u64, u8>
 }
 
-// TODO: Implement VirtualKeyboard
+// TODO(#242): Implement VirtualKeyboard
 impl VirtualKeyboard {
     pub fn from_config(config: &Config) -> VirtualKeyboard {
         VirtualKeyboard {
