@@ -2,26 +2,30 @@ use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::render::Renderer;
 use sdl2::rect::Point;
+use sdl2::keyboard::Keycode;
 
 use screen::Screen;
-use midi::AbsMidiEvent;
+use midi::*;
 use config::Config;
+use ui::VirtualKeyboard;
+use traits::*;
 
 pub struct KeyboardLayoutScreen {
     config: Config,
-    quit: bool
+    virtual_keyboard: VirtualKeyboard,
+    quit: bool,
 }
 
 impl KeyboardLayoutScreen {
     pub fn new(config: Config) -> KeyboardLayoutScreen {
         KeyboardLayoutScreen {
+            virtual_keyboard: VirtualKeyboard::from_config(&config),
             config: config,
             quit: false
         }
     }
 }
 
-// TODO(#237): implement Screen trait for KeyboardLayoutScreen
 impl Screen<Config> for KeyboardLayoutScreen {
     fn handle_sdl_events(&mut self, events: &[Event]) {
         for event in events {
@@ -30,16 +34,44 @@ impl Screen<Config> for KeyboardLayoutScreen {
                     self.quit = true
                 },
 
+                Event::KeyDown {
+                    keycode: Some(Keycode::Escape), ..
+                } => {
+                    self.virtual_keyboard.cancel_binding()
+                }
+
+                Event::KeyDown { keycode: Some(keycode), .. } => {
+                    self.virtual_keyboard.activate_binding(&keycode);
+                },
+
                 _ => {}
             }
         }
     }
 
     fn handle_midi_events(&mut self, events: &[AbsMidiEvent]) {
+        for event in events {
+            match *event {
+                AbsMidiEvent {
+                    message: TypedMidiMessage::NoteOn {
+                        key: midicode,
+                        ..
+                    },
+                    ..
+                } => {
+                    self.virtual_keyboard.bind_midicode(midicode)
+                },
+
+                _ => {}
+            }
+        }
     }
 
     fn update(&mut self, delta_time: u32) -> Option<Config> {
+        self.virtual_keyboard.update(delta_time);
+
         if self.quit {
+            self.virtual_keyboard.to_config(&mut self.config);
             Some(self.config.clone())
         } else {
             None
@@ -47,11 +79,6 @@ impl Screen<Config> for KeyboardLayoutScreen {
     }
 
     fn render(&self, renderer: &mut Renderer) {
-        let window_width = renderer.viewport().width() as i32;
-        let window_height = renderer.viewport().height() as i32;
-
-        renderer.set_draw_color(Color::RGB(255, 255, 255));
-        renderer.draw_line(Point::from((0, 0)), Point::from((window_width, window_height)));
-        renderer.draw_line(Point::from((window_width, 0)), Point::from((0, window_height)));
+        self.virtual_keyboard.render(renderer);
     }
 }
