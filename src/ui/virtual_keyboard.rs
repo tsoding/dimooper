@@ -14,6 +14,7 @@ use ui::VirtualKey;
 
 pub struct VirtualKeyboard {
     virtual_keys: HashMap<Keycode, VirtualKey>,
+    active_key: Option<Keycode>,
 }
 
 // TODO(#242): Implement VirtualKeyboard
@@ -30,7 +31,8 @@ impl VirtualKeyboard {
                        (keycode, VirtualKey::new(&keycode, &midicode))
                    })
                })
-              .collect()
+              .collect(),
+            active_key: None,
         }
     }
 
@@ -44,6 +46,10 @@ impl VirtualKeyboard {
     }
 
     pub fn activate_binding(&mut self, keycode: &Keycode) {
+        self.active_key = self.virtual_keys.get_mut(&keycode).map(|virtual_key| {
+            virtual_key.activate_binding();
+            keycode.clone()
+        });
     }
 
     pub fn cancel_binding(&mut self) {
