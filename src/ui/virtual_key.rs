@@ -24,6 +24,10 @@ impl VirtualKey {
 
     pub fn bind_midicode(&mut self, midicode: u8) {
     }
+
+    pub fn as_midicode(&self) -> Option<u8> {
+        self.midicode
+    }
 }
 
 impl Renderable for VirtualKey {

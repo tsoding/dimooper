@@ -13,14 +13,14 @@ use config::Config;
 use ui::VirtualKey;
 
 pub struct VirtualKeyboard {
-    virtual_key: HashMap<Keycode, VirtualKey>,
+    virtual_keys: HashMap<Keycode, VirtualKey>,
 }
 
 // TODO(#242): Implement VirtualKeyboard
 impl VirtualKeyboard {
     pub fn from_config(config: &Config) -> VirtualKeyboard {
         VirtualKeyboard {
-            virtual_key: ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
+            virtual_keys: ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
                .iter()
                .flat_map(|row| {
                    row.chars().map(|key| {
@@ -35,7 +35,12 @@ impl VirtualKeyboard {
     }
 
     pub fn to_config(&self, config: &mut Config) {
-
+        config.keyboard_layout =
+            self.virtual_keys.iter().filter_map(|(keycode, virtual_key)| {
+                virtual_key
+                    .as_midicode()
+                    .and_then(|midicode| keycode.to_u64().map(|keycode| (keycode, midicode)))
+            }).collect();
     }
 
     pub fn activate_binding(&mut self, keycode: &Keycode) {
