@@ -86,5 +86,8 @@ impl Renderable for VirtualKeyboard {
 
 impl Updatable for VirtualKeyboard {
     fn update(&mut self, delta_time: u32) {
+        for (_, virtual_key) in self.virtual_keys.iter_mut() {
+            virtual_key.update(delta_time);
+        }
     }
 }
