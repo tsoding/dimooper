@@ -15,7 +15,6 @@ pub struct VirtualKeyboard {
     active_key: Option<Keycode>,
 }
 
-// TODO(#242): Implement VirtualKeyboard
 impl VirtualKeyboard {
     pub fn from_config(config: &Config) -> VirtualKeyboard {
         VirtualKeyboard {
