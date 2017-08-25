@@ -53,6 +53,14 @@ impl VirtualKeyboard {
     }
 
     pub fn cancel_binding(&mut self) {
+        self.active_key = self.active_key
+            .and_then(|keycode|{
+                self.virtual_keys.get_mut(&keycode)
+            })
+            .and_then(|virtual_key| {
+                virtual_key.cancel_binding();
+                None
+            });
     }
 
     pub fn bind_midicode(&mut self, midicode: u8) {
