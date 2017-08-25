@@ -78,12 +78,9 @@ impl VirtualKeyboard {
 
 impl Renderable for VirtualKeyboard {
     fn render(&self, renderer: &mut Renderer) {
-        let window_width = renderer.viewport().width() as i32;
-        let window_height = renderer.viewport().height() as i32;
-
-        renderer.set_draw_color(Color::RGB(255, 255, 255));
-        renderer.draw_line(Point::from((0, 0)), Point::from((window_width, window_height)));
-        renderer.draw_line(Point::from((window_width, 0)), Point::from((0, window_height)));
+        for (_, virtual_key) in self.virtual_keys.iter() {
+            virtual_key.render(renderer);
+        }
     }
 }
 
