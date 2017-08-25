@@ -65,6 +65,14 @@ impl VirtualKeyboard {
     }
 
     pub fn bind_midicode(&mut self, midicode: u8) {
+        self.active_key = self.active_key
+            .and_then(|keycode| {
+                self.virtual_keys.get_mut(&keycode)
+            })
+            .and_then(|virtual_key| {
+                virtual_key.bind_midicode(midicode);
+                None
+            });
     }
 }
 
