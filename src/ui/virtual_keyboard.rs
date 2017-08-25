@@ -19,17 +19,20 @@ pub struct VirtualKeyboard {
 impl VirtualKeyboard {
     pub fn from_config(config: &Config) -> VirtualKeyboard {
         VirtualKeyboard {
-            virtual_keys: ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
-               .iter()
-               .flat_map(|row| {
-                   row.chars().map(|key| {
-                       let keycode = Keycode::from_name(key.to_string().as_str()).unwrap();
-                       let code = keycode.to_u64().unwrap();
-                       let midicode = config.keyboard_layout.get(&code).cloned();
-                       (keycode, VirtualKey::new(keycode, midicode))
-                   })
-               })
-              .collect(),
+            virtual_keys: {
+                let mut virtual_keys = HashMap::new();
+
+                for (i, row) in ["qwertyuiop", "asdfghjkl", "zxcvbnm"].iter().enumerate() {
+                    for (j, key) in row.chars().enumerate() {
+                        let keycode = Keycode::from_name(key.to_string().as_str()).unwrap();
+                        let code = keycode.to_u64().unwrap();
+                        let midicode = config.keyboard_layout.get(&code).cloned();
+                        virtual_keys.insert(keycode, VirtualKey::new((i, j), keycode, midicode));
+                    }
+                }
+
+                virtual_keys
+            },
             active_key: None,
         }
     }

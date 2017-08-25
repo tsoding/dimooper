@@ -6,13 +6,17 @@ use traits::*;
 pub struct VirtualKey {
     keycode: Keycode,
     midicode: Option<u8>,
+    position: (usize, usize),
 }
 
 impl VirtualKey {
-    pub fn new(keycode: Keycode, midicode: Option<u8>) -> VirtualKey {
+    pub fn new(position: (usize, usize),
+               keycode: Keycode,
+               midicode: Option<u8>) -> VirtualKey {
         VirtualKey {
             keycode: keycode,
             midicode: midicode,
+            position: position,
         }
     }
 
