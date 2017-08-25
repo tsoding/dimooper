@@ -28,7 +28,7 @@ impl VirtualKeyboard {
                        let keycode = Keycode::from_name(key.to_string().as_str()).unwrap();
                        let code = keycode.to_u64().unwrap();
                        let midicode = config.keyboard_layout.get(&code).cloned();
-                       (keycode, VirtualKey::new(&keycode, &midicode))
+                       (keycode, VirtualKey::new(keycode, midicode))
                    })
                })
               .collect(),

@@ -9,10 +9,10 @@ pub struct VirtualKey {
 }
 
 impl VirtualKey {
-    pub fn new(keycode: &Keycode, midicode: &Option<u8>) -> VirtualKey {
+    pub fn new(keycode: Keycode, midicode: Option<u8>) -> VirtualKey {
         VirtualKey {
-            keycode: keycode.clone(),
-            midicode: midicode.clone(),
+            keycode: keycode,
+            midicode: midicode,
         }
     }
 
