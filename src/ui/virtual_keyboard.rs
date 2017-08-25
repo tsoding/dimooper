@@ -46,6 +46,7 @@ impl VirtualKeyboard {
     }
 
     pub fn activate_binding(&mut self, keycode: &Keycode) {
+        self.cancel_binding();
         self.active_key = self.virtual_keys.get_mut(&keycode).map(|virtual_key| {
             virtual_key.activate_binding();
             keycode.clone()
