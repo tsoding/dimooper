@@ -6,13 +6,17 @@ use traits::*;
 pub struct VirtualKey {
     keycode: Keycode,
     midicode: Option<u8>,
+    position: (usize, usize),
 }
 
 impl VirtualKey {
-    pub fn new(keycode: &Keycode, midicode: &Option<u8>) -> VirtualKey {
+    pub fn new(position: (usize, usize),
+               keycode: Keycode,
+               midicode: Option<u8>) -> VirtualKey {
         VirtualKey {
-            keycode: keycode.clone(),
-            midicode: midicode.clone(),
+            keycode: keycode,
+            midicode: midicode,
+            position: position,
         }
     }
 
@@ -23,6 +27,10 @@ impl VirtualKey {
     }
 
     pub fn bind_midicode(&mut self, midicode: u8) {
+    }
+
+    pub fn as_midicode(&self) -> Option<u8> {
+        self.midicode
     }
 }
 
