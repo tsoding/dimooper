@@ -33,3 +33,7 @@ pub const CONFIG_FILE_NAME: &'static str = ".dimooper";
 
 pub const KEYBOARD_MESSAGE_VELOCITY: u8 = 100;
 pub const KEYBOARD_MESSAGE_CHANNEL: u8 = 2;
+
+pub const VIRTUAL_KEY_WIDTH: u32 = 100;
+pub const VIRTUAL_KEY_HEIGHT: u32 = 100;
+pub const VIRTUAL_KEY_SPACING: i32 = 10;
