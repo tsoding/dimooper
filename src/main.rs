@@ -29,6 +29,7 @@ mod screen;
 mod config;
 mod error;
 mod path;
+mod fundamental;
 
 use midi::PortMidiNoteTracker;
 use pm::PortMidiDeviceId as DeviceId;

@@ -1,6 +1,6 @@
 use pm::{DeviceInfo, PortMidiDeviceId};
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Eq, PartialEq, Clone, Debug, Deserialize, Serialize)]
 pub struct ConfigDeviceInfo {
     id: PortMidiDeviceId,
     name: String,

@@ -13,7 +13,7 @@ use serde_json;
 use config::ConfigDeviceInfo;
 use error::Result;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Eq, PartialEq, Clone, Debug, Deserialize, Serialize)]
 pub struct Config {
     pub last_input_port: Option<ConfigDeviceInfo>,
     pub last_output_port: Option<ConfigDeviceInfo>,
@@ -25,14 +25,7 @@ impl Default for Config {
         Config {
             last_input_port: None,
             last_output_port: None,
-            keyboard_layout: [(Keycode::G, 59),
-                              (Keycode::H, 61)]
-                .iter()
-                .cloned()
-                .filter_map(|(keycode, midicode)| {
-                    keycode.to_u64().map(|keyvalue| (keyvalue, midicode))
-                })
-                .collect()
+            keyboard_layout: HashMap::new(),
         }
     }
 }

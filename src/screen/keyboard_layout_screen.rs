@@ -27,6 +27,7 @@ impl KeyboardLayoutScreen {
 }
 
 impl Screen<Config> for KeyboardLayoutScreen {
+    // TODO(#247): Implement unbind key operation for the keyboard mode
     fn handle_sdl_events(&mut self, events: &[Event]) {
         for event in events {
             match *event {
@@ -49,6 +50,7 @@ impl Screen<Config> for KeyboardLayoutScreen {
         }
     }
 
+    // TODO(#248): Replay midi events on the keyboard mode
     fn handle_midi_events(&mut self, events: &[AbsMidiEvent]) {
         for event in events {
             match *event {
