@@ -27,7 +27,7 @@ impl KeyboardLayoutScreen {
 }
 
 impl Screen<Config> for KeyboardLayoutScreen {
-    // TODO: implement unbind key operation for the keyboard mode
+    // TODO(#247): Implement unbind key operation for the keyboard mode
     fn handle_sdl_events(&mut self, events: &[Event]) {
         for event in events {
             match *event {
