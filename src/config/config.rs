@@ -25,14 +25,7 @@ impl Default for Config {
         Config {
             last_input_port: None,
             last_output_port: None,
-            keyboard_layout: [(Keycode::G, 59),
-                              (Keycode::H, 61)]
-                .iter()
-                .cloned()
-                .filter_map(|(keycode, midicode)| {
-                    keycode.to_u64().map(|keyvalue| (keyvalue, midicode))
-                })
-                .collect()
+            keyboard_layout: HashMap::new(),
         }
     }
 }
