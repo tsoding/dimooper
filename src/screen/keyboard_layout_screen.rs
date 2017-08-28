@@ -50,7 +50,7 @@ impl Screen<Config> for KeyboardLayoutScreen {
         }
     }
 
-    // TODO: replay midi events on the keyboard mode
+    // TODO(#248): Replay midi events on the keyboard mode
     fn handle_midi_events(&mut self, events: &[AbsMidiEvent]) {
         for event in events {
             match *event {
