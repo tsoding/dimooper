@@ -79,7 +79,7 @@ impl VirtualKeyboard {
 }
 
 impl Renderable for VirtualKeyboard {
-    // TODO: Center virtual keyboard
+    // TODO(#251): Center virtual keyboard
     fn render(&self, renderer: &mut Renderer) {
         let old_viewport = renderer.viewport();
 
