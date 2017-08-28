@@ -5,12 +5,17 @@ use sdl2::pixels::Color;
 
 use traits::*;
 use hardcode::*;
+use fundamental::option::*;
 
 pub struct VirtualKey {
     keycode: Keycode,
     midicode: Option<u8>,
     active: bool,
 }
+
+const UNBOUND_COLOR: Color = Color::RGB(100, 100, 100);
+const BOUND_COLOR: Color = Color::RGB(100, 200, 100);
+const ACTIVE_COLOR: Color = Color::RGB(200, 200, 100);
 
 impl VirtualKey {
     pub fn new(keycode: Keycode,
@@ -42,15 +47,12 @@ impl VirtualKey {
 
 impl Renderable for VirtualKey {
     fn render(&self, renderer: &mut Renderer) {
-        if (self.active) {
-            renderer.set_draw_color(Color::RGB(200, 200, 100));
-        } else {
-            if (self.midicode.is_some()) {
-                renderer.set_draw_color(Color::RGB(100, 200, 100))
-            } else {
-                renderer.set_draw_color(Color::RGB(100, 100, 100));
-            }
-        }
+        self.active
+            .as_option(|| ACTIVE_COLOR)
+            .or(self.midicode.map(|_| BOUND_COLOR))
+            .or(Some(UNBOUND_COLOR))
+            .map(|color| renderer.set_draw_color(color))
+            .unwrap();
         renderer.fill_rect(Rect::new(0, 0, VIRTUAL_KEY_WIDTH, VIRTUAL_KEY_HEIGHT));
     }
 }
