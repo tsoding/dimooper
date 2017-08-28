@@ -46,7 +46,7 @@ impl VirtualKey {
 }
 
 impl Renderable for VirtualKey {
-    // TODO: print key names on the virtual keys
+    // TODO(#250): Display key names on the virtual keys
     fn render(&self, renderer: &mut Renderer) {
         self.active
             .as_option(|| ACTIVE_COLOR)
