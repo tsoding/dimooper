@@ -108,3 +108,60 @@ impl Updatable for VirtualKeyboard {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::VirtualKeyboard;
+    use config::Config;
+
+    use sdl2::keyboard::Keycode;
+    use num::ToPrimitive;
+    use std::collections::HashMap;
+
+    // Just create VirtualKeyboard, do nothing, and persist back to config
+    // Ensure that the config didn't change
+    #[test]
+    fn test_create_and_persist() {
+        let vkbd = VirtualKeyboard::from_config(&Config::default());
+        let mut modified_config = Config::default();
+        vkbd.to_config(&mut modified_config);
+        assert_eq!(Config::default(), modified_config);
+    }
+
+    // Normal workflow: activate_binding(), bind_midicode(), persist back to config
+    // Ensure that the config contains a new binding
+    #[test]
+    fn test_bind_key() {
+        let mut vkbd = VirtualKeyboard::from_config(&Config::default());
+        vkbd.activate_binding(&Keycode::A);
+        vkbd.bind_midicode(150);
+
+        let mut modified_config = Config::default();
+        vkbd.to_config(&mut modified_config);
+
+        let expected_layout: HashMap<u64, u8> = [(Keycode::A, 150)]
+            .iter()
+            .cloned()
+            .filter_map(|(keycode, midicode)| {
+                keycode.to_u64().map(|keyvalue| (keyvalue, midicode))
+            })
+            .collect();
+
+        assert_eq!(expected_layout,
+                   modified_config.keyboard_layout);
+    }
+
+    // activate_binding(), cancel_binding(), persist back to config
+    // Ensure that config didn't change
+    #[test]
+    fn test_activate_but_cancel() {
+        let mut vkbd = VirtualKeyboard::from_config(&Config::default());
+        vkbd.activate_binding(&Keycode::A);
+        vkbd.cancel_binding();
+
+        let mut modified_config = Config::default();
+        vkbd.to_config(&mut modified_config);
+
+        assert_eq!(Config::default(), modified_config);
+    }
+}
