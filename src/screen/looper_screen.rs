@@ -41,7 +41,7 @@ impl<NoteTracker: MidiNoteTracker> LooperScreen<NoteTracker> {
 impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
     fn handle_sdl_events(&mut self, events: &[Event]) {
         for event in events {
-            // TODO: Hardcoded key bindings in looper mode collide with the key bound via the keyboard mode
+            // TODO(#249): Hardcoded key bindings in looper mode collide with the key bound via the keyboard mode
             match *event {
                 Event::Quit { .. } |
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
