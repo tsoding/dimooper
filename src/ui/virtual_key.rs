@@ -55,8 +55,10 @@ impl Renderable for VirtualKey {
             .map(|color| renderer.set_draw_color(color))
             .unwrap();
 
+        let viewport = renderer.viewport();
+
         renderer
-            .fill_rect(Rect::new(0, 0, VIRTUAL_KEY_WIDTH, VIRTUAL_KEY_HEIGHT))
+            .fill_rect(Rect::new(0, 0, viewport.width(), viewport.height()))
             .expect("Cannot render a virtualkey");
     }
 }
