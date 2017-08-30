@@ -163,7 +163,7 @@ impl<NoteTracker: MidiNoteTracker> Screen<()> for LooperScreen<NoteTracker> {
     }
 
     fn render(&self, renderer: &mut Renderer) {
-        renderer.set_draw_color(Color::RGB(0, 0, 0));
+        renderer.set_draw_color(Color::RGB(24, 24, 24));
         renderer.clear();
         self.looper.render(renderer);
         self.bpm_popup.render(renderer);

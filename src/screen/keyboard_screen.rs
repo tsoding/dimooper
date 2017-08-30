@@ -1,6 +1,7 @@
 use sdl2::event::Event;
 use sdl2::render::Renderer;
 use sdl2::keyboard::Keycode;
+use sdl2::pixels::Color;
 
 use screen::Screen;
 use midi::*;
@@ -81,6 +82,8 @@ impl<NoteTracker: MidiNoteTracker> Screen<Config> for KeyboardScreen<NoteTracker
     }
 
     fn render(&self, renderer: &mut Renderer) {
+        renderer.set_draw_color(Color::RGB(24, 24, 24));
+        renderer.clear();
         self.virtual_keyboard.render(renderer);
     }
 }
