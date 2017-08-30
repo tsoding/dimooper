@@ -3,10 +3,6 @@ use std::io::{Read, Write};
 use std::path::Path;
 use std::collections::HashMap;
 
-use sdl2::keyboard::Keycode;
-
-use num::ToPrimitive;
-
 use pm::DeviceInfo;
 use serde_json;
 

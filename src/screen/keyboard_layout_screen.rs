@@ -1,7 +1,5 @@
-use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::render::Renderer;
-use sdl2::rect::Point;
 use sdl2::keyboard::Keycode;
 
 use screen::Screen;
