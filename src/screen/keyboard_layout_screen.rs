@@ -67,9 +67,7 @@ impl Screen<Config> for KeyboardLayoutScreen {
         }
     }
 
-    fn update(&mut self, delta_time: u32) -> Option<Config> {
-        self.virtual_keyboard.update(delta_time);
-
+    fn update(&mut self, _: u32) -> Option<Config> {
         if self.quit {
             self.virtual_keyboard.to_config(&mut self.config);
             Some(self.config.clone())

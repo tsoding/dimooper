@@ -54,11 +54,9 @@ impl Renderable for VirtualKey {
             .or(Some(UNBOUND_COLOR))
             .map(|color| renderer.set_draw_color(color))
             .unwrap();
-        renderer.fill_rect(Rect::new(0, 0, VIRTUAL_KEY_WIDTH, VIRTUAL_KEY_HEIGHT));
-    }
-}
 
-impl Updatable for VirtualKey {
-    fn update(&mut self, delta_time: u32) {
+        renderer
+            .fill_rect(Rect::new(0, 0, VIRTUAL_KEY_WIDTH, VIRTUAL_KEY_HEIGHT))
+            .expect("Cannot render a virtualkey");
     }
 }
