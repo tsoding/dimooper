@@ -8,15 +8,15 @@ use config::Config;
 use ui::VirtualKeyboard;
 use traits::*;
 
-pub struct KeyboardLayoutScreen {
+pub struct KeyboardScreen {
     config: Config,
     virtual_keyboard: VirtualKeyboard,
     quit: bool,
 }
 
-impl KeyboardLayoutScreen {
-    pub fn new(config: Config) -> KeyboardLayoutScreen {
-        KeyboardLayoutScreen {
+impl KeyboardScreen {
+    pub fn new(config: Config) -> KeyboardScreen {
+        KeyboardScreen {
             virtual_keyboard: VirtualKeyboard::from_config(&config),
             config: config,
             quit: false
@@ -24,7 +24,7 @@ impl KeyboardLayoutScreen {
     }
 }
 
-impl Screen<Config> for KeyboardLayoutScreen {
+impl Screen<Config> for KeyboardScreen {
     // TODO(#247): Implement unbind key operation for the keyboard mode
     fn handle_sdl_events(&mut self, events: &[Event]) {
         for event in events {
