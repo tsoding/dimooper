@@ -1,7 +1,5 @@
-use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::render::Renderer;
-use sdl2::rect::Point;
 use sdl2::keyboard::Keycode;
 
 use screen::Screen;
@@ -10,23 +8,25 @@ use config::Config;
 use ui::VirtualKeyboard;
 use traits::*;
 
-pub struct KeyboardLayoutScreen {
+pub struct KeyboardScreen<NoteTracker: MidiNoteTracker> {
     config: Config,
     virtual_keyboard: VirtualKeyboard,
+    note_tracker: NoteTracker,
     quit: bool,
 }
 
-impl KeyboardLayoutScreen {
-    pub fn new(config: Config) -> KeyboardLayoutScreen {
-        KeyboardLayoutScreen {
+impl<NoteTracker: MidiNoteTracker> KeyboardScreen<NoteTracker> {
+    pub fn new(note_tracker: NoteTracker, config: Config) -> Self {
+        Self {
             virtual_keyboard: VirtualKeyboard::from_config(&config),
             config: config,
-            quit: false
+            quit: false,
+            note_tracker: note_tracker,
         }
     }
 }
 
-impl Screen<Config> for KeyboardLayoutScreen {
+impl<NoteTracker: MidiNoteTracker> Screen<Config> for KeyboardScreen<NoteTracker> {
     // TODO(#247): Implement unbind key operation for the keyboard mode
     fn handle_sdl_events(&mut self, events: &[Event]) {
         for event in events {
@@ -50,7 +50,6 @@ impl Screen<Config> for KeyboardLayoutScreen {
         }
     }
 
-    // TODO(#248): Replay midi events on the keyboard mode
     fn handle_midi_events(&mut self, events: &[AbsMidiEvent]) {
         for event in events {
             match *event {
@@ -66,13 +65,14 @@ impl Screen<Config> for KeyboardLayoutScreen {
 
                 _ => {}
             }
+
+            self.note_tracker.feed(event.message);
         }
     }
 
-    fn update(&mut self, delta_time: u32) -> Option<Config> {
-        self.virtual_keyboard.update(delta_time);
-
+    fn update(&mut self, _: u32) -> Option<Config> {
         if self.quit {
+            self.note_tracker.close_opened_notes();
             self.virtual_keyboard.to_config(&mut self.config);
             Some(self.config.clone())
         } else {

@@ -152,7 +152,13 @@ fn main() {
             event_loop.run(LooperScreen::<PortMidiNoteTracker>::new(looper, bpm_popup, &config))
         },
         "keyboard" => {
-            config = event_loop.run(KeyboardLayoutScreen::new(config));
+            config = context
+                .device(output_id)
+                .and_then(|out_info| context.output_port(out_info, 1024))
+                .map(|out_port| {
+                    event_loop.run(KeyboardScreen::new(PortMidiNoteTracker::new(out_port),
+                                                       config))
+                }).unwrap();
         },
         _ => unreachable!()
     }
