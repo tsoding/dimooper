@@ -83,16 +83,20 @@ impl Renderable for VirtualKeyboard {
         let viewport = renderer.viewport();
 
         let y = {
-            (viewport.height() as i32 - (VIRTUAL_KEY_HEIGHT as i32 + VIRTUAL_KEY_SPACING) * 3) / 2
+            (viewport.height() as i32 - (VIRTUAL_KEY_HEIGHT as i32 + VIRTUAL_KEY_SPACING) * KEYBOARD_LAYOUT.len() as i32) / 2
         };
 
         for (i, row) in KEYBOARD_LAYOUT.iter().enumerate() {
+            let x = {
+                (viewport.width() as i32 - (VIRTUAL_KEY_WIDTH as i32 + VIRTUAL_KEY_SPACING) * row.len() as i32) / 2
+            };
+
             for (j, key) in row.chars().enumerate() {
                 Keycode::from_name(key.to_string().as_str())
                     .and_then(|keycode| self.virtual_keys.get(&keycode))
                     .map(|virtual_key| {
                         renderer.set_viewport(
-                            Some(Rect::new((j as i32) * (VIRTUAL_KEY_WIDTH as i32 + VIRTUAL_KEY_SPACING),
+                            Some(Rect::new(x + (j as i32) * (VIRTUAL_KEY_WIDTH as i32 + VIRTUAL_KEY_SPACING),
                                            y + (i as i32) * (VIRTUAL_KEY_HEIGHT as i32 + VIRTUAL_KEY_SPACING),
                                            VIRTUAL_KEY_WIDTH,
                                            VIRTUAL_KEY_HEIGHT)));
